@@ -8,4 +8,8 @@ set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
 
 add_subdirectory(${TOPDIR}/framework framework.out)
 
-add_executable(SivinPlayer SivinPlayer.cpp)
+add_library(SivinPlayer STATIC "")
+
+target_sources(SivinPlayer PRIVATE
+        SivinPlayer.cpp
+        )
