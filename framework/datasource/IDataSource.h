@@ -63,11 +63,11 @@ namespace Sivin {
             int connectTimeout_ms{15000};
             int so_rcv_size{0};
 
-            std::string http_proxy;
+            std::string httpProxy;
             std::string refer; //请求源标识
             std::string userAgent;
             std::vector<std::string> customHeaders;
-            Listener *listener = nullptr;
+            std::shared_ptr<Listener> listener{nullptr};
             IpResolveType resolveType{IpResolveWhatEver};
             bool enableLog{true};
 

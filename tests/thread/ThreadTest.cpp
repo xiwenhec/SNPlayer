@@ -1,12 +1,22 @@
 //
 // Created by Sivin on 2022-11-26.
 //
+
+#define LOG_TAG "ThreadTest"
+
+#include <thread>
 #include <iostream>
-#include "utils/SNJson.h"
+#include "utils/SNLog.h"
+
+
 int main() {
-    SNJson j;
-    j["pi"] = 3.14;
-    std::cout << j["pi"] << std::endl;
-    std::cout << "thread test start\n";
+
+    NS_LOGD("hello world\n");
+    NS_LOGE("hello world\n");
+    NS_LOGI("hello world\n");
+    NS_TRACE;
+
+    std::cout << "test end " << std::this_thread::get_id() << std::endl;
+
     return 0;
 }

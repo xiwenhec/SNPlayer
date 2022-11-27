@@ -22,5 +22,10 @@ if (${ENABLE_THREAD_TEST})
     target_sources(Test PRIVATE
             thread/ThreadTest.cpp
             )
+
+    target_link_libraries(Test PRIVATE
+            pthread
+            framework_utils
+            )
 endif ()
 
