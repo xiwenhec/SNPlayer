@@ -20,6 +20,8 @@ typedef struct RingBuffer_t {
     unsigned int m_writePtr;
     atomic<uint32_t> m_fillCount;
     unsigned int m_back_size;
+    //为了能够回退已经读取过的数据而保留的长度，
+    //写指针不能占用这部分空间
     atomic<uint32_t> m_backCount;
 } RingBuffer;
 
@@ -65,6 +67,7 @@ uint32_t RingBufferReadData(RingBuffer *rBuf, char *buf, uint32_t size) {
         return 0;
     }
 
+    //要读取的数据需要回环
     if (size + rBuf->m_readPtr > rBuf->m_size) {
         unsigned int chunk = rBuf->m_size - rBuf->m_readPtr;
         memcpy(buf, rBuf->m_buffer + rBuf->m_readPtr, chunk);
@@ -122,15 +125,17 @@ int64_t RingBufferSkipBytes(RingBuffer *rBuf, int64_t skipSize) {
 
     if (skipSize < 0) {
         size = -skipSize;
-        //    AF_LOGI("skip size is %d\n", skipSize);
-
+        //回退的长度小于(读后缓冲 backCount)长度，表示可以直接缓冲回退，不会污染写空间
         if (rBuf->m_backCount.load() >= size) {
+            //更新回退缓冲大小
             rBuf->m_backCount -= size;
-
+            //当前读指针的位置小于要回退的大小，则回环
             if (rBuf->m_readPtr < size) {
+                //回环处理 回退读指针
                 rBuf->m_readPtr = rBuf->m_size - (size - rBuf->m_readPtr);
                 assert(rBuf->m_readPtr <= rBuf->m_size);
             } else {
+                //直接回推读指针
                 rBuf->m_readPtr -= size;
                 assert(rBuf->m_readPtr <= rBuf->m_size);
             }
@@ -138,7 +143,7 @@ int64_t RingBufferSkipBytes(RingBuffer *rBuf, int64_t skipSize) {
             if (rBuf->m_readPtr == rBuf->m_size) {
                 rBuf->m_readPtr = 0;
             }
-
+            //更新可读数据大小
             rBuf->m_fillCount += size;
             return skipSize;
         }
@@ -148,15 +153,19 @@ int64_t RingBufferSkipBytes(RingBuffer *rBuf, int64_t skipSize) {
 
     size = skipSize;
 
+    //向前seek，超过了可读空间大小，直接返回
     if (size > rBuf->m_fillCount) {
         return 0;
     }
 
+
     if (size + rBuf->m_readPtr > rBuf->m_size) {
+        //回环前进，更新读指针
         unsigned int chunk = rBuf->m_size - rBuf->m_readPtr;
         rBuf->m_readPtr = size - chunk;
         assert(rBuf->m_readPtr <= rBuf->m_size);
     } else {
+        //直接更新读指针
         rBuf->m_readPtr += size;
         assert(rBuf->m_readPtr <= rBuf->m_size);
     }
@@ -164,7 +173,7 @@ int64_t RingBufferSkipBytes(RingBuffer *rBuf, int64_t skipSize) {
     if (rBuf->m_readPtr == rBuf->m_size) {
         rBuf->m_readPtr = 0;
     }
-
+    //更新可读空间大小
     rBuf->m_fillCount -= size;
     return skipSize;
 }
@@ -185,14 +194,14 @@ unsigned int RingBufferGetWritePtr(RingBuffer *rBuf) {
     return rBuf->m_writePtr;
 }
 
-uint32_t RingBufferGetMaxReadSize(RingBuffer *rBuf) {
+uint32_t RingBufferGetAvailableReadSize(RingBuffer *rBuf) {
     return rBuf->m_fillCount.load();
 }
 
-uint32_t RingBufferGetMaxWriteSize(RingBuffer *rBuf) {
+uint32_t RingBufferGetAvailableWriteSize(RingBuffer *rBuf) {
     return rBuf->m_size - rBuf->m_fillCount.load() - rBuf->m_backCount.load();
 }
 
-uint32_t RingBufferGetMaxBackSize(RingBuffer *rBuf) {
+uint32_t RingBufferGetAvailableBackSize(RingBuffer *rBuf) {
     return rBuf->m_backCount;
 }

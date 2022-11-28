@@ -35,10 +35,10 @@ unsigned int RingBufferGetReadPtr(RingBuffer *rBuf);
 
 unsigned int RingBufferGetWritePtr(RingBuffer *rBuf);
 
-uint32_t RingBufferGetMaxReadSize(RingBuffer *rBuf);
+uint32_t RingBufferGetAvailableReadSize(RingBuffer *rBuf);
 
-uint32_t RingBufferGetMaxWriteSize(RingBuffer *rBuf);
-uint32_t RingBufferGetMaxBackSize(RingBuffer *rBuf);
+uint32_t RingBufferGetAvailableWriteSize(RingBuffer *rBuf);
+uint32_t RingBufferGetAvailableBackSize(RingBuffer *rBuf);
 
 #ifdef __cplusplus
 }
