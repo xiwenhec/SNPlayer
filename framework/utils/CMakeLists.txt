@@ -8,7 +8,7 @@ target_sources(
         framework_utils PRIVATE
         SNJson.h
         SNLog.cpp
-        thread/SNThread.cpp
+        SNThread.cpp
 )
 
 target_sources(

@@ -7,16 +7,33 @@
 #include <thread>
 #include <iostream>
 #include "utils/SNLog.h"
+#include <utils/SNThread.h>
 
+using namespace Sivin;
 
 int main() {
 
-    NS_LOGD("hello world\n");
-    NS_LOGE("hello world\n");
-    NS_LOGI("hello world\n");
-    NS_TRACE;
+    int i = 0;
+    auto *thread = new SNThread([&i]() {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        NS_LOGD("i = %d\n", i++);
+        return 0;
+    }, "testThread");
 
-    std::cout << "test end " << std::this_thread::get_id() << std::endl;
+    thread->setBeginCallback([](){
+        NS_LOGD("thread start..\n");
+    });
 
+    thread->setEndCallback([]{
+        NS_LOGD("thread end..\n");
+    });
+
+    thread->start();
+    std::this_thread::sleep_for(std::chrono::seconds(7));
+    thread->pause();
+    std::this_thread::sleep_for(std::chrono::seconds(7));
+    thread->stop();
+    std::this_thread::sleep_for(std::chrono::seconds(7));
+    std::cout << "test end " <<std::endl;
     return 0;
 }

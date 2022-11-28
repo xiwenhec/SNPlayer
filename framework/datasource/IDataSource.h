@@ -16,22 +16,22 @@ namespace Sivin {
         class Listener {
         public:
             enum NetWorkRetryStatus {
-                netWorkRetryStatus_pending,
-                netWorkRetryStatus_retry,
+                NETWORK_RETRY_STATUS_PENDING,
+                NETWORK_RETRY_STATUS_RETRY,
             };
             enum BitStreamType {
-                bitStreamType_media,
+                BITSTREAM_TYPE_MEDIA,
             };
 
             enum NetworkEvent {
-                networkEvent_startConnect,
-                networkEvent_connected,
-                networkEvent_disconnect,
-                networkEvent_error,
-                networkEvent_eos,
-                networkEvent_retry,
-                networkEvent_resume,
-                networkEvent_exit,
+                NETWORK_EVENT_START_CONNECT,
+                NETWORK_EVENT_CONNECTED,
+                NETWORK_EVENT_DISCONNECT,
+                NETWORK_EVENT_EOS,
+                NETWORK_EVENT_ERROR,
+                NETWORK_EVENT_RETRY,
+                NETWORK_EVENT_RESUME,
+                NETWORK_EVENT_EXIT,
             };
 
             virtual void onNetworkEvent(const std::string &url, const SNJson &eventParams) {}
