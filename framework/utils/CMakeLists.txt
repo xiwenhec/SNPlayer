@@ -7,6 +7,15 @@ add_library(framework_utils STATIC "")
 target_sources(
         framework_utils PRIVATE
         SNJson.h
-        thread/SNThread.cpp
         SNLog.cpp
+        thread/SNThread.cpp
 )
+
+target_sources(
+        framework_utils PRIVATE
+        ../base/RingBuffer.cpp
+)
+
+target_include_directories(framework_utils PUBLIC
+        ${COMMON_INC_DIR}
+        )

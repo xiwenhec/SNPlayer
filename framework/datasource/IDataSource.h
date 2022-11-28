@@ -56,11 +56,11 @@ namespace Sivin {
              * 最低传输速度
              */
             int lowSpeedLimit{1};
-            int lowSpeedTime_ms{15000};
+            int lowSpeedTimeMs{15000};
             /**
              * 连接超时时间
              */
-            int connectTimeout_ms{15000};
+            int connectTimeoutMs{15000};
             int so_rcv_size{0};
 
             std::string httpProxy;
@@ -73,7 +73,6 @@ namespace Sivin {
 
             std::string toString();
         };
-
 
     };
 

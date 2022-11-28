@@ -97,9 +97,9 @@ SNLog::SNLog() {
 }
 
 
-int SNLog::snLogPrint(int prio, const char *tag, const char *fmt, va_list args) {
+void SNLog::snLogPrint(int prio, const char *tag, const char *fmt, va_list args) {
     if (prio > mPriority) {
-        return 0;
+        return;
     }
 
     std::lock_guard<std::mutex> lockGuard{mLogMutex};
@@ -137,8 +137,6 @@ int SNLog::snLogPrint(int prio, const char *tag, const char *fmt, va_list args) 
             printf("%s", NONE);
         }
 #endif
-
-        return 0;
     }
 }
 
@@ -179,10 +177,10 @@ void SNLog::formatLog(int priority, const char *tag, char *inBuffer, char *outBu
     char levelChar = getLevelChar(priority, &ctr);
 
     if (mShowPid) {
-        sprintf(outBuffer, "%s %d 0x%llx %c/%s [%s] [%s]: %s", timeBuffer, pid, tid, levelChar, APP_TAG,
+        sprintf(outBuffer, "%s %d 0x%llx %c/%s [%s] [%s]: %s", timeBuffer, pid, *(long long *)&tid, levelChar, APP_TAG,
                 mVersion.c_str(), tag, inBuffer);
     } else {
-        sprintf(outBuffer, "%s 0x%llx %c/%s [%s] [%s]: %s", timeBuffer, tid, levelChar, APP_TAG,
+        sprintf(outBuffer, "%s 0x%llx %c/%s [%s] [%s]: %s", timeBuffer, *(long long *)&tid, levelChar, APP_TAG,
                 mVersion.c_str(), tag, inBuffer);
     }
 }

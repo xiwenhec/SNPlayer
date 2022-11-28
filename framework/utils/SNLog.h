@@ -33,7 +33,7 @@ private:
 
     static void init();
 
-    int snLogPrint(int priority, const char *tag, const char *fmt, va_list args);
+    void snLogPrint(int priority, const char *tag, const char *fmt, va_list args);
 
     void formatLog(int priority, const char *tag, char *inBuffer, char *outBuffer);
 
