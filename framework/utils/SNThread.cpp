@@ -52,7 +52,7 @@ namespace Sivin {
     static void threadSetSelfName(const char *name) {
 #ifdef __APPLE__
         pthread_setname_np(name);
-#elifdef ANDROID
+#elif defined(ANDROID)
         setName(name);
 #endif
     }

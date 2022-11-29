@@ -74,7 +74,21 @@ namespace Sivin {
             std::string toString();
         };
 
+    public:
+        explicit IDataSource(const std::string &url);
+
+        virtual int open(int flags) = 0;
+
+        virtual int read(void *outBuffer, size_t size) = 0;
+
+        virtual void close() = 0;
+
+        virtual int64_t seek(int64_t offset, int whence) = 0;
+
+    protected:
+        std::string mUrl;
     };
+
 
 } // Sivin
 
