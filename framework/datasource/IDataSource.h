@@ -75,7 +75,7 @@ namespace Sivin {
         };
 
     public:
-        explicit IDataSource(const std::string &url);
+        explicit IDataSource(std::string url);
 
         virtual int open(int flags) = 0;
 

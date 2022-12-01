@@ -3,11 +3,11 @@
 //
 #include "IDataSource.h"
 
+#include <utility>
+
 namespace Sivin {
 
-
-
-    IDataSource::IDataSource(const std::string &url) : mUrl(url) {}
+    IDataSource::IDataSource(std::string url) : mUrl(std::move(url)) {}
 
 
 }

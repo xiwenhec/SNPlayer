@@ -4,9 +4,17 @@
 
 #ifndef DATASOURCETEST_CURLCONNECTION_H
 #define DATASOURCETEST_CURLCONNECTION_H
-
-
+#include "base/RingBuffer.h"
+#include <memory>
 class CurlConnection {
+
+public:
+
+    void connect();
+
+
+
+private:
 
 };
 
