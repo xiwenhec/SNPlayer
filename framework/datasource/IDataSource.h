@@ -61,7 +61,11 @@ namespace Sivin {
              * 连接超时时间
              */
             int connectTimeoutMs{15000};
-            int so_rcv_size{0};
+
+            /**
+             * socket 接收缓冲区大小
+             */
+            int sockReceiveBufferSize{0};
 
             std::string httpProxy;
             std::string refer; //请求源标识
