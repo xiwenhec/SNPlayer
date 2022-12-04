@@ -1,13 +1,15 @@
 //
 // Created by sivin on 11/28/22.
 //
-
+#define LOG_TAG "DataSourceTest"
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <future>
 #include <thread>
 #include "curl/curl.h"
+
+#include "utils/SNLog.h"
 
 size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp) {
 
@@ -20,8 +22,6 @@ size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp) {
 }
 
 std::string network(const std::string &url) {
-
-    //《正题开始， 关注这个部分》
 
     //创建一个easy_handle, 不要在线程直接共享easy_handle
     CURL *easy_handle = curl_easy_init();
@@ -65,31 +65,41 @@ void printRet(std::future<std::string> &future) {
 }
 
 int main() {
-    //1.使用curl需要进行全局初始化,支持ssl
-    curl_global_init(CURL_GLOBAL_SSL);
+//    //1.使用curl需要进行全局初始化,支持ssl
+//    curl_global_init(CURL_GLOBAL_SSL);
+//
+//    //2.请求地址
+//    std::string url = "https://www.baidu.com";
+//    //3.这里我们使用异步来处理网络请求的任务
+//    std::packaged_task<std::string(std::string)> task(network);
+//    std::future<std::string> ret = task.get_future();
+//
+//
+//    //4.将任务移新的线程中去, std::move, std::ref 分别对应右值移动， 和引用绑定
+//    std::thread t = std::thread(std::move(task), std::ref(url));
+//
+//    //5.开辟另外一个线程处理数据
+//    std::thread t2 = std::thread(std::move(printRet), std::ref(ret));
+//
+//
+//    //TODO:此处做其他事情
+//
+//    //6.最后我们等待子线程处理任务完成
+//    t.join();
+//    t2.join();
+//
+//    //7.清理全局curl
+//    curl_global_cleanup();
 
-    //2.请求地址
-    std::string url = "https://www.baidu.com";
-    //3.这里我们使用异步来处理网络请求的任务
-    std::packaged_task<std::string(std::string)> task(network);
-    std::future<std::string> ret = task.get_future();
+//    std::cout << "hello world\n";
+    NS_LOGD("hell world\n");
+//    NS_LOGE("gfhgfghffgh\n");
+//    NS_LOGI("hgjhghjgjgjgjjg\n");
+//    NS_TRACE;
 
+    int buffer = 1024;
+    NS_LOGE("sizeof(buffer) = %ld", sizeof(buffer));
 
-    //4.将任务移新的线程中去, std::move, std::ref 分别对应右值移动， 和引用绑定
-    std::thread t = std::thread(std::move(task), std::ref(url));
-
-    //5.开辟另外一个线程处理数据
-    std::thread t2 = std::thread(std::move(printRet), std::ref(ret));
-
-
-    //TODO:此处做其他事情
-
-    //6.最后我们等待子线程处理任务完成
-    t.join();
-    t2.join();
-
-    //7.清理全局curl
-    curl_global_cleanup();
 
     return 0;
 }

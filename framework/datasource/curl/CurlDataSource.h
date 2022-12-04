@@ -11,6 +11,7 @@ namespace Sivin {
     class CurlDataSource : IDataSource {
 
         explicit CurlDataSource(const std::string &url);
+
         ~CurlDataSource();
 
         int open(int flags) override;
@@ -20,7 +21,6 @@ namespace Sivin {
         void close() override;
 
         int64_t seek(int64_t offset, int whence) override;
-
 
     private:
         std::string mUri;

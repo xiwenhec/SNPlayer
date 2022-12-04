@@ -16,6 +16,7 @@ if (${ENABLE_CURL})
             IDataSource.cpp
             curl/CurlDataSource.cpp
             curl/CurlConnection.cpp
+            curl/CurlConnectionManager.cpp
             )
 endif ()
 
