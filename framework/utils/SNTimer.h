@@ -14,7 +14,7 @@ public:
     static int64_t getSystemTimeMs();
     static int64_t getSystemTimeUs();
 
-    static void sleepMS(int ms);
+    static void sleepMs(int ms);
     static void sleepUs(int us);
 
 };

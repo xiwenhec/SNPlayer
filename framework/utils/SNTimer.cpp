@@ -27,7 +27,7 @@ int64_t SNTimer::getSystemTimeUs() {
             std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-void SNTimer::sleepMS(int ms) {
+void SNTimer::sleepMs(int ms) {
     std::chrono::milliseconds duration(ms);
     std::this_thread::sleep_for(duration);
 }

@@ -12,7 +12,10 @@
 #include <condition_variable>
 #include <atomic>
 
-#define NEW_SN_THREAD(func,name) (new SNThread([this]() -> int { return this->func(); }, name))
+#define NEW_SN_THREAD(func, name) (new SNThread([this]() -> int { return this->func(); }, name))
+#define MAKE_UNIQUE_THREAD(func, name) ( std::make_unique<SNThread>([this]() -> int { \
+return this->func();                                                                  \
+}, name))
 
 namespace Sivin {
 

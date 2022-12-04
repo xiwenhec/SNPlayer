@@ -14,6 +14,7 @@
 
 #define NS_LOGI(...) SNLog::info(LOG_TAG, __VA_ARGS__)
 #define NS_LOGD(...) SNLog::debug(LOG_TAG, __VA_ARGS__)
+#define NS_LOGW(...) SNLog::warn(LOG_TAG, __VA_ARGS__)
 #define NS_LOGE(...) SNLog::error(LOG_TAG, __VA_ARGS__)
 
 #define NS_TRACE do { NS_LOGD("%s:%d(%s)\n",__FILE__,__LINE__,__func__);} while(0)
@@ -23,6 +24,8 @@ public:
     static void info(const char *tag, const char *fmt, ...);
 
     static void debug(const char *tag, const char *fmt, ...);
+
+    static void warn(const char *tag, const char *fmt, ...);
 
     static void error(const char *tag, const char *fmt, ...);
 

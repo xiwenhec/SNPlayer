@@ -200,12 +200,24 @@ void SNLog::debug(const char *tag, const char *fmt, ...) {
     va_end(args);
 }
 
+void SNLog::warn(const char *tag, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    SNLog::getInstance()->snLogPrint(SN_LOG_LEVEL_WARNING, tag, fmt, args);
+    va_end(args);
+}
+
+
+
 void SNLog::error(const char *tag, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     SNLog::getInstance()->snLogPrint(SN_LOG_LEVEL_ERROR, tag, fmt, args);
     va_end(args);
 }
+
+
+
 
 
 
