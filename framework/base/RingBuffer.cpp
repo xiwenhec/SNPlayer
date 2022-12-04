@@ -4,9 +4,9 @@
 #include <atomic>
 #include <cassert>
 
-RingBuffer::RingBuffer(uint32_t size) : RingBuffer(size, 0) {}
+RingBuffer::RingBuffer(uint64_t size) : RingBuffer(size, 0) {}
 
-RingBuffer::RingBuffer(uint32_t size, uint32_t backSize) : mSize(size),
+RingBuffer::RingBuffer(uint64_t size, uint64_t backSize) : mSize(size),
                                                            mBackSize(backSize),
                                                            mBackCount(0), mReadIndex(0),
                                                            mWriteIndex(0), mFillCount(0) {
@@ -21,14 +21,14 @@ RingBuffer::~RingBuffer() {
     }
 }
 
-uint32_t RingBuffer::readData(char *outBuffer, uint32_t wantSize) {
+uint64_t RingBuffer::readData(char *outBuffer, uint64_t wantSize) {
     if (wantSize > mFillCount.load()) {
         return 0;
     }
 
     //要读取的数据需要回环
     if (wantSize + mReadIndex > mSize) {
-        unsigned int chunk = mSize - mReadIndex;
+        uint64_t chunk = mSize - mReadIndex;
         memcpy(outBuffer, mBuffer + mReadIndex, chunk);
         memcpy(outBuffer + chunk, mBuffer, wantSize - chunk);
         mReadIndex = wantSize - chunk;
@@ -50,14 +50,14 @@ uint32_t RingBuffer::readData(char *outBuffer, uint32_t wantSize) {
 }
 
 
-uint32_t RingBuffer::writeData(const char *inputBuffer, uint32_t inputSize) {
+uint64_t RingBuffer::writeData(const char *inputBuffer, uint64_t inputSize) {
 
     if (inputSize > mSize - mFillCount.load() - mBackCount.load()) {
         return 0;
     }
 
     if (inputSize + mWriteIndex > mSize) {
-        uint32_t chunk = mSize - mWriteIndex;
+        uint64_t chunk = mSize - mWriteIndex;
         memcpy(mBuffer + mWriteIndex, inputBuffer, chunk);
         memcpy(mBuffer, inputBuffer + chunk, inputSize - chunk);
         mWriteIndex = inputSize - chunk;
@@ -83,9 +83,9 @@ void RingBuffer::clear() {
     mBackCount = 0;
 }
 
-int64_t RingBuffer::skipBytes(int64_t skpSize) {
+[[maybe_unused]] int64_t RingBuffer::skipBytes(int64_t skpSize) {
 
-    int64_t skipSize = 0;
+    int64_t skipSize;
 
     if (skpSize < 0) {
         skipSize = -skpSize;
@@ -138,10 +138,10 @@ uint64_t RingBuffer::getMaxReadableDataSize() const {
 }
 
 uint64_t RingBuffer::getMaxWriteableDataSize() const {
-    return mSize - mFillCount.load() - mBackCount.load();;
+    return mSize - mFillCount.load() - mBackCount.load();
 }
 
-uint64_t RingBuffer::getMaxBackSize() const {
+[[maybe_unused]] uint64_t RingBuffer::getMaxBackSize() const {
     return mBackCount;
 }
 

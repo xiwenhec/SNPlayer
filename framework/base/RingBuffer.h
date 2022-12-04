@@ -6,65 +6,27 @@
 #include <atomic>
 #include <memory>
 
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-//struct RingBuffer_t;
-//
-//RingBuffer_t *RingBufferCreate(uint32_t size);
-//
-//void RingBufferSetBackSize(RingBuffer_t *rBuf, uint32_t size);
-//
-//void RingBufferDestroy(RingBuffer_t *rBuf);
-//
-//void RingBufferClear(RingBuffer_t *rBuf);
-//
-//uint32_t RingBufferReadData(RingBuffer_t *rBuf, char *buf, uint32_t size);
-//
-//uint32_t RingBufferWriteData(RingBuffer_t *rBuf, const char *buf, uint32_t size);
-//
-//int64_t RingBufferSkipBytes(RingBuffer_t *rBuf, int64_t skipSize);
-//
-//char *RingBufferGetBuffer(RingBuffer_t *rBuf);
-//
-//uint32_t RingBufferGetSize(RingBuffer_t *rBuf);
-//
-//unsigned int RingBufferGetReadPtr(RingBuffer_t *rBuf);
-//
-//unsigned int RingBufferGetWritePtr(RingBuffer_t *rBuf);
-//
-//uint32_t RingBufferGetAvailableReadSize(RingBuffer_t *rBuf);
-//
-//uint32_t RingBufferGetAvailableWriteSize(RingBuffer_t *rBuf);
-//uint32_t RingBufferGetAvailableBackSize(RingBuffer_t *rBuf);
-//
-//#ifdef __cplusplus
-//}
-//#endif
-//
-
-
 class RingBuffer {
 public:
-    explicit RingBuffer(uint32_t size);
+    explicit RingBuffer(uint64_t size);
 
-    RingBuffer(uint32_t size, uint32_t backSize);
+    RingBuffer(uint64_t size, uint64_t backSize);
 
     ~RingBuffer();
 
-    void setBackSize(uint32_t size) { mBackSize = size; }
+    [[maybe_unused]] void setBackSize(uint32_t size) { mBackSize = size; }
 
-    uint32_t readData(char *outBuffer, uint32_t size);
+    uint64_t readData(char *outBuffer, uint64_t size);
 
-    uint32_t writeData(const char *inputBuffer, uint32_t size);
+    uint64_t writeData(const char *inputBuffer, uint64_t size);
 
-    int64_t skipBytes(int64_t skipSize);
+    [[maybe_unused]] int64_t skipBytes(int64_t skipSize);
 
-    uint64_t getMaxReadableDataSize() const;
+    [[nodiscard]] uint64_t getMaxReadableDataSize() const;
 
-    uint64_t getMaxWriteableDataSize() const;
+    [[nodiscard]] uint64_t getMaxWriteableDataSize() const;
 
-    uint64_t getMaxBackSize() const;
+    [[maybe_unused]] [[nodiscard]] uint64_t getMaxBackSize() const;
 
     void clear();
 
