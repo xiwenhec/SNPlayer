@@ -9,6 +9,7 @@ target_sources(
         SNJson.h
         SNLog.cpp
         SNThread.cpp
+        SNTimer.cpp
 )
 
 target_sources(
