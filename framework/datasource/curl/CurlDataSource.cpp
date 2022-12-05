@@ -10,7 +10,6 @@
 namespace Sivin {
     CurlDataSource::CurlDataSource(const std::string &url) : IDataSource(url) {
         mConnectManager = std::make_shared<CurlConnectionManager>();
-
     }
 
     CurlDataSource::~CurlDataSource() {
@@ -34,7 +33,40 @@ namespace Sivin {
 
     int CurlDataSource::read(void *outBuffer, size_t size) {
 
+        if (mRangeEnd != INT64_MIN || mFileSize > 0) {
+            int64_t end = mFileSize;
+            if (mRangeEnd > 0) {
+                end = mRangeEnd;
+            }
+            end = std::min(mFileSize, end);
+            if (end > 0) {
+                size = std::min(size, (size_t) (end - mConnection->tell()));
+                if (size <= 0) {
+                    return 0;
+                }
+            }
+        }
+        int64_t ret = 0;
+        /* only request 1 byte, for truncated reads (only if not eof) */
+        if (mFileSize <= 0 || mConnection->tell() < mFileSize) {
+            ret = mConnection->fillBuffer(1, mNeedReconnect);
+            if (mNeedReconnect) {
+//                closeConnections(false, true);
+//                mConnection->setReconnect(true);
+//                int64_t pos = mConnection->tell();
+//                int64_t seekRet = seek(pos, SEEK_SET);
+//                assert(seekRet == pos);
+            }
+            if (ret < 0) {
+                NS_LOGE("CurlDataSource2::Read ret=%d", ret);
+                return (int) ret;
+            }
+        }
 
+        ret = mConnection->readBuffer(outBuffer, size);
+        if (ret < 0) {
+            NS_LOGE("CurlDataSource2::Read ret=%d", ret);
+        }
         return 0;
     }
 
