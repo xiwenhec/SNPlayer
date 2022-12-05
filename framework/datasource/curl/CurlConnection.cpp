@@ -15,7 +15,7 @@
 #define RINGBUFFER_SIZE (1024 * 256)
 #define RINGBUFFER_BACK_SIZE (1024 * 512)
 
-#define CURL_READ_BUFFER_SIZE CURL_MAX_WRITE_SIZE//(1024 * 64)
+#define CURL_READ_BUFFER_SIZE CURL_MAX_WRITE_SIZE//(1024 * 16)
 
 #define TRUE 1L
 #define FALSE 0L
@@ -261,7 +261,6 @@ namespace Sivin {
 //        if (reSolveList != nullptr) {
 //            curl_easy_setopt(mHttpHandle, CURLOPT_RESOLVE, reSolveList);
 //        }
-
     }
 
     void CurlConnection::setPost(bool isPost, const uint8_t *data, int64_t size) {
@@ -285,7 +284,7 @@ namespace Sivin {
     }
 
     //TODO:Sivin 待优化
-    int CurlConnection::fillBuffer(uint32_t want, const std::atomic<bool> &needReconnect) {
+    int64_t CurlConnection::fillBuffer(int64_t want, const std::atomic<bool> &needReconnect) {
         int64_t startTime = SNTimer::getSteadyTimeMs();
         //需要继续等待填充数据
         while (mBuffer->getMaxReadableDataSize() < want && mBuffer->getMaxWriteableDataSize() > 0) {
@@ -421,9 +420,9 @@ namespace Sivin {
         mInterrupted.store(interrupt);
     }
 
-    int CurlConnection::readBuffer(void *outBuffer, uint64_t size) {
+    int64_t CurlConnection::readBuffer(void *outBuffer, int64_t size) {
         std::lock_guard<std::mutex> lockGuard{mMutex};
-        uint64_t want = std::min(mBuffer->getMaxReadableDataSize(), size);
+        int64_t want = std::min(mBuffer->getMaxReadableDataSize(), size);
         if (want > 0 && mBuffer->readData((char *) outBuffer, want) == want) {
             mFilePos += want;
             return want;
@@ -437,11 +436,63 @@ namespace Sivin {
         return 0;
     }
 
-    int CurlConnection::shortSeek(int64_t off) {
+    int64_t CurlConnection::shortSeek(int64_t off) {
         int64_t delta = off - mFilePos;
+        std::lock_guard<std::mutex> lockGuard{mMutex};
+        //向后回退
+        if (delta < 0) {
+            if (mBuffer->skipBytes(delta)) {
+                mFilePos = off;
+                return 0;
+            }
+            return -1;
+        }
 
+        //向前seek
+        if (mBuffer->skipBytes(delta)) {
+            mFilePos = off;
+            return 0;
+        }
 
-        return 0;
+        //向前seek失败，表示可读取空间小于delta
+        uint32_t shortBufferSize = 1024 * 64;
+        //判断off是否超过设定的阈值,如果超过阈值，则直接判定为无法shortSeek,return -1;
+        if (off < mFilePos + shortBufferSize) {
+            int64_t ringBufReadSize = mBuffer->getMaxReadableDataSize();
+            //先seek缓存空间
+            if (ringBufReadSize > 0) {
+                mBuffer->skipBytes(ringBufReadSize);
+                mFilePos += ringBufReadSize;
+            }
+            int64_t ret = 0;
+            if ((ret = fillBuffer(shortBufferSize, mNeedReconnect)) < 0) {
+                //获取shortBufferSize数据失败,撤销之前的缓存回退
+                if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
+                    NS_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                } else {
+                    //撤销成功
+                    mFilePos -= ringBufReadSize;
+                }
+                return ret;
+            }
+
+            //填充成功
+            NS_LOGI("read buffer size = %lld, need is %ld", mBuffer->getMaxReadableDataSize(),
+                    (delta - ringBufReadSize));
+            if (!mBuffer->skipBytes((delta - ringBufReadSize))) {
+                NS_LOGE("%s - Failed to skip to position after having filled buffer", __FUNCTION__);
+                if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
+                    NS_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                } else {
+                    //撤销成功
+                    mFilePos -= ringBufReadSize;
+                }
+                return -1;
+            }
+            mFilePos = off;
+            return 0;
+        }
+        return -1;
     }
 
 

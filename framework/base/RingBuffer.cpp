@@ -4,9 +4,9 @@
 #include <atomic>
 #include <cassert>
 
-RingBuffer::RingBuffer(uint64_t size) : RingBuffer(size, 0) {}
+RingBuffer::RingBuffer(int64_t size) : RingBuffer(size, 0) {}
 
-RingBuffer::RingBuffer(uint64_t size, uint64_t backSize) : mSize(size),
+RingBuffer::RingBuffer(int64_t size, int64_t backSize) : mSize(size),
                                                            mBackSize(backSize),
                                                            mBackCount(0), mReadIndex(0),
                                                            mWriteIndex(0), mFillCount(0) {
@@ -21,7 +21,7 @@ RingBuffer::~RingBuffer() {
     }
 }
 
-uint64_t RingBuffer::readData(char *outBuffer, uint64_t wantSize) {
+int64_t RingBuffer::readData(char *outBuffer, int64_t wantSize) {
     if (wantSize > mFillCount.load()) {
         return 0;
     }
@@ -50,7 +50,7 @@ uint64_t RingBuffer::readData(char *outBuffer, uint64_t wantSize) {
 }
 
 
-uint64_t RingBuffer::writeData(const char *inputBuffer, uint64_t inputSize) {
+int64_t RingBuffer::writeData(const char *inputBuffer, int64_t inputSize) {
 
     if (inputSize > mSize - mFillCount.load() - mBackCount.load()) {
         return 0;
@@ -133,15 +133,15 @@ void RingBuffer::clear() {
     return skipSize;
 }
 
-uint64_t RingBuffer::getMaxReadableDataSize() const {
+int64_t RingBuffer::getMaxReadableDataSize() const {
     return mFillCount.load();
 }
 
-uint64_t RingBuffer::getMaxWriteableDataSize() const {
+int64_t RingBuffer::getMaxWriteableDataSize() const {
     return mSize - mFillCount.load() - mBackCount.load();
 }
 
-[[maybe_unused]] uint64_t RingBuffer::getMaxBackSize() const {
+[[maybe_unused]] int64_t RingBuffer::getMaxBackSize() const {
     return mBackCount;
 }
 

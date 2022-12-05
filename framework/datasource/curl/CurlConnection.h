@@ -42,13 +42,13 @@ namespace Sivin {
 
         void setInterrupt(const std::atomic_bool &interrupt);
 
-        int64_t tell() { return mFilePos; }
+        int64_t tell() const { return mFilePos; }
 
-        int fillBuffer(uint32_t want, const std::atomic<bool> &needReconnect);
+        int64_t fillBuffer(int64_t want, const std::atomic<bool> &needReconnect);
 
-        int readBuffer(void *outBuffer, uint64_t size);
+        int64_t readBuffer(void *outBuffer, int64_t size);
 
-        int shortSeek(int64_t off);
+        int64_t shortSeek(int64_t off);
 
         /*
          * 连接出错或者结束，当这个函数调用后，该connection->handle随后将会被移出multiHandle
@@ -107,7 +107,7 @@ namespace Sivin {
 
         //响应头
         char *mResponseHeader;
-        uint64_t mResponseHeaderSize = 0;
+        int64_t mResponseHeaderSize = 0;
 
         CURLcode mStatus{CURLE_OK};
 
@@ -116,7 +116,8 @@ namespace Sivin {
         int64_t mFileSize{0};
 
         int sendRange{0};
-
+        //当前connect需要重新连接
+        bool mNeedReconnect{false};
         bool mStillRunning{false};
 
     };
