@@ -6,6 +6,8 @@
 #define DATASOURCETEST_CURLDATASOURCE_H
 
 #include "datasource/IDataSource.h"
+#include "datasource/curl/CurlConnectionManager.h"
+#include "datasource/curl/CurlConnection.h"
 
 namespace Sivin {
     class CurlDataSource : IDataSource {
@@ -23,7 +25,18 @@ namespace Sivin {
         int64_t seek(int64_t offset, int whence) override;
 
     private:
+        std::shared_ptr<CurlConnection> initConnection();
+
+    private:
         std::string mUri;
+
+
+        std::shared_ptr<CurlConnectionManager> mConnectManager;
+        std::shared_ptr<CurlConnection> mConnection;
+        int64_t mOpenTimeMs = 0;
+        std::atomic<bool> mNeedReconnect{false};
+        curl_slist *mHeaderList;
+        int64_t mFileSize = -1;
     };
 }
 

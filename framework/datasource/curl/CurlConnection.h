@@ -65,6 +65,10 @@ namespace Sivin {
 
         void removeFromManager();
 
+        int64_t startConnect();
+
+        int getFileSize(int64_t &fileSize);
+
     private:
 
         void reset();

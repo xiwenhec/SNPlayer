@@ -13,6 +13,7 @@ namespace Sivin {
     class CurlConnection;
 
     class CurlConnectionManager {
+    public:
         CurlConnectionManager();
 
         ~CurlConnectionManager();

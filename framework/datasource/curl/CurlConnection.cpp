@@ -495,5 +495,40 @@ namespace Sivin {
         return -1;
     }
 
+    int CurlConnection::getFileSize(int64_t &fileSize) {
+        if (!mStillRunning) return -1;
+        double length;
+        if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &length)) {
+            if (length < 0) {
+                length = 0.0;
+            }
+            if (length > 0.0) {
+                fileSize = mFilePos + (int64_t) length;
+            } else {
+                fileSize = 0;
+            }
+        }
+        return 0;
+    }
+
+    int64_t CurlConnection::startConnect() {
+        addToManager();
+        int64_t ret = 0;
+        if ((ret = fillBuffer(1, mNeedReconnect)) < 0) {
+            NS_LOGE("Connect, didn't get any data from stream.");
+            return ret;
+        }
+        long responseCode;
+        if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &responseCode)) {
+            NS_LOGD("CURLINFO_RESPONSE_CODE is %d", responseCode);
+            if (responseCode >= 400) {
+                return -1;
+            }
+        }
+        NS_LOGD("connect success.");
+        getFileSize(mFileSize);
+        return 0;
+    }
+
 
 }

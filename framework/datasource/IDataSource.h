@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
 #include "utils/SNJson.h"
 
 namespace Sivin {
@@ -89,8 +90,19 @@ namespace Sivin {
 
         virtual int64_t seek(int64_t offset, int whence) = 0;
 
+    public:
+        void setConfig(SourceConfig &config);
+
+        void setInterrupt(bool interrupt);
+
+        void setRange(int64_t start, int64_t end);
+
     protected:
         std::string mUrl;
+        SourceConfig mConfig{};
+        std::atomic_bool mInterrupt{false};
+        int64_t mRangeStart{INT64_MIN};
+        int64_t mRangeEnd{INT64_MIN};
     };
 
 

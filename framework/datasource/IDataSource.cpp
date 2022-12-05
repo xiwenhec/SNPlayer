@@ -9,5 +9,17 @@ namespace Sivin {
 
     IDataSource::IDataSource(std::string url) : mUrl(std::move(url)) {}
 
+    void IDataSource::setConfig(SourceConfig &config) {
+        mConfig = config;
+    }
+
+    void IDataSource::setInterrupt(bool interrupt) {
+        mInterrupt = interrupt;
+    }
+
+    void IDataSource::setRange(int64_t start, int64_t end) {
+        mRangeStart = start;
+        mRangeEnd = end;
+    }
 
 }
