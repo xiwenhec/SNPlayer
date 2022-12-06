@@ -36,7 +36,6 @@ void testRead(std::shared_ptr<IDataSource> &dataSource) {
 }
 
 int main() {
-    int *p;
     curl_global_init(CURL_GLOBAL_ALL);
     std::string url = "https://player.alicdn.com/video/aliyunmedia.mp4";
     auto dataSource = DataSourcePrototype::create(url);
