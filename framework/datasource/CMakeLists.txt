@@ -14,6 +14,7 @@ target_include_directories(framework_datasource PUBLIC
 if (${ENABLE_CURL})
     target_sources(framework_datasource PRIVATE
             IDataSource.cpp
+            DataSourcePrototype.cpp
             curl/CurlDataSource.cpp
             curl/CurlConnection.cpp
             curl/CurlConnectionManager.cpp

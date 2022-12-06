@@ -9,7 +9,7 @@
 #include <future>
 #include <thread>
 #include "curl/curl.h"
-#include "datasource/curl/CurlDataSource.h"
+#include "datasource/DataSourcePrototype.h"
 #include "utils/SNLog.h"
 #include <memory>
 #include "utils/SNTimer.h"
@@ -39,7 +39,7 @@ int main() {
     int *p;
     curl_global_init(CURL_GLOBAL_ALL);
     std::string url = "https://player.alicdn.com/video/aliyunmedia.mp4";
-    std::shared_ptr<IDataSource> dataSource = std::make_shared<CurlDataSource>(url);
+    auto dataSource = DataSourcePrototype::create(url);
     dataSource->open(0);
     testRead(dataSource);
 
