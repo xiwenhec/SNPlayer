@@ -6,3 +6,4 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(utils)
 add_subdirectory(datasource)
+add_subdirectory(demuxer)

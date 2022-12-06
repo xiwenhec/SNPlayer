@@ -529,6 +529,4 @@ namespace Sivin {
         getFileSize(mFileSize);
         return 0;
     }
-
-
 }
