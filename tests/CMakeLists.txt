@@ -13,10 +13,12 @@ set(COMMON_INC_DIR  ${TOPDIR}/framework
         ${TOPDIR}/thirdparty/json
         ${TOPDIR}/thirdparty/curl/include
         ${TOPDIR}/thirdparty/openssl/include
+        ${TOPDIR}/thirdparty/ffmpeg/include
         )
 
 set(COMMON_LIB_DIR ${TOPDIR}/thirdparty/curl/lib
         ${TOPDIR}/thirdparty/openssl/lib
+        ${TOPDIR}/thirdparty/ffmpeg/lib
         )
 
 add_subdirectory(${TOPDIR}/framework framework.out)

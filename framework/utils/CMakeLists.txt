@@ -10,11 +10,14 @@ target_sources(
         SNLog.cpp
         SNThread.cpp
         SNTimer.cpp
+        SNUtils.cpp
+        SNFFUtils.cpp
 )
 
 target_sources(
         framework_utils PUBLIC
         ../base/RingBuffer.cpp
+        ../base/media/ISNPacket.cpp
 )
 
 target_include_directories(framework_utils PUBLIC

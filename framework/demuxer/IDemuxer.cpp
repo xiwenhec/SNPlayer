@@ -9,7 +9,7 @@ namespace Sivin {
     }
 
     void IDemuxer::setDataCallback(IDemuxer::ReadCallback readCallback) {
-        mReadCallback = readCallback;
+        mReadCb = readCallback;
     }
 
 
