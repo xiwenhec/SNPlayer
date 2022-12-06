@@ -31,13 +31,20 @@ target_include_directories(Test PUBLIC
 
 target_link_directories(Test PRIVATE ${COMMON_LIB_DIR})
 
+#线程测试
+#set(ENABLE_THREAD_TEST ON)
+
+#dataSource测试
 set(ENABLE_DATASOURCE_TEST ON)
+
+
 
 if (${ENABLE_THREAD_TEST})
     target_sources(Test PRIVATE
             thread/ThreadTest.cpp
             )
 endif ()
+
 
 if (${ENABLE_DATASOURCE_TEST})
     target_sources(Test PRIVATE
