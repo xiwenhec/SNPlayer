@@ -1,6 +1,7 @@
 //
 // Created by sivin on 12/3/22.
 //
+#define LOG_TAG "CurlConnectionManager"
 
 #include "CurlConnectionManager.h"
 #include "CurlConnection.h"
@@ -30,7 +31,6 @@ namespace Sivin {
 
     int CurlConnectionManager::loop() {
         applyPending();
-
         CURLMcode code;
         do {
             code = curl_multi_perform(mMultiHandle, &mStillRunning);
@@ -75,14 +75,13 @@ namespace Sivin {
             code = curl_multi_poll(mMultiHandle, nullptr, 0, 1000, nullptr);
         }
 
-        if (!code) {
+        if (code != CURLM_OK) {
             NS_LOGE("curl_multi_poll error %d\n", code);
         }
 
         if (!mStillRunning) {
             SNTimer::sleepMs(10);
         }
-
         return 0;
     }
 

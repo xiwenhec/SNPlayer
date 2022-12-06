@@ -84,7 +84,7 @@ namespace Sivin {
 
         virtual int open(int flags) = 0;
 
-        virtual int read(void *outBuffer, size_t size) = 0;
+        virtual int64_t read(void *outBuffer, size_t size) = 0;
 
         virtual void close() = 0;
 

@@ -525,7 +525,7 @@ namespace Sivin {
                 return -1;
             }
         }
-        NS_LOGD("connect success.");
+        NS_LOGD("connect success.\n");
         getFileSize(mFileSize);
         return 0;
     }

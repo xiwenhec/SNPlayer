@@ -10,15 +10,15 @@
 #include "datasource/curl/CurlConnection.h"
 
 namespace Sivin {
-    class CurlDataSource : IDataSource {
-
+    class CurlDataSource : public IDataSource {
+    public:
         explicit CurlDataSource(const std::string &url);
 
         ~CurlDataSource();
 
         int open(int flags) override;
 
-        int read(void *outBuffer, size_t size) override;
+        int64_t read(void *outBuffer, size_t size) override;
 
         void close() override;
 
@@ -29,13 +29,11 @@ namespace Sivin {
 
     private:
         std::string mUri;
-
-
         std::shared_ptr<CurlConnectionManager> mConnectManager;
         std::shared_ptr<CurlConnection> mConnection;
         int64_t mOpenTimeMs = 0;
         std::atomic<bool> mNeedReconnect{false};
-        curl_slist *mHeaderList;
+        curl_slist *mHeaderList{nullptr};
         int64_t mFileSize = -1;
     };
 }

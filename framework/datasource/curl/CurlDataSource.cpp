@@ -18,20 +18,25 @@ namespace Sivin {
 
 
     int CurlDataSource::open(int flags) {
-        //TODO:Sivin 多线程处理
+        //TODO:Sivin 多线程open处理
         mOpenTimeMs = SNTimer::getSteadyTimeMs();
         bool isRtmp = mUrl.compare(0, 7, "rtmp://") == 0;
         mUri = (isRtmp ? (mUrl + " live=1") : mUrl);
         mConnection = initConnection();
         mConnection->setInterrupt(mInterrupt);
         mConnection->setResume(mRangeStart != INT64_MIN ? mRangeStart : 0);
-        mConnection->startConnect();
+        NS_LOGI("startConnect...\n");
+        int ret = mConnection->startConnect();
+        if (ret != 0) {
+            mOpenTimeMs = 0;
+            return ret;
+        }
         //TODO:Sivin 连接失败错误处理
         mOpenTimeMs = SNTimer::getSteadyTimeMs() - mOpenTimeMs;
         return 0;
     }
 
-    int CurlDataSource::read(void *outBuffer, size_t size) {
+    int64_t CurlDataSource::read(void *outBuffer, size_t size) {
 
         if (mRangeEnd != INT64_MIN || mFileSize > 0) {
             int64_t end = mFileSize;
@@ -67,12 +72,11 @@ namespace Sivin {
         if (ret < 0) {
             NS_LOGE("CurlDataSource2::Read ret=%d", ret);
         }
-        return 0;
+        return ret;
     }
 
 
     int64_t CurlDataSource::seek(int64_t offset, int whence) {
-
 
         return 0;
     }

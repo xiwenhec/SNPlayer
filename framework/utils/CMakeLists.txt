@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(framework_utils STATIC "")
 
 target_sources(
-        framework_utils PRIVATE
+        framework_utils PUBLIC
         SNJson.h
         SNLog.cpp
         SNThread.cpp
@@ -13,7 +13,7 @@ target_sources(
 )
 
 target_sources(
-        framework_utils PRIVATE
+        framework_utils PUBLIC
         ../base/RingBuffer.cpp
 )
 
