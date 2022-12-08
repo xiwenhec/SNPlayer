@@ -7,7 +7,11 @@
 
 #include <atomic>
 #include <utils/SNThread.h>
+#include <base/media/ISNPacket.h>
 #include "IDemuxer.h"
+#include <map>
+#include "base/media/IAVBSF.h"
+
 
 extern "C" {
 #include <libavformat//avformat.h>
@@ -16,34 +20,57 @@ extern "C" {
 namespace Sivin {
 
     class AVFormatDemuxer : public IDemuxer {
+    private:
+        class AVStreamCtx {
+        public:
+            std::unique_ptr<IAVBSF> bsf;
+            bool bsfInited{false};
+            bool opened{true};
+        };
 
     public:
-
         explicit AVFormatDemuxer(std::string &path);
 
         int open();
 
         int open(AVInputFormat *inputFormat);
 
+        void start();
+
     private:
 
         void init();
 
-        static int interrupt_cb(void *opaque);
+        int readLoop();
 
-        static int readLoop();
+        int readPacketInternal(std::unique_ptr<ISNPacket> &packet);
+
+        static int interrupt_cb(void *opaque);
 
         static inline int avio_callback_read(void *arg, uint8_t *buffer, int size);
 
         static inline int64_t avio_callback_seek(void *arg, int64_t offset, int whence);
+
+        int createBsf(AVPacket *pkt, int index);
 
     private:
         AVFormatContext *mCtx{nullptr};
         AVIOContext *mIOCtx{nullptr};
         AVDictionary *mInputOpts = nullptr;
         bool bOpened{false};
+        bool bPaused{false};
+        bool bExited{false};
+        bool bEOS{false};
         std::atomic_bool mInterrupted{false};
         std::shared_ptr<SNThread> mThread{nullptr};
+
+        std::mutex mMutex{};
+        std::mutex mQueMutex{};
+        std::condition_variable mQueCond{};
+
+        //key为流index
+        std::mutex mStreamCtxMutex{};
+        std::map<int, std::unique_ptr<AVStreamCtx>> mStreamCtxMap{};
     };
 }
 

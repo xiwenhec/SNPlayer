@@ -1,0 +1,14 @@
+prefix=/home/sivin/work/source/build_tools/../build/x86_64
+exec_prefix=${prefix}
+libdir=/home/sivin/work/source/build_tools/../build/x86_64/lib
+includedir=/home/sivin/work/source/build_tools/../build/x86_64/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 59.34.101
+Requires: libavcodec >= 59.52.101, libavutil >= 57.42.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavformat -lm -latomic -lz
+Libs.private: 
+Cflags: -I${includedir}

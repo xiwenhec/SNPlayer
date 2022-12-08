@@ -1,0 +1,14 @@
+prefix=/home/sivin/work/source/build_tools/../build/x86_64
+exec_prefix=${prefix}
+libdir=/home/sivin/work/source/build_tools/../build/x86_64/lib
+includedir=/home/sivin/work/source/build_tools/../build/x86_64/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 4.9.100
+Requires: libavutil >= 57.42.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lswresample -lm -latomic
+Libs.private: 
+Cflags: -I${includedir}

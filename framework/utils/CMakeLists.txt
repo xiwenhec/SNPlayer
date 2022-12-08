@@ -18,6 +18,7 @@ target_sources(
         framework_utils PUBLIC
         ../base/RingBuffer.cpp
         ../base/media/ISNPacket.cpp
+        ../base/media/IAVBSF.cpp
 )
 
 target_include_directories(framework_utils PUBLIC
