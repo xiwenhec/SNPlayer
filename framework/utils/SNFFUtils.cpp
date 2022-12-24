@@ -9,10 +9,9 @@ extern "C" {
 }
 
 namespace Sivin {
-    static char errorBuff[256];
-
+    // static char errorBuff[256];
     const char *SNFFUtils::getErrorString(int err) {
-        av_strerror(err, errorBuff, sizeof(errorBuff));
-        return errorBuff;
+        // av_strerror(err, errorBuff, sizeof(errorBuff));
+        return av_err2str(err);
     }
 } // Sivin

@@ -1,16 +1,17 @@
 //
 // Created by sivin on 12/6/22.
 //
+extern "C" {
+#include <libavutil/intreadwrite.h>
+}
 
 #include <utils/SNFFUtils.h>
 #include "AVFormatDemuxer.h"
 #include "utils/SNTimer.h"
 #include "utils/SNLog.h"
 #include "utils/SNUtils.h"
+#include "base/media/SNAVPacket.h"
 
-extern "C" {
-#include <libavutil/intreadwrite.h>
-}
 
 namespace Sivin {
 
@@ -142,6 +143,23 @@ namespace Sivin {
         std::unique_ptr<ISNPacket> pkt{};
         int ret = readPacketInternal(pkt);
 
+        if (ret > 0) {
+            std::unique_lock<std::mutex> waitLock{mQueMutex};
+            if (mPacketQueue.size() > MAX_QUEUE_SIZE) {
+                mQueCond.wait(waitLock, [this]() {
+                    return mPacketQueue.size() <= MAX_QUEUE_SIZE || bPaused || mInterrupted || bExited;
+                });
+            }
+            mPacketQueue.push_back(std::move(pkt));
+        } else if (ret == 0) {
+            bEOS = true;
+        } else {
+            //TODO:Sivin 错误处理
+            mError = ret;
+            std::unique_lock<std::mutex> waitLock(mQueMutex);
+            mQueCond.wait_for(waitLock, std::chrono::milliseconds(10),
+                              [this]() { return bPaused || mInterrupted || bExited; });
+        }
         return 0;
     }
 
@@ -204,7 +222,60 @@ namespace Sivin {
             mStreamCtxMap[pkt->stream_index]->bsfInited = true;
         }
 
-        return 0;
+        bool needUpdateExtraData = false;
+        size_t newExtraDataSize = 0;
+        const uint8_t *newExtraData = av_packet_get_side_data(pkt, AV_PKT_DATA_NEW_EXTRADATA, &newExtraDataSize);
+        if (newExtraData) {
+            AVCodecParameters *codecpar = mCtx->streams[streamIndex]->codecpar;
+            av_free(codecpar->extradata);
+            codecpar->extradata = static_cast<uint8_t *>(av_malloc(newExtraDataSize + AV_INPUT_BUFFER_PADDING_SIZE));
+            memcpy(codecpar->extradata, newExtraData, newExtraDataSize);
+            codecpar->extradata_size = newExtraDataSize;
+            createBsf(pkt, streamIndex);
+            needUpdateExtraData = true;
+        }
+        //TODO:Sivin 有什么用
+        //av_packet_shrink_side_data(pkt, AV_PKT_DATA_SKIP_SAMPLES, 0);
+        if (mStreamCtxMap[pkt->stream_index]->bsf) {
+            int index = pkt->stream_index;
+            mStreamCtxMap[index]->bsf->sendPacket(pkt);
+            int ret = mStreamCtxMap[index]->bsf->receivePacket(pkt);
+            if (ret < 0) {
+                av_packet_free(&pkt);
+                return -1;
+            }
+        }
+
+        //转换成微妙
+        if (pkt->pts != AV_NOPTS_VALUE) {
+            pkt->pts = av_rescale_q(pkt->pts, mCtx->streams[pkt->stream_index]->time_base, av_get_time_base_q());
+        }
+
+        if (pkt->dts != AV_NOPTS_VALUE) {
+            pkt->dts = av_rescale_q(pkt->dts, mCtx->streams[pkt->stream_index]->time_base, av_get_time_base_q());
+        }
+
+        if (pkt->duration > 0) {
+            pkt->duration = av_rescale_q(pkt->duration, mCtx->streams[pkt->stream_index]->time_base,
+                                         av_get_time_base_q());
+        } else if (mCtx->streams[pkt->stream_index]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            AVCodecParameters *codecpar = mCtx->streams[pkt->stream_index]->codecpar;
+            if (codecpar->sample_rate > 0 && codecpar->frame_size > 0) {
+                pkt->duration = codecpar->frame_size * 1000000 / codecpar->sample_rate;
+            }
+        }
+
+        int packet_size = pkt->size;
+        packet = std::unique_ptr<ISNPacket>(new SNAVPacket(&pkt));
+
+        if (packet->getInfo().pts != INT64_MIN) {
+            if (mCtx->start_time == INT64_MIN) {
+                mCtx->start_time = packet->getInfo().pts;
+            }
+            packet->getInfo().timePosition = packet->getInfo().pts - mCtx->start_time;
+        }
+
+        return packet_size;
     }
 
     int AVFormatDemuxer::createBsf(AVPacket *pkt, int index) {
@@ -240,11 +311,63 @@ namespace Sivin {
             mStreamCtxMap[index]->bsf = std::unique_ptr<IAVBSF>(AVBSFFactory::create(bsfName));
             int ret = mStreamCtxMap[index]->bsf->init(bsfName, mCtx->streams[index]->codecpar);
             if (ret < 0) {
-                NS_LOGE("create %s bsf error \n",bsfName.c_str());
+                NS_LOGE("create %s bsf error \n", bsfName.c_str());
                 return ret;
             }
         }
         return 0;
+    }
+
+    int AVFormatDemuxer::readPacket(std::unique_ptr<ISNPacket> &packet, int index) {
+        if (mThread->getStatus() == SNThread::THREAD_STATUS_IDLE) {
+            return readPacketInternal(packet);
+        } else {
+            std::unique_lock<std::mutex> waitLock(mQueMutex);
+            if (!mPacketQueue.empty()) {
+                packet = std::move(mPacketQueue.front());
+                mPacketQueue.pop_front();
+                mQueCond.notify_one();
+                return static_cast<int>(packet->getSize());
+            }
+            if (bEOS) {
+                return 0;
+            }
+            if (mError < 0) {
+                return mError;
+            }
+            return -EAGAIN;
+        }
+    }
+
+    int AVFormatDemuxer::openStream(int index) {
+        std::unique_lock<std::mutex> uLock(mMutex);
+        if (index >= mCtx->nb_streams) {
+            NS_LOGE("no such stream\n");
+            return -EINVAL;
+        }
+        if (mStreamCtxMap[index] != nullptr) {
+            mStreamCtxMap[index]->opened = true;
+            return 0;
+        }
+
+        mStreamCtxMap[index] = std::unique_ptr<AVStreamCtx>(new AVStreamCtx());
+        mStreamCtxMap[index]->opened = true;
+        mStreamCtxMap[index]->bsfInited = false;
+
+        return 0;
+    }
+
+    void AVFormatDemuxer::closeStream(int index) {
+        std::unique_lock<std::mutex> uLock(mMutex);
+        if (mStreamCtxMap.find(index) == mStreamCtxMap.end()) {
+            NS_LOGI("not opened\n");
+            return;
+        }
+        mStreamCtxMap[index]->opened = false;
+    }
+
+    AVFormatDemuxer::~AVFormatDemuxer() {
+
     }
 
 

@@ -19,6 +19,7 @@ target_sources(
         ../base/RingBuffer.cpp
         ../base/media/ISNPacket.cpp
         ../base/media/IAVBSF.cpp
+        ../base/media/SNAVPacket.cpp
 )
 
 target_include_directories(framework_utils PUBLIC

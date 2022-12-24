@@ -11,7 +11,7 @@
 #include "IDemuxer.h"
 #include <map>
 #include "base/media/IAVBSF.h"
-
+#include <deque>
 
 extern "C" {
 #include <libavformat//avformat.h>
@@ -31,11 +31,19 @@ namespace Sivin {
     public:
         explicit AVFormatDemuxer(std::string &path);
 
-        int open();
+        ~AVFormatDemuxer() override;
+
+        int open() override;
 
         int open(AVInputFormat *inputFormat);
 
-        void start();
+        void start() override;
+
+        int readPacket(std::unique_ptr<ISNPacket> &packet, int index) override;
+
+        int openStream(int index) override;
+
+        void closeStream(int index) override;
 
     private:
 
@@ -67,10 +75,13 @@ namespace Sivin {
         std::mutex mMutex{};
         std::mutex mQueMutex{};
         std::condition_variable mQueCond{};
-
+        int MAX_QUEUE_SIZE = 60;
+        std::deque<std::unique_ptr<ISNPacket>> mPacketQueue{};
         //key为流index
         std::mutex mStreamCtxMutex{};
         std::map<int, std::unique_ptr<AVStreamCtx>> mStreamCtxMap{};
+
+        std::atomic<int64_t> mError{0};
     };
 }
 

@@ -7,6 +7,7 @@
 
 #include <string>
 #include <memory>
+#include "base/media/ISNPacket.h"
 
 namespace Sivin {
 
@@ -30,12 +31,24 @@ namespace Sivin {
     public:
         explicit IDemuxer(std::string path);
 
+        virtual ~IDemuxer() = 0;
+
         void setDataCallback(ReadCallback readCallback);
 
         void setBitStreamType(BitStreamType videoStreamType, BitStreamType audioStreamType) {
             mVideoStreamType = videoStreamType;
             mAudioStreamType = audioStreamType;
         }
+
+        virtual int open() = 0;
+
+        virtual void start() = 0;
+
+        virtual int readPacket(std::unique_ptr<ISNPacket> &packet, int index) = 0;
+
+        virtual int openStream(int index) = 0;
+
+        virtual void closeStream(int index) = 0;
 
     protected:
         std::string mPath;
