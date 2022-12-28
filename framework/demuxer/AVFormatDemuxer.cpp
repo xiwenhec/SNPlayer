@@ -75,7 +75,6 @@ namespace Sivin {
         }
 
         int ret = avformat_open_input(&mCtx, filename, inputFormat, mInputOpts ? &mInputOpts : nullptr);
-
         if (ret < 0) {
             NS_LOGE("avformat_open_input error %d,%s,", ret, SNFFUtils::getErrorString(ret));
             if (ret == AVERROR_PROTOCOL_NOT_FOUND) {
@@ -167,6 +166,28 @@ namespace Sivin {
         bPaused = false;
         mThread->start();
     }
+
+
+    void AVFormatDemuxer::preStop() {
+        {
+            std::unique_lock<std::mutex> waitLock(mQueMutex);
+            bExited = true;
+        }
+        mQueCond.notify_one();
+    }
+
+    void AVFormatDemuxer::stop() {
+        {
+            std::unique_lock<std::mutex> waitLock(mQueMutex);
+            bPaused = true;
+        }
+        mQueCond.notify_one();
+
+        if (mThread) {
+            mThread->stop();
+        }
+    }
+
 
     int AVFormatDemuxer::readPacketInternal(std::unique_ptr<ISNPacket> &packet) {
         if (!bOpened) {
@@ -367,7 +388,25 @@ namespace Sivin {
     }
 
     AVFormatDemuxer::~AVFormatDemuxer() {
+        stop();
+        if (mCtx) {
+            avformat_close_input(&mCtx);
+            mCtx = nullptr;
+        }
+        if (mIOCtx) {
+            av_free(mIOCtx->buffer);
+            av_free(mIOCtx);
+            mIOCtx = nullptr;
+        }
 
+        mStreamCtxMap.clear();
+        mPacketQueue.clear();
+        bOpened = false;
+
+        if (mInputOpts) {
+            av_dict_free(&mInputOpts);
+            mInputOpts = nullptr;
+        }
     }
 
 

@@ -44,6 +44,10 @@ namespace Sivin {
 
         virtual void start() = 0;
 
+        virtual void preStop() = 0;
+
+        virtual void stop() = 0;
+
         virtual int readPacket(std::unique_ptr<ISNPacket> &packet, int index) = 0;
 
         virtual int openStream(int index) = 0;

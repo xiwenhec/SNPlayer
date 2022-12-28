@@ -39,6 +39,10 @@ namespace Sivin {
 
         void start() override;
 
+        void preStop() override;
+
+        void stop() override;
+
         int readPacket(std::unique_ptr<ISNPacket> &packet, int index) override;
 
         int openStream(int index) override;
@@ -77,8 +81,9 @@ namespace Sivin {
         std::condition_variable mQueCond{};
         int MAX_QUEUE_SIZE = 60;
         std::deque<std::unique_ptr<ISNPacket>> mPacketQueue{};
-        //key为流index
+
         std::mutex mStreamCtxMutex{};
+        //key为流index
         std::map<int, std::unique_ptr<AVStreamCtx>> mStreamCtxMap{};
 
         std::atomic<int64_t> mError{0};
