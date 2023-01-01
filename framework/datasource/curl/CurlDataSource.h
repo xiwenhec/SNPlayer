@@ -24,6 +24,8 @@ namespace Sivin {
 
         int64_t seek(int64_t offset, int whence) override;
 
+        std::string getUri() override;
+
     private:
         std::shared_ptr<CurlConnection> initConnection();
 

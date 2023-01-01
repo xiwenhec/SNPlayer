@@ -25,7 +25,7 @@ namespace Sivin {
         mConnection = initConnection();
         mConnection->setInterrupt(mInterrupt);
         mConnection->setResume(mRangeStart != INT64_MIN ? mRangeStart : 0);
-        NS_LOGI("startConnect...\n");
+        SN_LOGI("startConnect...\n");
         int ret = mConnection->startConnect();
         if (ret != 0) {
             mOpenTimeMs = 0;
@@ -63,14 +63,14 @@ namespace Sivin {
 //                assert(seekRet == pos);
             }
             if (ret < 0) {
-                NS_LOGE("CurlDataSource2::Read ret=%d", ret);
+                SN_LOGE("CurlDataSource2::Read ret=%d", ret);
                 return (int) ret;
             }
         }
 
         ret = mConnection->readBuffer(outBuffer, size);
         if (ret < 0) {
-            NS_LOGE("CurlDataSource2::Read ret=%d", ret);
+            SN_LOGE("CurlDataSource2::Read ret=%d", ret);
         }
         return ret;
     }
@@ -94,6 +94,10 @@ namespace Sivin {
         connection->setSource(mUri, mHeaderList);
         connection->setPost(false, nullptr, 0);
         return std::move(connection);
+    }
+
+    std::string CurlDataSource::getUri() {
+        return mUri;
     }
 
 

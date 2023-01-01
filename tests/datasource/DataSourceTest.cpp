@@ -23,7 +23,7 @@ void readThreadFunc(std::shared_ptr<IDataSource> &dataSource) {
         int ret = dataSource->read(buffer, sizeof(buffer));
         size += ret;
         if (ret != 0) {
-            NS_LOGD("size = %ld\n", size);
+            SN_LOGD("size = %ld\n", size);
         }
         SNTimer::sleepMs(10);
     }
@@ -43,6 +43,6 @@ int main() {
     testRead(dataSource);
 
     SNTimer::sleepMs(1000 * 1000);
-    NS_LOGD("exit success ...\n");
+    SN_LOGD("exit success ...\n");
     return 0;
 }

@@ -35,7 +35,7 @@ namespace Sivin {
             // implies that 16 byte names are not.
             name[MAX_TASK_NAME_LEN] = 0;
         }
-        NS_LOGD("thread_name is %s\n", name);
+        SN_LOGD("thread_name is %s\n", name);
     }
 
     static void setName(const char *name) {
@@ -124,7 +124,7 @@ namespace Sivin {
     }
 
     void SNThread::pause() {
-        NS_LOGD("%s (%s) start\n", __func__, mName.c_str());
+        SN_LOGD("%s (%s) start\n", __func__, mName.c_str());
         std::lock_guard<std::mutex> lockGuard{mMutex};
         if (mThreadStatus == THREAD_STATUS_RUNNING) {
             mWaitPaused = true;
@@ -134,11 +134,11 @@ namespace Sivin {
                 return !mWaitPaused;
             });
         }
-        NS_LOGD("%s (%s) end\n", __func__, mName.c_str());
+        SN_LOGD("%s (%s) end\n", __func__, mName.c_str());
     }
 
     void SNThread::stop() {
-        NS_LOGD("%s (%s) start\n", __func__, mName.c_str());
+        SN_LOGD("%s (%s) start\n", __func__, mName.c_str());
         std::lock_guard<std::mutex> lockGuard{mMutex};
         mTryPause = false;
         {
@@ -156,7 +156,7 @@ namespace Sivin {
         }
         mThread.reset(nullptr);
         assert(mThread == nullptr);
-        NS_LOGD("%s (%s) end\n", __func__, mName.c_str());
+        SN_LOGD("%s (%s) end\n", __func__, mName.c_str());
     }
 
     void SNThread::prePause() {

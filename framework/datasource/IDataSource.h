@@ -90,6 +90,8 @@ namespace Sivin {
 
         virtual int64_t seek(int64_t offset, int whence) = 0;
 
+        virtual std::string getUri() = 0;
+
     public:
         void setConfig(SourceConfig &config);
 

@@ -28,6 +28,7 @@ namespace Sivin {
     public:
         using ReadCallback = int (*)(std::shared_ptr<void> userArg, uint8_t *buffer, int size);
         using SeekCallback = int64_t(*)(std::shared_ptr<void> arg, int64_t offset, int whence);
+
     public:
         explicit IDemuxer(std::string path);
 

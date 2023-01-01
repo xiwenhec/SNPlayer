@@ -40,14 +40,14 @@ namespace Sivin {
 
         if (mConfig != nullptr) {
             if (mConfig->lowSpeedLimit && mConfig->lowSpeedTimeMs) {
-                NS_LOGD("set lowSpeedLimit to %d\n", mConfig->lowSpeedLimit);
-                NS_LOGD("set lowSpeedTime to %d(ms)\n", mConfig->lowSpeedTimeMs);
+                SN_LOGD("set lowSpeedLimit to %d\n", mConfig->lowSpeedLimit);
+                SN_LOGD("set lowSpeedTime to %d(ms)\n", mConfig->lowSpeedTimeMs);
                 curl_easy_setopt(mHttpHandle, CURLOPT_LOW_SPEED_LIMIT, (long) mConfig->lowSpeedLimit);
                 curl_easy_setopt(mHttpHandle, CURLOPT_LOW_SPEED_TIME, (long) mConfig->lowSpeedTimeMs / 1000);
             }
 
             if (mConfig->connectTimeoutMs) {
-                NS_LOGD("set connect time to %d(ms)\n", mConfig->connectTimeoutMs);
+                SN_LOGD("set connect time to %d(ms)\n", mConfig->connectTimeoutMs);
                 curl_easy_setopt(mHttpHandle, CURLOPT_CONNECTTIMEOUT, (long) mConfig->connectTimeoutMs / 1000);
             }
         }
@@ -141,7 +141,7 @@ namespace Sivin {
         }
 
         if (connect->mBuffer->writeData(buffer, amount) != amount) {
-            NS_LOGE("write ring buffer error %u %u\n", amount, connect->mBuffer->getMaxWriteableDataSize());
+            SN_LOGE("write ring buffer error %u %u\n", amount, connect->mBuffer->getMaxWriteableDataSize());
             assert(0);
         }
 
@@ -166,7 +166,7 @@ namespace Sivin {
             memcpy(connect->mResponseHeader + connect->mResponseHeaderSize, buffer, size * nitems);
             connect->mResponseHeaderSize += size * nitems;
         } else {
-            NS_LOGE("responseHeader filed can not hold header response: "
+            SN_LOGE("responseHeader filed can not hold header response: "
                     "headerSize = %ld, size * nitems = %ld, maxHaderSize = %ld",
                     connect->mResponseHeaderSize, size * nitems, MAX_HEADER_SIZE);
         }
@@ -195,7 +195,7 @@ namespace Sivin {
         auto connect = (CurlConnection *) userp;
         switch (type) {
             case CURLINFO_TEXT:
-                NS_LOGD("curl info : %s", data);
+                SN_LOGD("curl info : %s", data);
                 break;
 
             case CURLINFO_HEADER_OUT:
@@ -291,7 +291,7 @@ namespace Sivin {
             //TODO:Sivin needReconnect这里有什么含义
             if (mInterrupted || needReconnect) {
                 //TODO:Sivin 处理错误码
-                NS_LOGW("connect error exit");
+                SN_LOGW("connect error exit");
                 return -1;
             }
             if (mEos) { //流结束，直接返回填充数据成功
@@ -383,7 +383,7 @@ namespace Sivin {
             if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &length)) {
                 if (length > 0.0) {
                     mFileSize = mFilePos + (int64_t) length;
-                    NS_LOGI("mFileSize = %llf", length);
+                    SN_LOGI("mFileSize = %llf", length);
                 } else {
                     mFileSize = 0;
                 }
@@ -429,7 +429,7 @@ namespace Sivin {
         }
         /* check if we finished prematurely */
         if (!mStillRunning && (mFileSize > 0 && mFilePos != mFileSize)) {
-            NS_LOGE("%s - Transfer ended before entire file was retrieved pos %lld, size %lld", __FUNCTION__, mFilePos,
+            SN_LOGE("%s - Transfer ended before entire file was retrieved pos %lld, size %lld", __FUNCTION__, mFilePos,
                     mFileSize);
             //   return -1;
         }
@@ -468,7 +468,7 @@ namespace Sivin {
             if ((ret = fillBuffer(shortBufferSize, mNeedReconnect)) < 0) {
                 //获取shortBufferSize数据失败,撤销之前的缓存回退
                 if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
-                    NS_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                    SN_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
                 } else {
                     //撤销成功
                     mFilePos -= ringBufReadSize;
@@ -477,12 +477,12 @@ namespace Sivin {
             }
 
             //填充成功
-            NS_LOGI("read buffer size = %lld, need is %ld", mBuffer->getMaxReadableDataSize(),
+            SN_LOGI("read buffer size = %lld, need is %ld", mBuffer->getMaxReadableDataSize(),
                     (delta - ringBufReadSize));
             if (!mBuffer->skipBytes((delta - ringBufReadSize))) {
-                NS_LOGE("%s - Failed to skip to position after having filled buffer", __FUNCTION__);
+                SN_LOGE("%s - Failed to skip to position after having filled buffer", __FUNCTION__);
                 if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
-                    NS_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                    SN_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
                 } else {
                     //撤销成功
                     mFilePos -= ringBufReadSize;
@@ -515,17 +515,17 @@ namespace Sivin {
         addToManager();
         int64_t ret = 0;
         if ((ret = fillBuffer(1, mNeedReconnect)) < 0) {
-            NS_LOGE("Connect, didn't get any data from stream.");
+            SN_LOGE("Connect, didn't get any data from stream.");
             return ret;
         }
         long responseCode;
         if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &responseCode)) {
-            NS_LOGD("CURLINFO_RESPONSE_CODE is %d", responseCode);
+            SN_LOGD("CURLINFO_RESPONSE_CODE is %d", responseCode);
             if (responseCode >= 400) {
                 return -1;
             }
         }
-        NS_LOGD("connect success.\n");
+        SN_LOGD("connect success.\n");
         getFileSize(mFileSize);
         return 0;
     }

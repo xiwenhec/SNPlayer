@@ -58,7 +58,7 @@ namespace Sivin {
                     assert(0);
                     status.eof = true;
                     status.status = CURLE_OK;
-                    NS_LOGW("assume a abnormal eos\n");
+                    SN_LOGW("assume a abnormal eos\n");
                 }
             }
 
@@ -76,7 +76,7 @@ namespace Sivin {
         }
 
         if (code != CURLM_OK) {
-            NS_LOGE("curl_multi_poll error %d\n", code);
+            SN_LOGE("curl_multi_poll error %d\n", code);
         }
 
         if (!mStillRunning) {

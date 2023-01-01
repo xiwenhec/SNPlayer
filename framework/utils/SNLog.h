@@ -12,12 +12,12 @@
 #define LOG_TAG ""
 #endif
 
-#define NS_LOGI(...) SNLog::info(LOG_TAG, __VA_ARGS__)
-#define NS_LOGD(...) SNLog::debug(LOG_TAG, __VA_ARGS__)
-#define NS_LOGW(...) SNLog::warn(LOG_TAG, __VA_ARGS__)
-#define NS_LOGE(...) SNLog::error(LOG_TAG, __VA_ARGS__)
+#define SN_LOGI(...) SNLog::info(LOG_TAG, __VA_ARGS__)
+#define SN_LOGD(...) SNLog::debug(LOG_TAG, __VA_ARGS__)
+#define SN_LOGW(...) SNLog::warn(LOG_TAG, __VA_ARGS__)
+#define SN_LOGE(...) SNLog::error(LOG_TAG, __VA_ARGS__)
 
-#define NS_TRACE do { NS_LOGD("%s:%d(%s)\n",__FILE__,__LINE__,__func__);} while(0)
+#define SN_TRACE do { SN_LOGD("%s:%d(%s)\n",__FILE__,__LINE__,__func__);} while(0)
 
 class SNLog {
 public:

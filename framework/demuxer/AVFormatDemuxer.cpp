@@ -17,9 +17,9 @@ namespace Sivin {
 
     const static int INITIAL_BUFFER_SIZE = 1024 * 32;
 
-    AVFormatDemuxer::AVFormatDemuxer(std::string &path) : IDemuxer(path) {
+    AVFormatDemuxer::AVFormatDemuxer(std::string path) : IDemuxer(std::move(path)) {
         init();
-        NS_TRACE;
+        SN_TRACE;
     }
 
 
@@ -76,7 +76,7 @@ namespace Sivin {
 
         int ret = avformat_open_input(&mCtx, filename, inputFormat, mInputOpts ? &mInputOpts : nullptr);
         if (ret < 0) {
-            NS_LOGE("avformat_open_input error %d,%s,", ret, SNFFUtils::getErrorString(ret));
+            SN_LOGE("avformat_open_input error %d,%s,", ret, SNFFUtils::getErrorString(ret));
             if (ret == AVERROR_PROTOCOL_NOT_FOUND) {
                 return -1;
             }
@@ -95,12 +95,12 @@ namespace Sivin {
         ret = avformat_find_stream_info(mCtx, nullptr);
 
         if (mInterrupted) {
-            NS_LOGD("interrupted\n");
+            SN_LOGD("interrupted\n");
             return -1;
         }
 
         if (ret < 0 && ret != AVERROR_EOF) {
-            NS_LOGE("avformat_find_stream_info error %d:%s\n", ret, SNFFUtils::getErrorString(ret));
+            SN_LOGE("avformat_find_stream_info error %d:%s\n", ret, SNFFUtils::getErrorString(ret));
             return ret;
         }
         bOpened = true;
@@ -230,11 +230,11 @@ namespace Sivin {
         } while (true);
 
         if (pkt->pts == AV_NOPTS_VALUE) {
-            NS_LOGW("pkt pts error\n");
+            SN_LOGW("pkt pts error\n");
         }
 
         if (pkt->dts == AV_NOPTS_VALUE) {
-            NS_LOGW("pkt dts error\n");
+            SN_LOGW("pkt dts error\n");
         }
 
         int streamIndex = pkt->stream_index;
@@ -332,7 +332,7 @@ namespace Sivin {
             mStreamCtxMap[index]->bsf = std::unique_ptr<IAVBSF>(AVBSFFactory::create(bsfName));
             int ret = mStreamCtxMap[index]->bsf->init(bsfName, mCtx->streams[index]->codecpar);
             if (ret < 0) {
-                NS_LOGE("create %s bsf error \n", bsfName.c_str());
+                SN_LOGE("create %s bsf error \n", bsfName.c_str());
                 return ret;
             }
         }
@@ -363,7 +363,7 @@ namespace Sivin {
     int AVFormatDemuxer::openStream(int index) {
         std::unique_lock<std::mutex> uLock(mMutex);
         if (index >= mCtx->nb_streams) {
-            NS_LOGE("no such stream\n");
+            SN_LOGE("no such stream\n");
             return -EINVAL;
         }
         if (mStreamCtxMap[index] != nullptr) {
@@ -381,7 +381,7 @@ namespace Sivin {
     void AVFormatDemuxer::closeStream(int index) {
         std::unique_lock<std::mutex> uLock(mMutex);
         if (mStreamCtxMap.find(index) == mStreamCtxMap.end()) {
-            NS_LOGI("not opened\n");
+            SN_LOGI("not opened\n");
             return;
         }
         mStreamCtxMap[index]->opened = false;

@@ -16,16 +16,16 @@ int main() {
     int i = 0;
     auto *thread = new SNThread([&i]() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        NS_LOGD("i = %d\n", i++);
+        SN_LOGD("i = %d\n", i++);
         return 0;
     }, "testThread");
 
     thread->setBeginCallback([](){
-        NS_LOGD("thread start..\n");
+        SN_LOGD("thread start..\n");
     });
 
     thread->setEndCallback([]{
-        NS_LOGD("thread end..\n");
+        SN_LOGD("thread end..\n");
     });
 
     thread->start();

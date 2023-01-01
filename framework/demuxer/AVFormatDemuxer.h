@@ -20,6 +20,7 @@ extern "C" {
 namespace Sivin {
 
     class AVFormatDemuxer : public IDemuxer {
+
     private:
         class AVStreamCtx {
         public:
@@ -29,7 +30,7 @@ namespace Sivin {
         };
 
     public:
-        explicit AVFormatDemuxer(std::string &path);
+        explicit AVFormatDemuxer(std::string path);
 
         ~AVFormatDemuxer() override;
 
