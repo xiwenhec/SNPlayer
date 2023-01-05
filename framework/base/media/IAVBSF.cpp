@@ -2,7 +2,7 @@
 // Created by sivin on 12/7/22.
 //
 
-#include <utils/SNLog.h>
+#include <utils/NSLog.h>
 #include "IAVBSF.h"
 #include "utils/SNFFUtils.h"
 
@@ -20,19 +20,19 @@ namespace Sivin {
     int AVBSF::init(const std::string &name, AVCodecParameters *codecpar) {
         const AVBitStreamFilter *bsf = av_bsf_get_by_name(name.c_str());
         if (!bsf) {
-            SN_LOGE("%s bsf not found\n", name.c_str());
+            SN_LOGE("%s bsf not found", name.c_str());
             return -1;
         }
         int ret = av_bsf_alloc(bsf, &mBsfContext);
         if (ret < 0) {
-            SN_LOGE("Cannot alloc bsf\n");
+            SN_LOGE("Cannot alloc bsf");
             return ret;
         }
 
         avcodec_parameters_copy(mBsfContext->par_in, codecpar);
         ret = av_bsf_init(mBsfContext);
         if (ret < 0) {
-            SN_LOGE("Error initializing bitstream filter: %s\n", bsf->name);
+            SN_LOGE("Error initializing bitstream filter: %s", bsf->name);
             return ret;
         }
         ret = avcodec_parameters_copy(codecpar, mBsfContext->par_out);
@@ -45,7 +45,7 @@ namespace Sivin {
     int AVBSF::sendPacket(AVPacket *pkt) {
         int ret = av_bsf_send_packet(mBsfContext, pkt);
         if (ret < 0) {
-            SN_LOGE("av_bsf_send_packet error %d (%s)\n", ret,  SNFFUtils::getErrorString(ret));
+            SN_LOGE("av_bsf_send_packet error %d (%s)", ret,  SNFFUtils::getErrorString(ret));
         }
         return ret;
     }
@@ -55,7 +55,7 @@ namespace Sivin {
         if (ret == AVERROR_EOF) {
             return 0;
         } else if (ret < 0) {
-            SN_LOGE("av_bsf_receive_packet error %d (%s)\n", ret,  SNFFUtils::getErrorString(ret));
+            SN_LOGE("av_bsf_receive_packet error %d (%s)", ret,  SNFFUtils::getErrorString(ret));
             return ret;
         } else {
             return pkt->size;

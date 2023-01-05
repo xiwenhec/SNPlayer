@@ -20,13 +20,14 @@ public:
 
     int64_t writeData(const char *inputBuffer, int64_t size);
 
-    [[maybe_unused]] int64_t skipBytes(int64_t skipSize);
+    //成功返回跳过的字节数，失败返回0
+    int64_t skipBytes(int64_t skipSize);
 
-    [[nodiscard]] int64_t getMaxReadableDataSize() const;
+    [[nodiscard]] int64_t getReadableSize() const;
 
-    [[nodiscard]] int64_t getMaxWriteableDataSize() const;
+    [[nodiscard]] int64_t getWriteableSize() const;
 
-    [[maybe_unused]] [[nodiscard]] int64_t getMaxBackSize() const;
+    [[maybe_unused]] [[nodiscard]] int64_t getBackSize() const;
 
     void clear();
 

@@ -6,7 +6,7 @@
 #include "CurlConnectionManager.h"
 #include "CurlConnection.h"
 #include <memory>
-#include <utils/SNLog.h>
+#include <utils/NSLog.h>
 #include "utils/SNTimer.h"
 
 namespace Sivin {
@@ -58,13 +58,13 @@ namespace Sivin {
                     assert(0);
                     status.eof = true;
                     status.status = CURLE_OK;
-                    SN_LOGW("assume a abnormal eos\n");
+                    SN_LOGW("assume a abnormal eos");
                 }
             }
 
             //该传输通道结束，或者该通道传输出现异常
             if (status.eof || status.status != CURLE_OK) {
-                connection->onConnectDone(status.eof, status.status);
+                connection->onConnectOver(status.eof, status.status);
                 curl_multi_remove_handle(mMultiHandle, connection->getCurlHandle());
             }
         }
@@ -76,7 +76,7 @@ namespace Sivin {
         }
 
         if (code != CURLM_OK) {
-            SN_LOGE("curl_multi_poll error %d\n", code);
+            SN_LOGE("curl_multi_poll error %d", code);
         }
 
         if (!mStillRunning) {

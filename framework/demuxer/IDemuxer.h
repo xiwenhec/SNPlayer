@@ -8,7 +8,7 @@
 #include <string>
 #include <memory>
 #include "base/media/ISNPacket.h"
-
+#include <functional>
 namespace Sivin {
 
     class IDemuxer {
@@ -26,15 +26,15 @@ namespace Sivin {
         };
 
     public:
-        using ReadCallback = int (*)(std::shared_ptr<void> userArg, uint8_t *buffer, int size);
-        using SeekCallback = int64_t(*)(std::shared_ptr<void> arg, int64_t offset, int whence);
+        using ReadCallback = int (*)(void *userArg, uint8_t *buffer, int size);
+        using SeekCallback = int64_t(*)(void *userArg, int64_t offset, int whence);
 
     public:
         explicit IDemuxer(std::string path);
 
-        virtual ~IDemuxer() = 0;
+        virtual ~IDemuxer(){};
 
-        void setDataCallback(ReadCallback readCallback);
+        void setDataCallback(ReadCallback readCallback, SeekCallback seekCallback, void *userArgs);
 
         void setBitStreamType(BitStreamType videoStreamType, BitStreamType audioStreamType) {
             mVideoStreamType = videoStreamType;
@@ -59,7 +59,7 @@ namespace Sivin {
         std::string mPath;
         ReadCallback mReadCb{nullptr};
         SeekCallback mSeekCb{nullptr};
-        std::shared_ptr<void> mUserArg{nullptr};
+        void *mUserArg{nullptr};
         BitStreamType mVideoStreamType = BITSTREAM_TYPE_NO_TOUCH;
         BitStreamType mAudioStreamType = BITSTREAM_TYPE_NO_TOUCH;
     };

@@ -30,7 +30,7 @@ namespace Sivin {
 
     public:
 
-        virtual ~ISNPacket() = 0;
+        virtual ~ISNPacket() {};
 
         virtual uint8_t *getData() = 0;
 

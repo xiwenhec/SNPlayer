@@ -7,9 +7,9 @@
 RingBuffer::RingBuffer(int64_t size) : RingBuffer(size, 0) {}
 
 RingBuffer::RingBuffer(int64_t size, int64_t backSize) : mSize(size),
-                                                           mBackSize(backSize),
-                                                           mBackCount(0), mReadIndex(0),
-                                                           mWriteIndex(0), mFillCount(0) {
+                                                         mBackSize(backSize),
+                                                         mBackCount(0), mReadIndex(0),
+                                                         mWriteIndex(0), mFillCount(0) {
     mBuffer = new char[size];
     memset(mBuffer, 0, size);
 }
@@ -76,17 +76,8 @@ int64_t RingBuffer::writeData(const char *inputBuffer, int64_t inputSize) {
     return inputSize;
 }
 
-void RingBuffer::clear() {
-    mReadIndex = 0;
-    mWriteIndex = 0;
-    mFillCount = 0;
-    mBackCount = 0;
-}
-
-[[maybe_unused]] int64_t RingBuffer::skipBytes(int64_t skpSize) {
-
+int64_t RingBuffer::skipBytes(int64_t skpSize) {
     int64_t skipSize;
-
     if (skpSize < 0) {
         skipSize = -skpSize;
         //回退的长度小于(读后缓冲 backCount)长度，表示可以直接缓冲回退，不会污染写空间
@@ -115,7 +106,6 @@ void RingBuffer::clear() {
     if (skipSize > mFillCount) {
         return 0;
     }
-
     if (skipSize + mReadIndex > mSize) {
         //前进需要回环
         uint64_t chunk = mSize - mReadIndex;
@@ -133,15 +123,22 @@ void RingBuffer::clear() {
     return skipSize;
 }
 
-int64_t RingBuffer::getMaxReadableDataSize() const {
+void RingBuffer::clear() {
+    mReadIndex = 0;
+    mWriteIndex = 0;
+    mFillCount = 0;
+    mBackCount = 0;
+}
+
+int64_t RingBuffer::getReadableSize() const {
     return mFillCount.load();
 }
 
-int64_t RingBuffer::getMaxWriteableDataSize() const {
+int64_t RingBuffer::getWriteableSize() const {
     return mSize - mFillCount.load() - mBackCount.load();
 }
 
-[[maybe_unused]] int64_t RingBuffer::getMaxBackSize() const {
+[[maybe_unused]] int64_t RingBuffer::getBackSize() const {
     return mBackCount;
 }
 

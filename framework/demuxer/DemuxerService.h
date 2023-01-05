@@ -9,18 +9,31 @@
 #include "datasource/IDataSource.h"
 
 namespace Sivin {
+
     class DemuxerService {
+
     public:
         explicit DemuxerService(std::shared_ptr<IDataSource> dataSource);
+
+        int initOpen(IDemuxer::DemuxerType type);
+
+        int start();
+
+        int openStream(int index);
+
+        int readPacket(std::unique_ptr<ISNPacket> &packet, int index = -1);
+
+    private:
+
+        static int read_callback(void *userArgs, uint8_t *buffer, int size);
+
+        static int64_t seek_callback(void *userArgs, int64_t offset, int whence);
 
         int createDemuxer(IDemuxer::DemuxerType demuxerType);
 
     private:
         std::unique_ptr<IDemuxer> mDemuxer{nullptr};
         std::shared_ptr<IDataSource> mDataSource{nullptr};
-
-        uint8_t *mProbBuffer{nullptr};
-        int mProbBufferSize{0};
 
         bool mNoFile{false};
 

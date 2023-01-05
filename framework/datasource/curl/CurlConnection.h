@@ -17,6 +17,7 @@ namespace Sivin {
 
     class CurlConnection : public std::enable_shared_from_this<CurlConnection> {
 
+        friend CurlConnectionManager;
 
         class ConnectionListener {
         public:
@@ -27,10 +28,9 @@ namespace Sivin {
 
     public:
 
-        explicit CurlConnection(std::shared_ptr<IDataSource::SourceConfig> config,
+        explicit CurlConnection(IDataSource::SourceConfig *config,
                                 std::shared_ptr<CurlConnectionManager> connectionManager,
-                                std::shared_ptr<ConnectionListener> listener
-        );
+                                std::shared_ptr<ConnectionListener> listener);
 
         ~CurlConnection();
 
@@ -40,24 +40,30 @@ namespace Sivin {
 
         void setResume(int64_t pos);
 
+        void setReconnect(bool needReconnect);
+
+        bool needReconnect();
+
+        int startConnect();
+
         void setInterrupt(const std::atomic_bool &interrupt);
 
         int64_t tell() const { return mFilePos; }
 
-        int64_t fillBuffer(int64_t want, const std::atomic<bool> &needReconnect);
+        int readCheck(bool needReconnect);
 
         int64_t readBuffer(void *outBuffer, int64_t size);
 
         int64_t shortSeek(int64_t off);
 
-        /*
-         * 连接出错或者结束，当这个函数调用后，该connection->handle随后将会被移出multiHandle
-         */
-        void onConnectDone(bool eos, CURLcode code);
+        int closeConnection(bool forbidReuse);
 
-        void clearCurlOpt();
+        int getFileSize();
 
-        [[nodiscard]] CURL *getCurlHandle() const;
+
+    private:
+
+        void setEasyHandleCommonOpt();
 
         void applyReconnect(bool reconnect);
 
@@ -65,15 +71,21 @@ namespace Sivin {
 
         void removeFromManager();
 
-        int64_t startConnect();
+        CURL *getCurlHandle() const;
 
-        int getFileSize(int64_t &fileSize);
+        int fillBuffer(int64_t want, const std::atomic<bool> &needReconnect);
 
-    private:
+        /*
+        * 连接出错或者结束
+        * 当这个函数调用后，该connection->handle随后将会被移出multiHandle
+        */
+        void onConnectOver(bool eos, CURLcode code);
 
         void reset();
 
-        void setEasyHandleCommonOpt();
+        void clearCurlOpt();
+
+        void calcFileSize();
 
         static size_t writeCallback(char *buffer, size_t size, size_t nmemb, void *userdata);
 
@@ -88,13 +100,13 @@ namespace Sivin {
 
     private:
         std::string mUri;
-        std::shared_ptr<IDataSource::SourceConfig> mConfig;
-        std::shared_ptr<ConnectionListener> mListener;
-        std::shared_ptr<CurlConnectionManager> mConnectionManager;
+        IDataSource::SourceConfig *mConfig{nullptr};
+        std::shared_ptr<ConnectionListener> mListener{nullptr};
+        std::shared_ptr<CurlConnectionManager> mConnectionManager{nullptr};
         //当前connect内部数据缓冲
-        std::shared_ptr<RingBuffer> mBuffer;
+        std::shared_ptr<RingBuffer> mBuffer{nullptr};
 
-        CURL *mHttpHandle;
+        CURL *mHttpHandle{nullptr};
 
         bool mDNSResolved{false};
 
@@ -110,14 +122,14 @@ namespace Sivin {
         std::mutex mMutex;
 
         //响应头
-        char *mResponseHeader;
+        char *mResponseHeader{nullptr};
         int64_t mResponseHeaderSize = 0;
 
         CURLcode mStatus{CURLE_OK};
 
-        bool isFirstLoop = false;
+        bool isFirstLoop{false};
         int64_t mFilePos{0};
-        int64_t mFileSize{0};
+        int64_t mFileSize{-1};
 
         int sendRange{0};
         //当前connect需要重新连接

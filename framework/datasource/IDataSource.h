@@ -12,6 +12,10 @@
 
 namespace Sivin {
 
+    enum {
+        SEEK_SIZE = 0x10000,
+    };
+
     class IDataSource {
     public:
         class Listener {
@@ -68,15 +72,13 @@ namespace Sivin {
              */
             int sockReceiveBufferSize{0};
 
-            std::string httpProxy;
-            std::string refer; //请求源标识
-            std::string userAgent;
-            std::vector<std::string> customHeaders;
+            std::string httpProxy{};
+            std::string refer{}; //请求源标识
+            std::string userAgent{};
+            std::vector<std::string> customHeaders{};
             std::shared_ptr<Listener> listener{nullptr};
             IpResolveType resolveType{IpResolveWhatEver};
             bool enableLog{true};
-
-            std::string toString();
         };
 
     public:
@@ -84,13 +86,14 @@ namespace Sivin {
 
         virtual int open(int flags) = 0;
 
-        virtual int64_t read(void *outBuffer, size_t size) = 0;
+        virtual int64_t read(void *outBuffer, int64_t size) = 0;
 
         virtual void close() = 0;
 
         virtual int64_t seek(int64_t offset, int whence) = 0;
 
         virtual std::string getUri() = 0;
+
 
     public:
         void setConfig(SourceConfig &config);
@@ -103,8 +106,8 @@ namespace Sivin {
         std::string mUrl;
         SourceConfig mConfig{};
         std::atomic_bool mInterrupt{false};
-        int64_t mRangeStart{INT64_MIN};
-        int64_t mRangeEnd{INT64_MIN};
+        int64_t mRangeStart{-1};
+        int64_t mRangeEnd{-1};
     };
 
 

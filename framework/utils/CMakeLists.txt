@@ -7,7 +7,7 @@ add_library(framework_utils STATIC "")
 target_sources(
         framework_utils PUBLIC
         SNJson.h
-        SNLog.cpp
+        NSLog.cpp
         SNThread.cpp
         SNTimer.cpp
         SNUtils.cpp

@@ -6,7 +6,7 @@
 
 #include <thread>
 #include <iostream>
-#include "utils/SNLog.h"
+#include "utils/NSLog.h"
 #include <utils/SNThread.h>
 
 using namespace Sivin;
@@ -16,16 +16,16 @@ int main() {
     int i = 0;
     auto *thread = new SNThread([&i]() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        SN_LOGD("i = %d\n", i++);
+        SN_LOGD("i = %d", i++);
         return 0;
     }, "testThread");
 
     thread->setBeginCallback([](){
-        SN_LOGD("thread start..\n");
+        SN_LOGD("thread start..");
     });
 
     thread->setEndCallback([]{
-        SN_LOGD("thread end..\n");
+        SN_LOGD("thread end..");
     });
 
     thread->start();

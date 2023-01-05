@@ -17,7 +17,4 @@ namespace Sivin {
         this->flags = other.flags;
         return *this;
     }
-
-
-
 } // Sivin

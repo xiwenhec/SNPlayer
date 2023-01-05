@@ -8,7 +8,7 @@ extern "C" {
 #include <utils/SNFFUtils.h>
 #include "AVFormatDemuxer.h"
 #include "utils/SNTimer.h"
-#include "utils/SNLog.h"
+#include "utils/NSLog.h"
 #include "utils/SNUtils.h"
 #include "base/media/SNAVPacket.h"
 
@@ -40,7 +40,7 @@ namespace Sivin {
     //TODO:Sivin 错误处理
     int AVFormatDemuxer::open(AVInputFormat *inputFormat) {
         if (bOpened) { return 0; }
-
+        SN_TRACE;
         int64_t startTime = SNTimer::getSteadyTimeMs();
         //是否直接使用文件路径
         bool useFileName = false;
@@ -68,7 +68,6 @@ namespace Sivin {
             if (SNUtils::startWith(mPath, {"http://", "https://"})) {
                 const AVInputFormat *mp4Format = av_find_input_format("mp4");
                 if (mp4Format && av_match_ext(filename, mp4Format->extensions)) {
-                    //TODO:Sivin ????
                     filename = "http://xxx";
                 }
             }
@@ -76,7 +75,7 @@ namespace Sivin {
 
         int ret = avformat_open_input(&mCtx, filename, inputFormat, mInputOpts ? &mInputOpts : nullptr);
         if (ret < 0) {
-            SN_LOGE("avformat_open_input error %d,%s,", ret, SNFFUtils::getErrorString(ret));
+            SN_LOGE("avformat_open_input error %d, %s", ret, SNFFUtils::getErrorString(ret));
             if (ret == AVERROR_PROTOCOL_NOT_FOUND) {
                 return -1;
             }
@@ -85,6 +84,7 @@ namespace Sivin {
             }
             return ret;
         }
+        SN_LOGI("avformat_open_input success");
 
         if (strcmp(mCtx->iformat->name, "mov,mp4,m4a,3gp,3g2,mj2") != 0) {
             mCtx->fps_probe_size = 0;
@@ -95,12 +95,12 @@ namespace Sivin {
         ret = avformat_find_stream_info(mCtx, nullptr);
 
         if (mInterrupted) {
-            SN_LOGD("interrupted\n");
+            SN_LOGD("interrupted");
             return -1;
         }
 
         if (ret < 0 && ret != AVERROR_EOF) {
-            SN_LOGE("avformat_find_stream_info error %d:%s\n", ret, SNFFUtils::getErrorString(ret));
+            SN_LOGE("avformat_find_stream_info error %d:%s", ret, SNFFUtils::getErrorString(ret));
             return ret;
         }
         bOpened = true;
@@ -230,11 +230,11 @@ namespace Sivin {
         } while (true);
 
         if (pkt->pts == AV_NOPTS_VALUE) {
-            SN_LOGW("pkt pts error\n");
+            SN_LOGW("pkt pts error");
         }
 
         if (pkt->dts == AV_NOPTS_VALUE) {
-            SN_LOGW("pkt dts error\n");
+            SN_LOGW("pkt dts error");
         }
 
         int streamIndex = pkt->stream_index;
@@ -332,7 +332,7 @@ namespace Sivin {
             mStreamCtxMap[index]->bsf = std::unique_ptr<IAVBSF>(AVBSFFactory::create(bsfName));
             int ret = mStreamCtxMap[index]->bsf->init(bsfName, mCtx->streams[index]->codecpar);
             if (ret < 0) {
-                SN_LOGE("create %s bsf error \n", bsfName.c_str());
+                SN_LOGE("create %s bsf error", bsfName.c_str());
                 return ret;
             }
         }
@@ -356,14 +356,14 @@ namespace Sivin {
             if (mError < 0) {
                 return mError;
             }
-            return -EAGAIN;
+            return -1;
         }
     }
 
     int AVFormatDemuxer::openStream(int index) {
         std::unique_lock<std::mutex> uLock(mMutex);
         if (index >= mCtx->nb_streams) {
-            SN_LOGE("no such stream\n");
+            SN_LOGE("no such stream");
             return -EINVAL;
         }
         if (mStreamCtxMap[index] != nullptr) {
@@ -381,7 +381,7 @@ namespace Sivin {
     void AVFormatDemuxer::closeStream(int index) {
         std::unique_lock<std::mutex> uLock(mMutex);
         if (mStreamCtxMap.find(index) == mStreamCtxMap.end()) {
-            SN_LOGI("not opened\n");
+            SN_LOGI("not opened");
             return;
         }
         mStreamCtxMap[index]->opened = false;

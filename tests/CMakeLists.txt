@@ -23,10 +23,9 @@ set(COMMON_LIB_DIR ${TOPDIR}/thirdparty/curl/lib
 
 add_subdirectory(${TOPDIR}/framework framework.out)
 
-
-
 add_executable(Test "")
-#add_library(Test SHARED "")
+
+
 target_include_directories(Test PUBLIC
         ${COMMON_INC_DIR}
         )
@@ -39,6 +38,8 @@ target_link_directories(Test PRIVATE ${COMMON_LIB_DIR})
 #dataSource测试
 set(ENABLE_DATASOURCE_TEST ON)
 
+
+#set(ENABLE_DEMUXER_TEST ON)
 
 
 if (${ENABLE_THREAD_TEST})
@@ -54,11 +55,22 @@ if (${ENABLE_DATASOURCE_TEST})
             )
 endif ()
 
+if (${ENABLE_DEMUXER_TEST})
+    target_sources(Test PRIVATE
+            demuxer/DemuxerTest.cpp
+            )
+endif ()
+
 
 target_link_libraries(Test PRIVATE
-        pthread
+        framework_codec
+        framework_demuxer
         framework_utils
         framework_datasource
+        pthread
+        avformat
+        avcodec
+        avutil
         curl
         ssl
         crypto

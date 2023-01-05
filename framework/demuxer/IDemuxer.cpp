@@ -8,8 +8,10 @@ namespace Sivin {
     IDemuxer::IDemuxer(std::string path) : mPath(std::move(path)) {
     }
 
-    void IDemuxer::setDataCallback(IDemuxer::ReadCallback readCallback) {
+    void IDemuxer::setDataCallback(ReadCallback readCallback, SeekCallback seekCallback, void *userArgs) {
         mReadCb = readCallback;
+        mSeekCb = seekCallback;
+        mUserArg = userArgs;
     }
 
 

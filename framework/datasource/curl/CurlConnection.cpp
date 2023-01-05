@@ -7,7 +7,7 @@
 #include "CurlConnection.h"
 
 #include <utility>
-#include <utils/SNLog.h>
+#include <utils/NSLog.h>
 #include <utils/SNTimer.h>
 #include "datasource/curl/CurlConnectionManager.h"
 
@@ -27,10 +27,10 @@ namespace Sivin {
         return -1;
     }
 
-    CurlConnection::CurlConnection(std::shared_ptr<IDataSource::SourceConfig> config,
+    CurlConnection::CurlConnection(IDataSource::SourceConfig *config,
                                    std::shared_ptr<CurlConnectionManager> connectionManager,
                                    std::shared_ptr<ConnectionListener> listener) :
-            mConfig(std::move(config)),
+            mConfig(config),
             mConnectionManager(std::move(connectionManager)),
             mListener(std::move(listener)),
             mBuffer(std::make_shared<RingBuffer>(RINGBUFFER_SIZE + RINGBUFFER_BACK_SIZE,
@@ -40,18 +40,19 @@ namespace Sivin {
 
         if (mConfig != nullptr) {
             if (mConfig->lowSpeedLimit && mConfig->lowSpeedTimeMs) {
-                SN_LOGD("set lowSpeedLimit to %d\n", mConfig->lowSpeedLimit);
-                SN_LOGD("set lowSpeedTime to %d(ms)\n", mConfig->lowSpeedTimeMs);
+                SN_LOGD("set lowSpeedLimit to %d", mConfig->lowSpeedLimit);
+                SN_LOGD("set lowSpeedTime to %d(ms)", mConfig->lowSpeedTimeMs);
                 curl_easy_setopt(mHttpHandle, CURLOPT_LOW_SPEED_LIMIT, (long) mConfig->lowSpeedLimit);
                 curl_easy_setopt(mHttpHandle, CURLOPT_LOW_SPEED_TIME, (long) mConfig->lowSpeedTimeMs / 1000);
             }
 
             if (mConfig->connectTimeoutMs) {
-                SN_LOGD("set connect time to %d(ms)\n", mConfig->connectTimeoutMs);
+                SN_LOGD("set connect time to %d(ms)", mConfig->connectTimeoutMs);
                 curl_easy_setopt(mHttpHandle, CURLOPT_CONNECTTIMEOUT, (long) mConfig->connectTimeoutMs / 1000);
             }
         }
         setEasyHandleCommonOpt();
+        SN_LOGI("Create curlConnection:%p", this);
     }
 
 
@@ -60,13 +61,18 @@ namespace Sivin {
             curl_easy_cleanup(mHttpHandle);
             mHttpHandle = nullptr;
         }
-
-        delete[] mResponseHeader;
-        mResponseHeader = nullptr;
+        if (mResponseHeader) {
+            delete[] mResponseHeader;
+            mResponseHeader = nullptr;
+        }
+        SN_TRACE;
     }
 
-
     void CurlConnection::setResume(int64_t pos) {
+        if (pos < 0) {
+            SN_LOGW("setResume: pos =%ld, is a illegal parameter, it will to be revised:0", pos);
+            pos = 0;
+        }
         mFilePos = pos;
         if (sendRange && this->mFilePos == 0) {
             curl_easy_setopt(mHttpHandle, CURLOPT_RANGE, "0-");
@@ -77,20 +83,266 @@ namespace Sivin {
         curl_easy_setopt(mHttpHandle, CURLOPT_RESUME_FROM_LARGE, (curl_off_t) mFilePos);
     }
 
+    void CurlConnection::setSource(const std::string &uri, curl_slist *headerList) {
+        if (headerList) {
+            curl_easy_setopt(mHttpHandle, CURLOPT_HTTPHEADER, headerList);
+        } else {
+            curl_easy_setopt(mHttpHandle, CURLOPT_HTTPHEADER, NULL);
+        }
+        mUri = uri;
+        curl_easy_setopt(mHttpHandle, CURLOPT_URL, uri.c_str());
+
+        //TODO:Sivin
+//        CURLSH *sh = nullptr;
+//        if (reSolveList) {
+//            curl_slist_free_all(reSolveList);
+//        }
+//
+//        reSolveList = CURLShareInstance::Instance()->getHosts(uri, &sh);
+//        assert(sh != nullptr);
+//        curl_easy_setopt(mHttpHandle, CURLOPT_SHARE, sh);
+//
+//        if (reSolveList != nullptr) {
+//            curl_easy_setopt(mHttpHandle, CURLOPT_RESOLVE, reSolveList);
+//        }
+    }
+
+    void CurlConnection::setPost(bool isPost, const uint8_t *data, int64_t size) {
+        if (isPost) {
+            curl_easy_setopt(mHttpHandle, CURLOPT_POST, 1);
+            curl_easy_setopt(mHttpHandle, CURLOPT_POSTFIELDS, data);
+            curl_easy_setopt(mHttpHandle, CURLOPT_POSTFIELDSIZE, (long) size);
+        } else {
+            curl_easy_setopt(mHttpHandle, CURLOPT_POST, 0);
+        }
+    }
+
+    void CurlConnection::setInterrupt(const std::atomic_bool &interrupt) {
+        mInterrupted.store(interrupt);
+    }
+
+    int CurlConnection::startConnect() {
+        addToManager();
+        SN_TRACE;
+        int ret = 0;
+        if ((ret = fillBuffer(1, mNeedReconnect)) < 0) {
+            SN_LOGE("Connect, didn't get any data from stream.");
+            return ret;
+        }
+
+
+        long responseCode;
+        if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &responseCode)) {
+            SN_LOGD("CURLINFO_RESPONSE_CODE is %d", responseCode);
+            if (responseCode >= 400) {
+                return -1;
+            }
+        }
+        calcFileSize();
+        SN_LOGI("Connect success. mFilesize = %ld", mFileSize);
+        return 0;
+    }
+
+    int64_t CurlConnection::readBuffer(void *outBuffer, int64_t size) {
+        std::lock_guard<std::mutex> lockGuard{mMutex};
+        int64_t want = std::min(mBuffer->getReadableSize(), size);
+        if (want > 0 && mBuffer->readData((char *) outBuffer, want) == want) {
+            mFilePos += want;
+            return want;
+        }
+        /* check if we finished prematurely */
+        if (!mStillRunning && (mFileSize > 0 && mFilePos != mFileSize)) {
+            SN_LOGE("%s - Transfer ended before entire file was retrieved pos %lld, size %lld", __FUNCTION__, mFilePos,
+                    mFileSize);
+        }
+        return 0;
+    }
+
+    int64_t CurlConnection::shortSeek(int64_t seekPos) {
+        int64_t delta = seekPos - mFilePos;
+        std::lock_guard<std::mutex> lockGuard{mMutex};
+        //回退seek,无论失败还是成功则都直接返回
+        if (delta < 0) {
+            if (mBuffer->skipBytes(delta) > 0) {
+                mFilePos = seekPos;
+                return 0;
+            }
+            return -1;
+        }
+
+        //向前seek
+        if (mBuffer->skipBytes(delta)) {
+            mFilePos = seekPos;
+            return 0;
+        }
+
+        //向前seek失败，表示可读取空间小于delta
+        uint32_t shortBufferSize = 1024 * 64;//64k
+        //判断off是否超过设定的阈值,如果超过阈值，则直接判定为无法shortSeek,return -1;
+        //如果没有超过阈值，可以进行短暂的等待，即可到达指定的位置
+        if (seekPos < mFilePos + shortBufferSize) {
+            int64_t ringBufReadSize = mBuffer->getReadableSize();
+            //先seek缓存的位置
+            if (ringBufReadSize > 0) {
+                mBuffer->skipBytes(ringBufReadSize);
+                mFilePos += ringBufReadSize;
+            }
+            int ret = 0; //等待数据填充
+            if ((ret = fillBuffer(shortBufferSize, mNeedReconnect)) < 0) {
+                //数据填充失败,撤销之前的回退
+                if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
+                    SN_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                } else {
+                    //撤销成功
+                    mFilePos -= ringBufReadSize;
+                }
+                SN_LOGE("forward short seek failed, because can not get enough data");
+                return ret;
+            }
+
+            //填充成功
+            SN_LOGI("read buffer size = %lld, need is %ld", mBuffer->getReadableSize(), (delta - ringBufReadSize));
+            if (!mBuffer->skipBytes((delta - ringBufReadSize))) {
+                SN_LOGE("%s - Failed to skip to position after having filled buffer", __FUNCTION__);
+                if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
+                    SN_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                } else {
+                    //撤销成功
+                    mFilePos -= ringBufReadSize;
+                }
+                return -1;
+            }
+            mFilePos = seekPos;
+            return 0;
+        }
+        SN_LOGE("forward seek failed, delta is to large");
+        return -1;
+    }
+
+    //待优化重连次数
+    int CurlConnection::fillBuffer(int64_t want, const std::atomic<bool> &needReconnect) {
+        int64_t startTime = SNTimer::getSteadyTimeMs();
+        //需要继续等待填充数据
+        while (mBuffer->getReadableSize() < want && mBuffer->getWriteableSize() > 0) {
+
+            //表示当前连接被中断，或者需要重连，则本次数据填充结束
+            if (mInterrupted || needReconnect) {
+                SN_LOGE("connect mInterrupted or needReconnect:%d,%ld", mInterrupted.load(), needReconnect.load());
+                return -1;
+            }
+            if (mEos) { //流结束，直接返回填充数据成功
+                SN_LOGI("stream end ...");
+                return 0;
+            }
+            if (mPaused && mBuffer->getWriteableSize() > CURL_READ_BUFFER_SIZE) {
+                mPaused = false;
+                mConnectionManager->resumeConnection(shared_from_this());
+            }
+
+            //如果当前连接结束，或者发生错误，mStatus将会被赋值
+            CURLcode code = mStatus;
+
+            bool isError = code != CURLE_OK;
+            switch (code) {
+                case CURLE_OK:
+                    break;
+                case CURLE_OPERATION_TIMEDOUT:
+                case CURLE_PARTIAL_FILE:
+                case CURLE_COULDNT_CONNECT:
+                case CURLE_RECV_ERROR:
+                case CURLE_COULDNT_RESOLVE_HOST:
+                case CURLE_HTTP2: //已上错误码认为不是错误
+                    isError = false;
+                    break;
+                case CURLE_HTTP_RETURNED_ERROR:
+                    long httpCode;
+                    curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &httpCode);
+                    break;
+                default:
+                    break;
+            }
+
+            if (isError) {
+                //网络连接错误，无法读取到want足够多的数据
+                //但缓冲区里还有数据，同样需要被读取，这里返回true
+                if (mBuffer->getReadableSize() > 0) {
+                    return 0;
+                }
+                return -1;
+            }
+
+            //处理不等于OK，但但不是错误情况
+            if (code != CURLE_OK) {
+                //connectManger内部会会同步删除出错或者流结束的connection
+                reset();
+                if (mConfig && mConfig->listener) {
+                    //网络重连通知回调给外部
+                    IDataSource::Listener::NetWorkRetryStatus status;
+                    do {
+                        status = mConfig->listener->onNetWorkRetry(getErrorCode(code));
+                        if (mInterrupted) {
+                            return -1;
+                        }
+                        SNTimer::sleepMs(10);
+                    } while (status == IDataSource::Listener::NETWORK_RETRY_STATUS_PENDING);
+
+                } else if (mConfig && SNTimer::getSteadyTimeMs() - startTime > mConfig->connectTimeoutMs) {
+                    mFilePos = 0;
+                    return -1;
+                }
+
+                SNTimer::sleepMs(10);
+                setResume(mFilePos);
+                applyReconnect(true);
+                addToManager();
+                continue;
+            }
+
+            if (isFirstLoop) {
+                curl_off_t length = 0;
+                if (curl_easy_getinfo(mHttpHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &length) == CURLE_OK) {
+                    if (length > 0) {
+                        if (mConfig && mConfig->listener) {
+                            mConfig->listener->onNetWorkConnected();
+                        }
+                        isFirstLoop = false;
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    void CurlConnection::reset() {
+        if (mBuffer) {
+            mBuffer->clear();
+        }
+
+        mEos = false;
+        mStatus = CURLE_OK;
+
+        mResponseHeaderSize = 0;
+        delete[] mResponseHeader;
+        mResponseHeader = nullptr;
+    }
 
     void CurlConnection::clearCurlOpt() {
         if (mHttpHandle) {
-            //TODO:Sivin
             curl_easy_setopt(mHttpHandle, CURLOPT_VERBOSE, FALSE);
             curl_easy_setopt(mHttpHandle, CURLOPT_WRITEDATA, nullptr);
-            //   curl_easy_setopt(mHttp_handle, CURLOPT_WRITEFUNCTION, nullptr);
-            //    curl_easy_setopt(mHttp_handle, CURLOPT_HEADERFUNCTION, nullptr);
             curl_easy_setopt(mHttpHandle, CURLOPT_HEADERDATA, nullptr);
-            //  curl_easy_setopt(mHttp_handle, CURLOPT_SOCKOPTFUNCTION, nullptr);
             curl_easy_setopt(mHttpHandle, CURLOPT_SOCKOPTDATA, nullptr);
-            // curl_easy_setopt(mHttp_handle, CURLOPT_DEBUGFUNCTION, nullptr);
             curl_easy_setopt(mHttpHandle, CURLOPT_DEBUGDATA, nullptr);
+            curl_easy_setopt(mHttpHandle, CURLOPT_XFERINFODATA, nullptr);
         }
+    }
+
+    int CurlConnection::closeConnection(bool forbidReuse) {
+        if (forbidReuse) {
+            curl_easy_setopt(mHttpHandle, CURLOPT_FORBID_REUSE, 1);
+        }
+        removeFromManager();
+        return 0;
     }
 
     void CurlConnection::setEasyHandleCommonOpt() {
@@ -135,13 +387,13 @@ namespace Sivin {
 
         std::lock_guard<std::mutex> lock{connect->mMutex};
         //缓存空间小于传输数据，则暂停传输
-        if (connect->mBuffer->getMaxWriteableDataSize() < amount) {
+        if (connect->mBuffer->getWriteableSize() < amount) {
             connect->mPaused = true;
             return CURL_WRITEFUNC_PAUSE;
         }
 
         if (connect->mBuffer->writeData(buffer, amount) != amount) {
-            SN_LOGE("write ring buffer error %u %u\n", amount, connect->mBuffer->getMaxWriteableDataSize());
+            SN_LOGE("write ring buffer error %u %u", amount, connect->mBuffer->getWriteableSize());
             assert(0);
         }
 
@@ -155,22 +407,22 @@ namespace Sivin {
         if (!userdata) {
             return size * nitems;
         }
-        auto *connect = (CurlConnection *) userdata;
-        if (connect->mResponseHeader == nullptr) {
-            connect->mResponseHeader = new char[MAX_HEADER_SIZE];
-            memset(connect->mResponseHeader, 0, MAX_HEADER_SIZE);
-            connect->mResponseHeaderSize = 0;
+        auto *connection = (CurlConnection *) userdata;
+        if (connection->mResponseHeader == nullptr) {
+            connection->mResponseHeader = new char[MAX_HEADER_SIZE];
+            memset(connection->mResponseHeader, 0, MAX_HEADER_SIZE);
+            connection->mResponseHeaderSize = 0;
+            SN_LOGI("create mResponseHeader...");
         }
 
-        if (connect->mResponseHeaderSize + size * nitems < MAX_HEADER_SIZE) {
-            memcpy(connect->mResponseHeader + connect->mResponseHeaderSize, buffer, size * nitems);
-            connect->mResponseHeaderSize += size * nitems;
+        if (connection->mResponseHeaderSize + size * nitems < MAX_HEADER_SIZE) {
+            memcpy(connection->mResponseHeader + connection->mResponseHeaderSize, buffer, size * nitems);
+            connection->mResponseHeaderSize += size * nitems;
         } else {
             SN_LOGE("responseHeader filed can not hold header response: "
                     "headerSize = %ld, size * nitems = %ld, maxHaderSize = %ld",
-                    connect->mResponseHeaderSize, size * nitems, MAX_HEADER_SIZE);
+                    connection->mResponseHeaderSize, size * nitems, MAX_HEADER_SIZE);
         }
-
         return size * nitems;
     }
 
@@ -195,7 +447,7 @@ namespace Sivin {
         auto connect = (CurlConnection *) userp;
         switch (type) {
             case CURLINFO_TEXT:
-                SN_LOGD("curl info : %s", data);
+//                SN_LOGD("curl info : %s", data);
                 break;
 
             case CURLINFO_HEADER_OUT:
@@ -231,176 +483,11 @@ namespace Sivin {
         }
         auto *connect = (CurlConnection *) clientp;
         //暂停结束
-        if (connect->mPaused && connect->mBuffer->getMaxWriteableDataSize() > CURL_READ_BUFFER_SIZE) {
+        if (connect->mPaused && connect->mBuffer->getWriteableSize() > CURL_READ_BUFFER_SIZE) {
             connect->mPaused = false;
             curl_easy_pause(connect->mHttpHandle, CURLPAUSE_CONT);
         }
         return 0;
-    }
-
-
-    void CurlConnection::setSource(const std::string &uri, curl_slist *headerList) {
-        if (headerList) {
-            curl_easy_setopt(mHttpHandle, CURLOPT_HTTPHEADER, headerList);
-        } else {
-            curl_easy_setopt(mHttpHandle, CURLOPT_HTTPHEADER, NULL);
-        }
-        mUri = uri;
-        curl_easy_setopt(mHttpHandle, CURLOPT_URL, uri.c_str());
-
-        //TODO:Sivin
-//        CURLSH *sh = nullptr;
-//        if (reSolveList) {
-//            curl_slist_free_all(reSolveList);
-//        }
-//
-//        reSolveList = CURLShareInstance::Instance()->getHosts(uri, &sh);
-//        assert(sh != nullptr);
-//        curl_easy_setopt(mHttpHandle, CURLOPT_SHARE, sh);
-//
-//        if (reSolveList != nullptr) {
-//            curl_easy_setopt(mHttpHandle, CURLOPT_RESOLVE, reSolveList);
-//        }
-    }
-
-    void CurlConnection::setPost(bool isPost, const uint8_t *data, int64_t size) {
-        if (isPost) {
-            curl_easy_setopt(mHttpHandle, CURLOPT_POST, 1);
-            curl_easy_setopt(mHttpHandle, CURLOPT_POSTFIELDS, data);
-            curl_easy_setopt(mHttpHandle, CURLOPT_POSTFIELDSIZE, (long) size);
-        } else {
-            curl_easy_setopt(mHttpHandle, CURLOPT_POST, 0);
-        }
-    }
-
-    void CurlConnection::onConnectDone(bool eos, CURLcode code) {
-        mEos = eos;
-        mStatus = code;
-        mStillRunning = false;
-    }
-
-    CURL *CurlConnection::getCurlHandle() const {
-        return mHttpHandle;
-    }
-
-    //TODO:Sivin 待优化
-    int64_t CurlConnection::fillBuffer(int64_t want, const std::atomic<bool> &needReconnect) {
-        int64_t startTime = SNTimer::getSteadyTimeMs();
-        //需要继续等待填充数据
-        while (mBuffer->getMaxReadableDataSize() < want && mBuffer->getMaxWriteableDataSize() > 0) {
-            //TODO:Sivin needReconnect这里有什么含义
-            if (mInterrupted || needReconnect) {
-                //TODO:Sivin 处理错误码
-                SN_LOGW("connect error exit");
-                return -1;
-            }
-            if (mEos) { //流结束，直接返回填充数据成功
-                return 0;
-            }
-
-            if (mPaused && mBuffer->getMaxWriteableDataSize() > CURL_READ_BUFFER_SIZE) {
-                mPaused = false;
-                mConnectionManager->resumeConnection(shared_from_this());
-            }
-
-            CURLcode code = mStatus;
-            bool error = code != CURLE_OK;
-            switch (code) {
-                case CURLE_OK:
-                    break;
-                case CURLE_OPERATION_TIMEDOUT:
-                case CURLE_PARTIAL_FILE:
-                case CURLE_COULDNT_CONNECT:
-                case CURLE_RECV_ERROR:
-                case CURLE_COULDNT_RESOLVE_HOST:
-                case CURLE_HTTP2:
-                    error = false;
-                    break;
-                case CURLE_HTTP_RETURNED_ERROR:
-                    long httpCode;
-                    curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &httpCode);
-                    break;
-                default:
-                    break;
-            }
-
-            if (error) {
-                if (mBuffer->getMaxReadableDataSize() > 0) {
-                    return 0;
-                }
-                //TODO:Sivin handle error
-                return -1;
-            }
-
-            bool reconnect = false;
-            //处理不等于OK，但是认为不是错误情况
-            if (code != CURLE_OK) {
-                //connectManger内部会会同步删除出错或者流结束的connection
-                reset();
-                if (mConfig && mConfig->listener) {
-                    IDataSource::Listener::NetWorkRetryStatus status;
-                    do {
-                        status = mConfig->listener->onNetWorkRetry(getErrorCode(code));
-                        if (mInterrupted) {
-                            //TODO:Sivin处理错误码
-                            return -1;
-                        }
-                        SNTimer::sleepMs(10);
-                    } while (status == IDataSource::Listener::NETWORK_RETRY_STATUS_PENDING);
-                    //TODO:Sivin 一定要放到这里吗？
-                    reconnect = true;
-                } else if (mConfig && SNTimer::getSteadyTimeMs() - startTime > mConfig->connectTimeoutMs) {
-                    mFilePos = 0;
-                    //TODO:Sivin 处理错误码
-                    return -1;
-                }
-                SNTimer::sleepMs(10);
-                setResume(mFilePos);
-                applyReconnect(true);
-                addToManager();
-                continue;
-            }
-
-            if (reconnect || isFirstLoop) {
-                double length = 0.0;
-                if (curl_easy_getinfo(mHttpHandle, CURLINFO_SIZE_DOWNLOAD, &length) == CURLE_OK) {
-                    if (length > 0) {
-                        reconnect = false;
-                        if (mConfig && mConfig->listener) {
-                            mConfig->listener->onNetWorkConnected();
-                        }
-                    }
-                }
-            }
-
-            if (isFirstLoop && mBuffer->getMaxReadableDataSize() > 0) {
-                isFirstLoop = false;
-            }
-        }
-
-        if (mFileSize < 0) {
-            double length;
-            if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &length)) {
-                if (length > 0.0) {
-                    mFileSize = mFilePos + (int64_t) length;
-                    SN_LOGI("mFileSize = %llf", length);
-                } else {
-                    mFileSize = 0;
-                }
-            }
-        }
-        return 0;
-    }
-
-    void CurlConnection::reset() {
-        if (mBuffer) mBuffer->clear();
-
-        mEos = false;
-        mStatus = CURLE_OK;
-
-        mResponseHeaderSize = 0;
-        delete[] mResponseHeader;
-        mResponseHeader = nullptr;
     }
 
     void CurlConnection::applyReconnect(bool reconnect) {
@@ -416,117 +503,48 @@ namespace Sivin {
         mConnectionManager->removeConnection(shared_from_this());
     }
 
-    void CurlConnection::setInterrupt(const std::atomic_bool &interrupt) {
-        mInterrupted.store(interrupt);
-    }
-
-    int64_t CurlConnection::readBuffer(void *outBuffer, int64_t size) {
-        std::lock_guard<std::mutex> lockGuard{mMutex};
-        int64_t want = std::min(mBuffer->getMaxReadableDataSize(), size);
-        if (want > 0 && mBuffer->readData((char *) outBuffer, want) == want) {
-            mFilePos += want;
-            return want;
-        }
-        /* check if we finished prematurely */
-        if (!mStillRunning && (mFileSize > 0 && mFilePos != mFileSize)) {
-            SN_LOGE("%s - Transfer ended before entire file was retrieved pos %lld, size %lld", __FUNCTION__, mFilePos,
-                    mFileSize);
-            //   return -1;
-        }
-        return 0;
-    }
-
-    int64_t CurlConnection::shortSeek(int64_t off) {
-        int64_t delta = off - mFilePos;
-        std::lock_guard<std::mutex> lockGuard{mMutex};
-        //向后回退
-        if (delta < 0) {
-            if (mBuffer->skipBytes(delta)) {
-                mFilePos = off;
-                return 0;
-            }
-            return -1;
-        }
-
-        //向前seek
-        if (mBuffer->skipBytes(delta)) {
-            mFilePos = off;
-            return 0;
-        }
-
-        //向前seek失败，表示可读取空间小于delta
-        uint32_t shortBufferSize = 1024 * 64;
-        //判断off是否超过设定的阈值,如果超过阈值，则直接判定为无法shortSeek,return -1;
-        if (off < mFilePos + shortBufferSize) {
-            int64_t ringBufReadSize = mBuffer->getMaxReadableDataSize();
-            //先seek缓存空间
-            if (ringBufReadSize > 0) {
-                mBuffer->skipBytes(ringBufReadSize);
-                mFilePos += ringBufReadSize;
-            }
-            int64_t ret = 0;
-            if ((ret = fillBuffer(shortBufferSize, mNeedReconnect)) < 0) {
-                //获取shortBufferSize数据失败,撤销之前的缓存回退
-                if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
-                    SN_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
-                } else {
-                    //撤销成功
-                    mFilePos -= ringBufReadSize;
+    void CurlConnection::calcFileSize() {
+        if (mFileSize < 0) {
+            curl_off_t length;
+            if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &length)) {
+                if (length < 0) {
+                    length = 0;
                 }
-                return ret;
-            }
-
-            //填充成功
-            SN_LOGI("read buffer size = %lld, need is %ld", mBuffer->getMaxReadableDataSize(),
-                    (delta - ringBufReadSize));
-            if (!mBuffer->skipBytes((delta - ringBufReadSize))) {
-                SN_LOGE("%s - Failed to skip to position after having filled buffer", __FUNCTION__);
-                if (ringBufReadSize && !mBuffer->skipBytes(-ringBufReadSize)) {
-                    SN_LOGE("%s - Failed to restore position after failed filled", __FUNCTION__);
+                if (length > 0) {
+                    mFileSize = mFilePos + (int64_t) length;
                 } else {
-                    //撤销成功
-                    mFilePos -= ringBufReadSize;
+                    mFileSize = -1;
                 }
-                return -1;
             }
-            mFilePos = off;
-            return 0;
         }
-        return -1;
     }
 
-    int CurlConnection::getFileSize(int64_t &fileSize) {
+    void CurlConnection::onConnectOver(bool eos, CURLcode code) {
+        mEos = eos;
+        mStatus = code;
+        mStillRunning = false;
+    }
+
+    CURL *CurlConnection::getCurlHandle() const {
+        return mHttpHandle;
+    }
+
+    int CurlConnection::getFileSize() {
         if (!mStillRunning) return -1;
-        double length;
-        if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &length)) {
-            if (length < 0) {
-                length = 0.0;
-            }
-            if (length > 0.0) {
-                fileSize = mFilePos + (int64_t) length;
-            } else {
-                fileSize = 0;
-            }
-        }
-        return 0;
+        return mFileSize;
     }
 
-    int64_t CurlConnection::startConnect() {
-        addToManager();
-        int64_t ret = 0;
-        if ((ret = fillBuffer(1, mNeedReconnect)) < 0) {
-            SN_LOGE("Connect, didn't get any data from stream.");
-            return ret;
-        }
-        long responseCode;
-        if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &responseCode)) {
-            SN_LOGD("CURLINFO_RESPONSE_CODE is %d", responseCode);
-            if (responseCode >= 400) {
-                return -1;
-            }
-        }
-        SN_LOGD("connect success.\n");
-        getFileSize(mFileSize);
-        return 0;
+    bool CurlConnection::needReconnect() {
+        return mNeedReconnect;
     }
+
+    void CurlConnection::setReconnect(bool needReconnect) {
+        mNeedReconnect = needReconnect;
+    }
+
+    int CurlConnection::readCheck(bool needReconnect) {
+        return fillBuffer(1, needReconnect);
+    }
+
+
 }
