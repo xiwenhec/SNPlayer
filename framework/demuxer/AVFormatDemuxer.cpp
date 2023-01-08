@@ -1,6 +1,7 @@
 //
 // Created by sivin on 12/6/22.
 //
+#define LOG_TAG "AVFormatDemuxer"
 extern "C" {
 #include <libavutil/intreadwrite.h>
 }
@@ -141,19 +142,19 @@ namespace Sivin {
 
         std::unique_ptr<ISNPacket> pkt{};
         int ret = readPacketInternal(pkt);
-
         if (ret > 0) {
             std::unique_lock<std::mutex> waitLock{mQueMutex};
             if (mPacketQueue.size() > MAX_QUEUE_SIZE) {
+                SN_LOGI("read packet thread wait..");
                 mQueCond.wait(waitLock, [this]() {
                     return mPacketQueue.size() <= MAX_QUEUE_SIZE || bPaused || mInterrupted || bExited;
                 });
+                SN_LOGI("read packet thread wakeup");
             }
             mPacketQueue.push_back(std::move(pkt));
         } else if (ret == 0) {
             bEOS = true;
         } else {
-            //TODO:Sivin 错误处理
             mError = ret;
             std::unique_lock<std::mutex> waitLock(mQueMutex);
             mQueCond.wait_for(waitLock, std::chrono::milliseconds(10),
@@ -193,7 +194,6 @@ namespace Sivin {
         if (!bOpened) {
             return -1;
         }
-
         AVPacket *pkt = av_packet_alloc();
         if (!pkt) {
             return -1;
@@ -214,17 +214,19 @@ namespace Sivin {
                         mCtx->pb->error = 0;
                         return ret;
                     }
-
                     av_packet_free(&pkt);
                     return 0;// EOS
                 }
-
                 av_packet_free(&pkt);
                 return error;
             }
             //如果当前的流需要被解码，则跳出循环
             if (mStreamCtxMap[pkt->stream_index] && mStreamCtxMap[pkt->stream_index]->opened) {
                 break;
+            }
+            if (pkt->stream_index == 0) {
+                SN_LOGI("get packet pts:%d",
+                        av_rescale_q(pkt->pts, mCtx->streams[pkt->stream_index]->time_base, av_get_time_base_q()));
             }
             av_packet_unref(pkt);
         } while (true);
@@ -341,6 +343,7 @@ namespace Sivin {
 
     int AVFormatDemuxer::readPacket(std::unique_ptr<ISNPacket> &packet, int index) {
         if (mThread->getStatus() == SNThread::THREAD_STATUS_IDLE) {
+            SN_LOGW("read packet thread not start, will read from Internal");
             return readPacketInternal(packet);
         } else {
             std::unique_lock<std::mutex> waitLock(mQueMutex);
@@ -351,12 +354,12 @@ namespace Sivin {
                 return static_cast<int>(packet->getSize());
             }
             if (bEOS) {
-                return 0;
+                return -1;
             }
             if (mError < 0) {
                 return mError;
             }
-            return -1;
+            return 0;
         }
     }
 
@@ -370,11 +373,9 @@ namespace Sivin {
             mStreamCtxMap[index]->opened = true;
             return 0;
         }
-
         mStreamCtxMap[index] = std::unique_ptr<AVStreamCtx>(new AVStreamCtx());
         mStreamCtxMap[index]->opened = true;
         mStreamCtxMap[index]->bsfInited = false;
-
         return 0;
     }
 

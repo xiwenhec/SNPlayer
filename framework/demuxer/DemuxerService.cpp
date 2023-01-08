@@ -38,7 +38,6 @@ namespace Sivin {
             SN_LOGE("mDemuxer open failed");
             return ret;
         }
-
         return 0;
     }
 
@@ -62,12 +61,12 @@ namespace Sivin {
 
     int DemuxerService::read_callback(void *userArgs, uint8_t *buffer, int size) {
         auto demuxerService = (DemuxerService *) userArgs;
-        return demuxerService->mDataSource->read(buffer,size);
+        return demuxerService->mDataSource->read(buffer, size);
     }
 
     int64_t DemuxerService::seek_callback(void *userArgs, int64_t offset, int whence) {
         auto demuxerService = (DemuxerService *) userArgs;
-        return demuxerService->mDataSource->seek(offset,whence);
+        return demuxerService->mDataSource->seek(offset, whence);
     }
 
     int DemuxerService::start() {

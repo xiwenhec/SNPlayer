@@ -37,7 +37,6 @@ namespace Sivin {
                                                  RINGBUFFER_BACK_SIZE)) {
         isFirstLoop = true;
         mHttpHandle = curl_easy_init();
-
         if (mConfig != nullptr) {
             if (mConfig->lowSpeedLimit && mConfig->lowSpeedTimeMs) {
                 SN_LOGD("set lowSpeedLimit to %d", mConfig->lowSpeedLimit);
@@ -65,7 +64,7 @@ namespace Sivin {
             delete[] mResponseHeader;
             mResponseHeader = nullptr;
         }
-        SN_TRACE;
+        SN_LOGI("~CurlConnection:%p",this);
     }
 
     void CurlConnection::setResume(int64_t pos) {
@@ -123,13 +122,11 @@ namespace Sivin {
 
     int CurlConnection::startConnect() {
         addToManager();
-        SN_TRACE;
         int ret = 0;
         if ((ret = fillBuffer(1, mNeedReconnect)) < 0) {
             SN_LOGE("Connect, didn't get any data from stream.");
             return ret;
         }
-
 
         long responseCode;
         if (CURLE_OK == curl_easy_getinfo(mHttpHandle, CURLINFO_RESPONSE_CODE, &responseCode)) {
@@ -139,7 +136,6 @@ namespace Sivin {
             }
         }
         calcFileSize();
-        SN_LOGI("Connect success. mFilesize = %ld", mFileSize);
         return 0;
     }
 
@@ -196,7 +192,7 @@ namespace Sivin {
                     //撤销成功
                     mFilePos -= ringBufReadSize;
                 }
-                SN_LOGE("forward short seek failed, because can not get enough data");
+                SN_LOGW("forward short seek failed, because can not get enough data");
                 return ret;
             }
 
@@ -215,7 +211,7 @@ namespace Sivin {
             mFilePos = seekPos;
             return 0;
         }
-        SN_LOGE("forward seek failed, delta is to large");
+        SN_LOGW("forward seek failed, delta is to large");
         return -1;
     }
 

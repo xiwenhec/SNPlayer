@@ -12,7 +12,6 @@
 using namespace Sivin;
 
 int main() {
-
     int i = 0;
     auto *thread = new SNThread([&i]() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -32,7 +31,7 @@ int main() {
     std::this_thread::sleep_for(std::chrono::seconds(7));
     thread->pause();
     std::this_thread::sleep_for(std::chrono::seconds(7));
-    thread->stop();
+    thread->stop();4096
     std::this_thread::sleep_for(std::chrono::seconds(7));
     std::cout << "test end " <<std::endl;
     return 0;

@@ -35,7 +35,6 @@ namespace Sivin {
         std::string mUri;
         std::shared_ptr<CurlConnectionManager> mConnectionManager;
         std::shared_ptr<CurlConnection> mConnection;
-        int64_t mOpenTimeMs = 0;
         std::atomic<bool> mNeedReconnect{false};
         curl_slist *mHeaderList{nullptr};
         int64_t mFileSize{-1};

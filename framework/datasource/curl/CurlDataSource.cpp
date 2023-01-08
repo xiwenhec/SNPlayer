@@ -18,9 +18,8 @@ namespace Sivin {
 
     }
 
-
     int CurlDataSource::open(int flags) {
-        mOpenTimeMs = SNTimer::getSteadyTimeMs();
+        auto openTimeMs = SNTimer::getSteadyTimeMs();
         //TODO:Sivin RTMP协议处理
         bool isRtmp = mUrl.compare(0, 7, "rtmp://") == 0;
         mUri = (isRtmp ? (mUrl + " live=1") : mUrl);
@@ -28,14 +27,15 @@ namespace Sivin {
         mConnection = initConnection();
         mConnection->setInterrupt(mInterrupt);
         mConnection->setResume(mRangeStart != -1 ? mRangeStart : 0);
+
         SN_LOGI("startConnect...");
         int ret = mConnection->startConnect();
         if (ret != 0) {
-            mOpenTimeMs = 0;
             return ret;
         }
         mFileSize = mConnection->getFileSize();
-        mOpenTimeMs = SNTimer::getSteadyTimeMs() - mOpenTimeMs;
+        openTimeMs = SNTimer::getSteadyTimeMs() - openTimeMs;
+        SN_LOGI("Connect success. mFilesize = %ld, cost time = %ldms", mFileSize, openTimeMs);
         return 0;
     }
 
@@ -74,7 +74,6 @@ namespace Sivin {
         }
         return ret;
     }
-
 
     int64_t CurlDataSource::seek(int64_t offset, int whence) {
         if (!mConnection) {
@@ -164,10 +163,12 @@ namespace Sivin {
         connection->setInterrupt(mInterrupt);
         connection->setResume(mRangeStart != -1 ? mRangeStart : offset);
         SN_LOGI("trySeekByNewConnection start...");
+        auto openTime = SNTimer::getSteadyTimeMs();
         int64_t ret = connection->startConnect();
         if (ret == 0) {
             mConnection = connection;
-            SN_LOGI("trySeekByNewConnection success.");
+            openTime = SNTimer::getSteadyTimeMs() - openTime;
+            SN_LOGI("trySeekByNewConnection success. cost time = %ldms", openTime);
             return offset;
         } else {
             SN_LOGE("trySeekByNewConnection failed.");
