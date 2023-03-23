@@ -1,0 +1,14 @@
+//
+// Created by sivin on 23-1-14.
+//
+
+#ifndef SIVINPLAYER_PLAYERMSGCONTROLLER_H
+#define SIVINPLAYER_PLAYERMSGCONTROLLER_H
+
+
+class PlayerMsgController {
+
+};
+
+
+#endif //SIVINPLAYER_PLAYERMSGCONTROLLER_H

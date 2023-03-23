@@ -1,0 +1,14 @@
+prefix=/home/sivin/work/thirdpart/build_tools/../ffmpeg_build/x86_64
+exec_prefix=${prefix}
+libdir=/home/sivin/work/thirdpart/build_tools/../ffmpeg_build/x86_64/lib
+includedir=/home/sivin/work/thirdpart/build_tools/../ffmpeg_build/x86_64/include
+
+Name: libavfilter
+Description: FFmpeg audio/video filtering library
+Version: 8.53.100
+Requires: libswresample >= 4.9.100, libavutil >= 57.43.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavfilter -pthread -lm -latomic
+Libs.private: 
+Cflags: -I${includedir}
