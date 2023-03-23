@@ -5,57 +5,61 @@
 #ifndef SIVINPLAYER_SIVINPLAYER_H
 #define SIVINPLAYER_SIVINPLAYER_H
 
+#include "IMediaPlayer.h"
 #include "data_source/IDataSource.h"
 #include "utils/SNThread.h"
 #include "demuxer/DemuxerService.h"
-#include "PlayerParamsSet.h"
-#include "PlayerDefinition.h"
+#include "PlayerParams.h"
+#include "MediaPlayerDef.h"
 #include "PlayerMsgController.h"
 #include "memory"
 
 
 namespace Sivin {
 
-  class SivinPlayer {
-    friend class PlayerMsgProcessor;
+    class SivinPlayer : public IMediaPlayer {
+        friend class PlayerMsgProcessor;
 
-  public:
-    SivinPlayer();
+    public:
+        SivinPlayer();
 
-    ~SivinPlayer();
+        ~SivinPlayer();
 
-  public:
-    void setView(void *view);
+    public:
+        virtual void setView(void *view) override;
 
-    void setDataSource(const char *url);
+        virtual void setDataSource(const char *url) override;
 
-  private:
+        virtual void prepare() override;
 
-    void putMsg(PlayerMsgType msgType, const PlayerMsgContent &msgContent, bool trigger);
+        virtual void start() override;
 
-    void processVideoLoop();
+    private:
+        void putMsg(PlayerMsgType msgType, const PlayerMsg &msgContent, bool trigger);
 
-    void changePlayerStatus(PlayerStatus newStatus);
+        void processVideoLoop();
 
-    int mainService();
+        void changePlayerStatus(PlayerStatus newStatus);
 
-  private:
-    std::unique_ptr<PlayerParamsSet> mParamsSet{nullptr};
-    std::unique_ptr<IDataSource> mDataSource{nullptr};
+        int mainService();
 
-    std::unique_ptr<IPlayerMsgProcessor> mMsgProcessor{nullptr};
-    std::unique_ptr<PlayerMsgController> mMsgController{nullptr};
+    private:
+        std::unique_ptr<PlayerParams> mParams{nullptr};
+        std::unique_ptr<IDataSource> mDataSource{nullptr};
 
-    std::atomic_bool mCanceled{false};
-    std::atomic_bool mMainServiceCanceled{true};
-    std::unique_ptr<SNThread> mThread{nullptr};
+        std::unique_ptr<IPlayerMsgProcessor> mMsgProcessor{nullptr};
+        std::unique_ptr<PlayerMsgController> mMsgController{nullptr};
 
-    PlayerStatus mOlderStatus{PlayerStatus::IDLE};
-    std::atomic<PlayerStatus> mStatus{PlayerStatus::IDLE};
+        std::atomic_bool mCanceled{false};
+        std::atomic_bool mMainServiceCanceled{true};
+        std::unique_ptr<SNThread> mThread{nullptr};
 
-    std::unique_ptr<DemuxerService> mDemuxerService{nullptr};
-  };
+        PlayerStatus mOlderStatus{PlayerStatus::IDLE};
+        std::atomic<PlayerStatus> mStatus{PlayerStatus::IDLE};
 
-} // Sivin
+        std::unique_ptr<DemuxerService> mDemuxerService{nullptr};
+    };
 
-#endif //SIVINPLAYER_SIVINPLAYER_H
+} // namespace Sivin
+
+#endif // SIVINPLAYER_SIVINPLAYER_H

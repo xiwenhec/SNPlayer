@@ -13,7 +13,7 @@ namespace Sivin {
 
   void PlayerMsgProcessor::processSetDataSourceMsg(const std::string &url) {
     if (mPlayer.mStatus == PlayerStatus::IDLE || mPlayer.mStatus == PlayerStatus::STOPPED) {
-      mPlayer.mParamsSet->url = url;
+      mPlayer.mParams->url = url;
       mPlayer.changePlayerStatus(PlayerStatus::INITIALIZED);
     }
   }

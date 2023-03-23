@@ -7,7 +7,7 @@
 #include <thread>
 #include <iostream>
 #include "utils/SNLog.h"
-#include <utils/SNThread.h>
+#include "utils/SNThread.h"
 
 using namespace Sivin;
 
@@ -31,7 +31,7 @@ int main() {
     std::this_thread::sleep_for(std::chrono::seconds(7));
     thread->pause();
     std::this_thread::sleep_for(std::chrono::seconds(7));
-    thread->stop();4096
+    thread->stop();
     std::this_thread::sleep_for(std::chrono::seconds(7));
     std::cout << "test end " <<std::endl;
     return 0;

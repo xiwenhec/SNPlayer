@@ -8,29 +8,28 @@
 #include "base/media/IMediaFrame.h"
 namespace Sivin {
 
-enum class SeekMode {
-  ACCURATE = 0x01,
-  INACCURATE = 0x10,
-};
+  enum class SeekMode {
+    ACCURATE = 0x01,
+    INACCURATE = 0x10,
+  };
 
-enum class PlayerStatus {
-  IDLE = 0,
-  INITIALIZED,
-  PREPARING,
-  PREPARED,
-  PLAYING,
-  PAUSED,
-  STOPPED,
-  COMPLETION,
-  ERROR = 101,
-};
+  enum class PlayerStatus {
+    IDLE = 0,
+    INITIALIZED,
+    PREPARING,
+    PREPARED,
+    PLAYING,
+    PAUSED,
+    STOPPED,
+    COMPLETION,
+    ERROR = 101,
+  };
 
-struct PlayerListener {};
+  struct PlayerListener {};
 
-using OnRenderFrameCallback = bool(void *userData, IMediaFrame *frame);
+  using OnRenderFrameCallback = bool(void *userData, IMediaFrame *frame);
 
 
+}// namespace Sivin
 
-} // namespace Sivin
-
-#endif // SIVINPLAYER_MEDIAPLAYERDEF_H
+#endif// SIVINPLAYER_MEDIAPLAYERDEF_H

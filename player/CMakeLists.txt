@@ -28,7 +28,7 @@ target_sources(SivinPlayer PRIVATE
         SivinPlayer.cpp
         PlayerMsgProcessor.cpp
         PlayerMsgController.cpp
-        PlayerParamsSet.cpp
+        PlayerParams.cpp
         MediaPlayer.cpp
         )
 

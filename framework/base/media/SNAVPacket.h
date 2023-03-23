@@ -2,8 +2,8 @@
 // Created by sivin on 12/25/22.
 //
 
-#ifndef DATASOURCETEST_SNAVPACKET_H
-#define DATASOURCETEST_SNAVPACKET_H
+#ifndef FRAMKEWORK_BASE_MEDIA_SNAVPACKET_H
+#define FRAMKEWORK_BASE_MEDIA_SNAVPACKET_H
 
 extern "C" {
 #include <libavcodec/packet.h>
@@ -15,25 +15,25 @@ extern "C" {
 
 namespace Sivin {
 
-    class SNAVPacket : public ISNPacket {
+class SNAVPacket : public ISNPacket {
 
-    public:
-        explicit SNAVPacket(AVPacket **pkt);
+public:
+  explicit SNAVPacket(AVPacket **pkt);
 
-        ~SNAVPacket();
+  ~SNAVPacket();
 
-        uint8_t *getData() override;
+  uint8_t *getData() override;
 
-        int64_t getSize() override;
+  int64_t getSize() override;
 
-    private:
-        AVPacket *mpkt{nullptr};
-        bool mIsProtected;
-        std::string mMagicKey{};
+private:
+  AVPacket *mpkt{nullptr};
+  bool mIsProtected;
+  std::string mMagicKey{};
 
-        void copyInfo();
-    };
+  void copyInfo();
+};
 
-} // Sivin
+} // namespace Sivin
 
-#endif //DATASOURCETEST_SNAVPACKET_H
+#endif // FRAMKEWORK_BASE_MEDIA_SNAVPACKET_H

@@ -5,11 +5,11 @@
 #ifndef SIVINPLAYER_PLAYERMSGCONTROLLER_H
 #define SIVINPLAYER_PLAYERMSGCONTROLLER_H
 
-#include <cstdint>
-#include <string>
-#include <mutex>
-#include <memory>
 #include "deque"
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <string>
 
 namespace Sivin {
 
@@ -25,17 +25,19 @@ namespace Sivin {
     INTERNAL_VIDEO_HOLD_ON
   };
 
+  //TODO:这里需要优化
   struct PlayerDataSourceMsg {
+    //拥有该资源的所有权
     std::string *url;
   };
 
-  union PlayerMsgContent {
+  union PlayerMsg {
     PlayerDataSourceMsg dataSource;
   };
 
   struct QueueMsg {
     PlayerMsgType msgType;
-    PlayerMsgContent msgContent;
+    PlayerMsg msg;
     int64_t msgTime;
   };
 
@@ -51,13 +53,14 @@ namespace Sivin {
   };
 
 
+  //该类主要是负责转发上层发送到player的各种消息
   class PlayerMsgController {
   public:
     explicit PlayerMsgController(IPlayerMsgProcessor &processor);
 
     ~PlayerMsgController();
 
-    void putMsg(PlayerMsgType type, const PlayerMsgContent &msgContent);
+    void putMsg(PlayerMsgType type, const PlayerMsg &msg);
 
     int processMsg();
 
@@ -70,7 +73,7 @@ namespace Sivin {
   private:
     void recycleMsg(QueueMsg &msg);
 
-    void distributeMsg(PlayerMsgType msgType, const PlayerMsgContent &msgContent);
+    void distributeMsg(PlayerMsgType msgType, const PlayerMsg &msg);
 
   private:
     std::mutex mMutex;
@@ -78,7 +81,7 @@ namespace Sivin {
 
     IPlayerMsgProcessor &mMsgProcessor;
   };
-}
+}// namespace Sivin
 
 
-#endif //SIVINPLAYER_PLAYERMSGCONTROLLER_H
+#endif// SIVINPLAYER_PLAYERMSGCONTROLLER_H

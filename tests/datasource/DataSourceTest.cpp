@@ -7,7 +7,7 @@
 #include <string>
 #include <thread>
 #include "curl/curl.h"
-#include "datasource/DataSourceFactory.h"
+#include "data_source/DataSourceFactory.h"
 #include "utils/SNLog.h"
 #include <memory>
 #include "utils/SNTimer.h"
