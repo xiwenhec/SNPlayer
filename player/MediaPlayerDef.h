@@ -1,0 +1,36 @@
+//
+// Created by sivin on 23-1-15.
+//
+
+#ifndef SIVINPLAYER_MEDIAPLAYERDEF_H
+#define SIVINPLAYER_MEDIAPLAYERDEF_H
+
+#include "base/media/IMediaFrame.h"
+namespace Sivin {
+
+enum class SeekMode {
+  ACCURATE = 0x01,
+  INACCURATE = 0x10,
+};
+
+enum class PlayerStatus {
+  IDLE = 0,
+  INITIALIZED,
+  PREPARING,
+  PREPARED,
+  PLAYING,
+  PAUSED,
+  STOPPED,
+  COMPLETION,
+  ERROR = 101,
+};
+
+struct PlayerListener {};
+
+using OnRenderFrameCallback = bool(void *userData, IMediaFrame *frame);
+
+
+
+} // namespace Sivin
+
+#endif // SIVINPLAYER_MEDIAPLAYERDEF_H
