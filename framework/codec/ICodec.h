@@ -7,8 +7,6 @@
 
 namespace Sivin {
     class ICodec {
-    public:
-        static void test();
     };
 }
 

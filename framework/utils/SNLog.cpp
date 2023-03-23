@@ -14,7 +14,7 @@
 
 #endif
 
-#include "NSLog.h"
+#include "SNLog.h"
 
 #define APP_TAG "SNPlayer"
 
@@ -75,19 +75,19 @@ static char getLevelChar(int lev, const char **ctrl) {
 }
 
 
-std::once_flag NSLog::sLogInitFlag;
-std::shared_ptr<NSLog> NSLog::sInstance{nullptr};
+std::once_flag SNLog::sLogInitFlag;
+std::shared_ptr<SNLog> SNLog::sInstance{nullptr};
 
-std::shared_ptr<NSLog> NSLog::getInstance() {
-    std::call_once(sLogInitFlag, &NSLog::init);
+std::shared_ptr<SNLog> SNLog::getInstance() {
+    std::call_once(sLogInitFlag, &SNLog::init);
     return sInstance;
 }
 
-void NSLog::init() {
-    sInstance.reset(new NSLog());
+void SNLog::init() {
+    sInstance.reset(new SNLog());
 }
 
-NSLog::NSLog() {
+SNLog::SNLog() {
     mVersion = "0.1";
 #ifdef NDEBUG
     mPriority = SN_LOG_LEVEL_INFO;
@@ -97,7 +97,7 @@ NSLog::NSLog() {
 }
 
 
-void NSLog::snLogPrint(int prio, const char *tag, const char *fmt, va_list args) {
+void SNLog::snLogPrint(int prio, const char *tag, const char *fmt, va_list args) {
     if (prio > mPriority) {
         return;
     }
@@ -164,7 +164,7 @@ static void getLocalTime(char *buffer) {
 }
 
 
-void NSLog::formatLog(int priority, const char *tag, char *inBuffer, char *outBuffer) {
+void SNLog::formatLog(int priority, const char *tag, char *inBuffer, char *outBuffer) {
     std::thread::id tid = std::this_thread::get_id();
     int pid = 0;
 #ifndef WIN32
@@ -186,33 +186,33 @@ void NSLog::formatLog(int priority, const char *tag, char *inBuffer, char *outBu
 }
 
 
-void NSLog::info(const char *tag, const char *fmt, ...) {
+void SNLog::info(const char *tag, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    NSLog::getInstance()->snLogPrint(SN_LOG_LEVEL_INFO, tag, fmt, args);
+    SNLog::getInstance()->snLogPrint(SN_LOG_LEVEL_INFO, tag, fmt, args);
     va_end(args);
 }
 
-void NSLog::debug(const char *tag, const char *fmt, ...) {
+void SNLog::debug(const char *tag, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    NSLog::getInstance()->snLogPrint(SN_LOG_LEVEL_DEBUG, tag, fmt, args);
+    SNLog::getInstance()->snLogPrint(SN_LOG_LEVEL_DEBUG, tag, fmt, args);
     va_end(args);
 }
 
-void NSLog::warn(const char *tag, const char *fmt, ...) {
+void SNLog::warn(const char *tag, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    NSLog::getInstance()->snLogPrint(SN_LOG_LEVEL_WARNING, tag, fmt, args);
+    SNLog::getInstance()->snLogPrint(SN_LOG_LEVEL_WARNING, tag, fmt, args);
     va_end(args);
 }
 
 
 
-void NSLog::error(const char *tag, const char *fmt, ...) {
+void SNLog::error(const char *tag, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    NSLog::getInstance()->snLogPrint(SN_LOG_LEVEL_ERROR, tag, fmt, args);
+    SNLog::getInstance()->snLogPrint(SN_LOG_LEVEL_ERROR, tag, fmt, args);
     va_end(args);
 }
 

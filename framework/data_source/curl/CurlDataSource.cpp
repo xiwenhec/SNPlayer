@@ -5,7 +5,7 @@
 
 #define LOG_TAG "CurlDataSource"
 
-#include <utils/NSLog.h>
+#include <utils/SNLog.h>
 #include "CurlDataSource.h"
 #include "utils/SNTimer.h"
 
@@ -24,6 +24,7 @@ namespace Sivin {
         bool isRtmp = mUrl.compare(0, 7, "rtmp://") == 0;
         mUri = (isRtmp ? (mUrl + " live=1") : mUrl);
 
+        std::unique_lock<std::shared_mutex> lock{mSharedMutex};
         mConnection = initConnection();
         mConnection->setInterrupt(mInterrupt);
         mConnection->setResume(mRangeStart != -1 ? mRangeStart : 0);
@@ -39,7 +40,11 @@ namespace Sivin {
         return 0;
     }
 
+
     int64_t CurlDataSource::read(void *outBuffer, int64_t size) {
+
+        std::shared_lock<std::shared_mutex> lock{mSharedMutex};
+
         if (mRangeEnd > 0 || mFileSize > 0) {
             int64_t end = std::min(mRangeEnd, mFileSize);
             if (end > 0) {
@@ -67,7 +72,6 @@ namespace Sivin {
                 return (int) ret;
             }
         }
-
         ret = mConnection->readBuffer(outBuffer, size);
         if (ret < 0) {
             SN_LOGE("CurlDataSource2::Read ret=%d", ret);
@@ -75,7 +79,9 @@ namespace Sivin {
         return ret;
     }
 
+
     int64_t CurlDataSource::seek(int64_t offset, int whence) {
+        std::shared_lock<std::shared_mutex> lock{mSharedMutex};
         if (!mConnection) {
             SN_LOGE("seek error connection = nullptr");
             return -1;
@@ -89,7 +95,6 @@ namespace Sivin {
             SN_LOGE("seek error,whence = SEEK_END, mFileSize = %ld", mFileSize);
             return -1;
         }
-
         if (whence == SEEK_CUR) {
             offset += mConnection->tell();
         } else if (whence == SEEK_END) {
@@ -124,15 +129,16 @@ namespace Sivin {
                 SN_LOGI("short seek failed: offset = %ld", offset);
             }
         } else {
+            lock.unlock();
             closeConnection(true);
         }
+        lock.unlock();
         int64_t ret = trySeekByNewConnection(offset);
         mNeedReconnect = false;
         return ret;
     }
 
     void CurlDataSource::close() {
-
     }
 
     std::shared_ptr<CurlConnection> CurlDataSource::initConnection() {
@@ -147,6 +153,7 @@ namespace Sivin {
 
 
     void CurlDataSource::closeConnection(bool forbidReuse) {
+        std::unique_lock<std::shared_mutex> lock{mSharedMutex};
         mConnection->closeConnection(forbidReuse);
         mConnection = nullptr;
     }
@@ -156,6 +163,7 @@ namespace Sivin {
     }
 
     int64_t CurlDataSource::trySeekByNewConnection(int64_t offset) {
+        std::unique_lock<std::shared_mutex> lock{mSharedMutex};
         if (mConnection) {
             mConnection->closeConnection(false);
         }

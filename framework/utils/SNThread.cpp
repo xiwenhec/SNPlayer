@@ -5,7 +5,7 @@
 #define LOG_TAG "SNThread"
 
 #include "SNThread.h"
-#include "NSLog.h"
+#include "SNLog.h"
 
 #include <memory>
 #include <utility>

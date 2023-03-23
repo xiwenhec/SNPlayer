@@ -10,15 +10,15 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-gc-sections")
 set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
 
 set(COMMON_INC_DIR  ${TOPDIR}/framework
-        ${TOPDIR}/thirdparty/json
-        ${TOPDIR}/thirdparty/curl/include
-        ${TOPDIR}/thirdparty/openssl/include
-        ${TOPDIR}/thirdparty/ffmpeg/x86_64/include
+        ${TOPDIR}/third_party/json
+        ${TOPDIR}/third_party/curl/include
+        ${TOPDIR}/third_party/openssl/include
+        ${TOPDIR}/third_party/ffmpeg/x86_64/include
         )
 
 set(COMMON_LIB_DIR ${TOPDIR}/thirdparty/curl/lib
-        ${TOPDIR}/thirdparty/openssl/lib
-        ${TOPDIR}/thirdparty/ffmpeg/x86_64/lib
+        ${TOPDIR}/third_party/openssl/lib
+        ${TOPDIR}/third_party/ffmpeg/x86_64/lib
         )
 
 add_subdirectory(${TOPDIR}/framework framework.out)

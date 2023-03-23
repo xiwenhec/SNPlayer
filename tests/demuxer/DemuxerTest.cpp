@@ -4,10 +4,10 @@
 
 #define LOG_TAG "DemuxerTest"
 
-#include "utils/NSLog.h"
+#include "utils/SNLog.h"
 #include "demuxer/DemuxerService.h"
-#include "datasource/curl/CurlDataSource.h"
-#include "datasource/DataSourceFactory.h"
+#include "data_source/curl/CurlDataSource.h"
+#include "data_source/DataSourceFactory.h"
 #include "utils/SNTimer.h"
 
 using namespace Sivin;
@@ -32,16 +32,23 @@ int main() {
     demuxerService->start();
     std::unique_ptr<ISNPacket> packet;
     demuxerService->openStream(0);
+
+    int64_t start = SNTimer::getSteadyTimeMs();
+
     do {
         ret = demuxerService->readPacket(packet, 0);
         if (ret > 0) {
             SN_LOGI("get packet: pts = %d", packet->getInfo().pts);
+            if (packet->getInfo().pts / 1000000 > 100) {
+            }
         } else if (ret == 0) {
-            SNTimer::sleepUs(10);
+            SNTimer::sleepUs(5);
         } else if (ret == -1) {
             SN_LOGI("stream finish to end");
         }
     } while (ret >= 0);
 
-    SN_LOGI("test end...");
+    start = SNTimer::getSteadyTimeMs() - start;
+
+    SN_LOGI("test end...:time = %ldms",start);
 }

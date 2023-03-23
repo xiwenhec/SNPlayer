@@ -7,9 +7,11 @@ extern "C" {
 }
 
 #include <utils/SNFFUtils.h>
+
+#include <memory>
 #include "AVFormatDemuxer.h"
 #include "utils/SNTimer.h"
-#include "utils/NSLog.h"
+#include "utils/SNLog.h"
 #include "utils/SNUtils.h"
 #include "base/media/SNAVPacket.h"
 
@@ -42,7 +44,7 @@ namespace Sivin {
     int AVFormatDemuxer::open(AVInputFormat *inputFormat) {
         if (bOpened) { return 0; }
         SN_TRACE;
-        int64_t startTime = SNTimer::getSteadyTimeMs();
+        int64_t costTime = SNTimer::getSteadyTimeMs();
         //是否直接使用文件路径
         bool useFileName = false;
         if (mReadCb != nullptr) {
@@ -85,7 +87,8 @@ namespace Sivin {
             }
             return ret;
         }
-        SN_LOGI("avformat_open_input success");
+        costTime = SNTimer::getSteadyTimeMs() - costTime;
+        SN_LOGI("avformat_open_input success. cost time = %ldms", costTime);
 
         if (strcmp(mCtx->iformat->name, "mov,mp4,m4a,3gp,3g2,mj2") != 0) {
             mCtx->fps_probe_size = 0;
@@ -305,9 +308,9 @@ namespace Sivin {
         std::string bsfName{};
         const AVCodecParameters *codecpar = mCtx->streams[index]->codecpar;
 
-        //表示需要annexb的打包格式
+        //表示需要Annexb的打包格式
         if (mVideoStreamType == BitStreamType::BITSTREAM_TYPE_MERGE) {
-            //extradata表示当前NALU码流可能是AVCC的打包格式
+            //extradata里有数据表示，当前是AVCC的打包格式
             if (codecpar->codec_id == AV_CODEC_ID_H264 && codecpar->extradata != nullptr &&
                 (codecpar->extradata[0] == 1)) {
                 bsfName = "h264_mp4toannexb";
@@ -315,7 +318,6 @@ namespace Sivin {
                        AV_RB32(codecpar->extradata) != 0x0000001 && AV_RB24(codecpar->extradata) != 0x000001) {
                 bsfName = "hevc_mp4toannexb";
             }
-
         } else if (mVideoStreamType == BITSTREAM_TYPE_EXTRACT) {
             //将码流转换成AVCC的格式
             if (codecpar->codec_id == AV_CODEC_ID_H264 && codecpar->extradata != nullptr &&
@@ -367,13 +369,13 @@ namespace Sivin {
         std::unique_lock<std::mutex> uLock(mMutex);
         if (index >= mCtx->nb_streams) {
             SN_LOGE("no such stream");
-            return -EINVAL;
+            return -1;
         }
         if (mStreamCtxMap[index] != nullptr) {
             mStreamCtxMap[index]->opened = true;
             return 0;
         }
-        mStreamCtxMap[index] = std::unique_ptr<AVStreamCtx>(new AVStreamCtx());
+        mStreamCtxMap[index] = std::make_unique<AVStreamCtx>();
         mStreamCtxMap[index]->opened = true;
         mStreamCtxMap[index]->bsfInited = false;
         return 0;

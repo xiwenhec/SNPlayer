@@ -6,13 +6,13 @@
 #define DATASOURCETEST_DATASOURCEFACTORY_H
 
 #include <memory>
-#include "datasource/IDataSource.h"
+#include "data_source/IDataSource.h"
 
 namespace Sivin {
-    class DataSourceFactory {
-    public:
-        static std::shared_ptr<IDataSource> create(const std::string &url);
-    };
+  class DataSourceFactory {
+  public:
+    static std::shared_ptr<IDataSource> create(const std::string &url);
+  };
 }
 
 

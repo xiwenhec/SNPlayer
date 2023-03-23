@@ -3,18 +3,12 @@
 //
 
 #include "ICodec.h"
-#include "utils/NSLog.h"
+#include "utils/SNLog.h"
 extern "C" {
 #include "libavformat/avformat.h"
 }
 
-
 namespace Sivin {
-    void ICodec::test() {
-        char sourcePath[] = "./res/ceshi.mp4";
-        AVFormatContext *mCtx = NULL;
-        int ret = avformat_open_input(&mCtx, sourcePath, NULL, NULL);
-        SN_LOGE("ret = %d",ret);
-    }
+
 }
 

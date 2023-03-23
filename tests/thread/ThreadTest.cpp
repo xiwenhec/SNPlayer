@@ -6,7 +6,7 @@
 
 #include <thread>
 #include <iostream>
-#include "utils/NSLog.h"
+#include "utils/SNLog.h"
 #include <utils/SNThread.h>
 
 using namespace Sivin;

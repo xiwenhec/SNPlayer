@@ -10,35 +10,35 @@
 #include <list>
 
 namespace Sivin {
-    class CurlConnection;
+  class CurlConnection;
 
-    class CurlConnectionManager {
-    public:
-        CurlConnectionManager();
+  class CurlConnectionManager {
+  public:
+    CurlConnectionManager();
 
-        ~CurlConnectionManager();
+    ~CurlConnectionManager();
 
-    public:
-        void addConnection(const std::shared_ptr<CurlConnection> &connection);
+  public:
+    void addConnection(const std::shared_ptr<CurlConnection> &connection);
 
-        void removeConnection(const std::shared_ptr<CurlConnection> &connection);
+    void removeConnection(const std::shared_ptr<CurlConnection> &connection);
 
-        void resumeConnection(const std::shared_ptr<CurlConnection> &connection);
+    void resumeConnection(const std::shared_ptr<CurlConnection> &connection);
 
-    private:
-        int loop();
+  private:
+    int loop();
 
-        void applyPending();
+    void applyPending();
 
-    private:
-        CURLM *mMultiHandle{nullptr};
-        int mStillRunning{0};
-        std::unique_ptr<SNThread> mLoopThread;
-        std::mutex mMutex;
-        std::list<std::shared_ptr<CurlConnection>> mAddList;
-        std::list<std::shared_ptr<CurlConnection>> mRemoveList;
-        std::list<std::shared_ptr<CurlConnection>> mResumeList;
-    };
+  private:
+    CURLM *mMultiHandle{nullptr};
+    int mStillRunning{0};
+    std::unique_ptr<SNThread> mLoopThread;
+    std::mutex mMutex;
+    std::list<std::shared_ptr<CurlConnection>> mAddList;
+    std::list<std::shared_ptr<CurlConnection>> mRemoveList;
+    std::list<std::shared_ptr<CurlConnection>> mResumeList;
+  };
 
 } // Sivin
 

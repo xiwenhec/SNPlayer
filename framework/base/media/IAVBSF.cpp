@@ -2,7 +2,7 @@
 // Created by sivin on 12/7/22.
 //
 
-#include <utils/NSLog.h>
+#include <utils/SNLog.h>
 #include "IAVBSF.h"
 #include "utils/SNFFUtils.h"
 

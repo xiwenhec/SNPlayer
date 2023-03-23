@@ -3,11 +3,11 @@
 //
 
 #include "DataSourceFactory.h"
-#include "datasource/curl/CurlDataSource.h"
+#include "data_source/curl/CurlDataSource.h"
 
 namespace Sivin {
-    std::shared_ptr<IDataSource> DataSourceFactory::create(const std::string &url) {
-        std::shared_ptr<IDataSource> dataSource = std::make_shared<CurlDataSource>(url);
-        return std::move(dataSource);
-    }
+  std::shared_ptr<IDataSource> DataSourceFactory::create(const std::string &url) {
+    std::shared_ptr<IDataSource> dataSource = std::make_shared<CurlDataSource>(url);
+    return dataSource;
+  }
 }

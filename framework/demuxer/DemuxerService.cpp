@@ -6,7 +6,7 @@
 
 #include "DemuxerService.h"
 #include "demuxer/DemuxerFactory.h"
-#include "utils/NSLog.h"
+#include "utils/SNLog.h"
 
 #define  MAX_PROBE_SIZE 1024
 
