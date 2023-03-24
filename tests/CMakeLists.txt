@@ -9,37 +9,44 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-gc-sections")
 
 set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
 
-set(COMMON_INC_DIR  ${TOPDIR}/framework
+set(COMMON_INC_DIR  
+        ${TOPDIR}/player
+        ${TOPDIR}/framework
         ${TOPDIR}/third_party/json
         ${TOPDIR}/third_party/curl/include
         ${TOPDIR}/third_party/openssl/include
         ${TOPDIR}/third_party/ffmpeg/x86_64/include
         )
 
-set(COMMON_LIB_DIR ${TOPDIR}/thirdparty/curl/lib
+set(COMMON_LIB_DIR 
+        ${TOPDIR}/thirdparty/curl/lib
         ${TOPDIR}/third_party/openssl/lib
         ${TOPDIR}/third_party/ffmpeg/x86_64/lib
         )
 
 add_subdirectory(${TOPDIR}/framework framework.out)
+add_subdirectory(${TOPDIR}/player player.out)
+
 
 add_executable(test "")
-
 
 target_include_directories(test PUBLIC
         ${COMMON_INC_DIR}
         )
-
 target_link_directories(test PRIVATE ${COMMON_LIB_DIR})
+
+
+
+
 
 #线程测试
 #set(ENABLE_THREAD_TEST ON)
-
 #dataSource测试
 #set(ENABLE_DATASOURCE_TEST ON)
+#set(ENABLE_DEMUXER_TEST ON)
+set(ENABLE_PLAYER_TEST ON)
 
 
-set(ENABLE_DEMUXER_TEST ON)
 
 if (${ENABLE_THREAD_TEST})
     target_sources(test PRIVATE
@@ -47,11 +54,11 @@ if (${ENABLE_THREAD_TEST})
             )
 endif ()
 
-
 if (${ENABLE_DATASOURCE_TEST})
-    target_sources(test PRIVATE
+        target_sources(test PRIVATE
             datasource/DataSourceTest.cpp
-            )
+        )
+
 endif ()
 
 if (${ENABLE_DEMUXER_TEST})
@@ -60,8 +67,7 @@ if (${ENABLE_DEMUXER_TEST})
             )
 endif ()
 
-
-target_link_libraries(test PRIVATE
+target_link_libraries(test PRIVATE        
         framework_codec
         framework_demuxer
         framework_utils
@@ -75,3 +81,36 @@ target_link_libraries(test PRIVATE
         crypto
         z
         )
+
+
+if (${ENABLE_PLAYER_TEST}) 
+        add_executable(PlayerTest "")
+
+        target_sources(PlayerTest PRIVATE 
+                player/PlayerTest.cpp
+        )
+
+        target_include_directories(PlayerTest PUBLIC
+                ${COMMON_INC_DIR}
+        )
+
+        target_link_directories(PlayerTest PRIVATE ${COMMON_LIB_DIR})
+        
+
+        target_link_libraries(PlayerTest PRIVATE
+                SnMedia
+                framework_codec
+                framework_demuxer
+                framework_utils
+                framework_datasource
+                pthread
+                avformat
+                avcodec
+                avutil
+                curl
+                ssl
+                crypto
+                z
+        )
+endif()
+

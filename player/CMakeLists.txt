@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(SivinPlayer)
+project(SnMedia)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -19,13 +19,13 @@ set(COMMON_LIB_DIR ${TOPDIR}/third_party/curl/lib
         )
 
 
-add_subdirectory(${TOPDIR}/framework framework.out)
+# add_subdirectory(${TOPDIR}/framework framework.out)
 
-add_library(SivinPlayer STATIC "")
+add_library(SnMedia STATIC "")
 
 
-target_sources(SivinPlayer PRIVATE
-        SivinPlayer.cpp
+target_sources(SnMedia PRIVATE
+        SnPlayer.cpp
         PlayerMsgProcessor.cpp
         PlayerMsgController.cpp
         PlayerParams.cpp
@@ -33,7 +33,7 @@ target_sources(SivinPlayer PRIVATE
         )
 
 
-target_link_libraries(SivinPlayer PRIVATE
+target_link_libraries(SnMedia PRIVATE
         framework_codec
         framework_demuxer
         framework_utils
