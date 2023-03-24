@@ -11,7 +11,7 @@
 namespace Sivin {
 
   /**
-   * 用于缓存播放器的一些内部状态变量
+   * 用于缓存播放器参数的类
    */
   class PlayerParams {
   public:
