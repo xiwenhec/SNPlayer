@@ -3,6 +3,7 @@
 //
 
 #include "PlayerMsgController.h"
+#include "utils/SNLog.h"
 #include <algorithm>
 
 namespace Sivin {
@@ -17,6 +18,7 @@ namespace Sivin {
   static int getReplaceType(PlayerMsgType type) {
     switch (type) {
       case PlayerMsgType::SET_DATASOURCE:
+      case PlayerMsgType::PREPARE:
         return REPLACE_ALL;
       default:
         return REPLACE_NONE;
@@ -35,15 +37,22 @@ namespace Sivin {
     int replaceType = getReplaceType(type);
     ADD_LOCK;
     switch (replaceType) {
-      case REPLACE_ALL://删除掉消息队列中的所有消息，只留下当前新插入的消息
-        for (auto iter = mMsgQueue.begin(); iter != mMsgQueue.end(); ++iter) {
-          if (iter->msgType == PlayerMsgType::SET_DATASOURCE) {
+      case REPLACE_ALL://删除掉消息队列中c重复的所有消息，只留下当前新插入的消息
+        for (auto iter = mMsgQueue.begin(); iter != mMsgQueue.end();) {
+          if (iter->msgType == type) {
             recycleMsg(*iter);
-            mMsgQueue.erase(iter);
+            iter = mMsgQueue.erase(iter);
+          } else {
+            ++iter;
           }
         }
         break;
-
+      case REPLACE_LAST:
+        if (!mMsgQueue.empty() && mMsgQueue.back().msgType == type) {
+          recycleMsg(mMsgQueue.back());
+          mMsgQueue.pop_back();
+        }
+        break;
       default:
         break;
     }
@@ -57,17 +66,19 @@ namespace Sivin {
     }
   }
 
+  /**
+    分发处理消息队列里的消息，返回处理的消息个数
+  */
   int PlayerMsgController::processMsg() {
-
     //首先将所有待处理的消息，转移到一个新的消息队列中，这样在消息处理期间不影响新的消息加入
     std::deque<QueueMsg> processQueue{};
+
     ADD_LOCK;
-    for (auto iter = mMsgQueue.begin(); iter != mMsgQueue.end(); ++iter) {
+    for (auto iter = mMsgQueue.begin(); iter != mMsgQueue.end();) {
       processQueue.push_back(*iter);
-      mMsgQueue.erase(iter);
+      iter = mMsgQueue.erase(iter);
     }
     lock.unlock();
-
     //一次性处理所有消息
     int count = 0;
     for (auto &queueMsg: processQueue) {
@@ -78,7 +89,6 @@ namespace Sivin {
       }
     }
     processQueue.clear();
-
     return count;
   }
 
@@ -86,6 +96,9 @@ namespace Sivin {
     switch (msgType) {
       case PlayerMsgType::SET_DATASOURCE:
         mMsgProcessor.processSetDataSourceMsg(*msg.dataSource.url);
+        break;
+      case PlayerMsgType::PREPARE:
+        mMsgProcessor.processPrepareMsg();
         break;
       default:
         break;
@@ -105,7 +118,9 @@ namespace Sivin {
 
   void PlayerMsgController::clear() {
     ADD_LOCK;
-    for (auto &msg: mMsgQueue) { recycleMsg(msg); }
+    for (auto &msg: mMsgQueue) {
+      recycleMsg(msg);
+    }
     mMsgQueue.clear();
   }
 

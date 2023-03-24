@@ -16,6 +16,7 @@ namespace Sivin {
   enum class PlayerStatus {
     IDLE = 0,
     INITIALIZED,
+    PREPARED_INIT,
     PREPARING,
     PREPARED,
     PLAYING,

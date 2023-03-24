@@ -64,7 +64,7 @@ namespace Sivin {
       delete[] mResponseHeader;
       mResponseHeader = nullptr;
     }
-    SN_LOGI("~CurlConnection:%p", this);
+    SN_LOGD("~CurlConnection:%p", this);
   }
 
   void CurlConnection::setResume(int64_t pos) {

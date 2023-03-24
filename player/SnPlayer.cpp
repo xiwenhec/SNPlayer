@@ -61,7 +61,10 @@ namespace Sivin {
 
   void SnPlayer::changePlayerStatus(PlayerStatus newStatus) {
     mOlderStatus = mPlayStatus;
-    if (mPlayStatus != newStatus) {}
+    SN_LOGD("change status: newStatus = %d, oldStatus = %ld\n", newStatus, mOlderStatus);
+    if (mPlayStatus != newStatus) {
+      mPlayStatus = newStatus;
+    }
   }
 
 
@@ -73,10 +76,12 @@ namespace Sivin {
     int64_t curTime = SNTimer::getSteadyTimeMs();
     //    mUtil->notifyPlayerLoop(curTime);
     //    sendDCAMessage();
+
+    //首先处理需要待处理的消息
     if (mMsgController->empty() || mMsgController->processMsg() == 0) {
-      // TODO:干什么？
       processVideoLoop();
     }
+
 
     return 0;
   }
@@ -88,5 +93,11 @@ namespace Sivin {
         mDemuxerService == nullptr) {
     }
   }
+
+
+  void SnPlayer::resetSeekStatus() {
+    mSeekPos = -1;
+  }
+
 
 }// namespace Sivin

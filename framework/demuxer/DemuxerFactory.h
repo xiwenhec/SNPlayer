@@ -7,11 +7,11 @@
 #include "demuxer/IDemuxer.h"
 namespace Sivin {
 
-    class DemuxerFactory {
-    public:
-        static std::unique_ptr<IDemuxer> createDemuxer(std::string path);
-    };
+  class DemuxerFactory {
+  public:
+    static IDemuxer *createDemuxer(const std::string &path);
+  };
 
-} // Sivin
+}// namespace Sivin
 
-#endif //DATASOURCETEST_DEMUXERFACTORY_H
+#endif//DATASOURCETEST_DEMUXERFACTORY_H

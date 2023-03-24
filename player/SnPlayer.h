@@ -43,6 +43,7 @@ namespace Sivin {
     virtual void seekTo(int64_t seekPos, bool isAccurate) override;
 
     virtual void stop() override;
+    
 
   private:
     void putMsg(PlayerMsgType msgType, const PlayerMsg &msgContent, bool trigger);
@@ -53,10 +54,12 @@ namespace Sivin {
 
     int mainService();
 
+    void resetSeekStatus();
+
   private:
     //用于记录播放的各种参数，比如播放地址，播放速度等
     std::unique_ptr<PlayerParams> mParams{nullptr};
-    std::unique_ptr<IDataSource> mDataSource{nullptr};
+    std::shared_ptr<IDataSource> mDataSource{nullptr};
 
     std::mutex mPlayerMutex;
 
@@ -71,6 +74,8 @@ namespace Sivin {
     std::atomic<PlayerStatus> mPlayStatus{PlayerStatus::IDLE};
 
     std::unique_ptr<DemuxerService> mDemuxerService{nullptr};
+
+    std::atomic<int64_t> mSeekPos{-1};
   };
 
 }// namespace Sivin

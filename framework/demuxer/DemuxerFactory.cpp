@@ -4,8 +4,9 @@
 
 #include "DemuxerFactory.h"
 #include "demuxer/AVFormatDemuxer.h"
+#include <utility>
 namespace Sivin {
-    std::unique_ptr<IDemuxer> DemuxerFactory::createDemuxer(std::string path) {
-        return std::make_unique<AVFormatDemuxer>(std::move(path));
-    }
-} // Sivin
+  IDemuxer *DemuxerFactory::createDemuxer(const std::string &path) {
+    return new AVFormatDemuxer(path);
+  }
+}// namespace Sivin

@@ -6,8 +6,7 @@
 #include "data_source/curl/CurlDataSource.h"
 
 namespace Sivin {
-  std::shared_ptr<IDataSource> DataSourceFactory::create(const std::string &url) {
-    std::shared_ptr<IDataSource> dataSource = std::make_shared<CurlDataSource>(url);
-    return dataSource;
+  IDataSource *DataSourceFactory::create(const std::string &url) {
+    return new CurlDataSource(url);
   }
-}
+}// namespace Sivin

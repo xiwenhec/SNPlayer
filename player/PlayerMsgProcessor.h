@@ -21,12 +21,11 @@ namespace Sivin {
   private:
     void processSetDataSourceMsg(const std::string &url) override;
 
-    void processPrepareMsg() final;
+    void processPrepareMsg() override;
 
 
   private:
-    void openUrl();
-
+    int openUrl();
 
   private:
     SnPlayer &mPlayer;
