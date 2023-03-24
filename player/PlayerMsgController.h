@@ -18,6 +18,7 @@ namespace Sivin {
   enum class PlayerMsgType {
     INVALID = -1,
     SET_DATASOURCE = 0,
+    PREPARE,
 
     INTERNAL_FIRST = 0x100,
     INTERNAL_RENDERED = INTERNAL_FIRST,

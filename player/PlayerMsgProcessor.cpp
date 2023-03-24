@@ -8,11 +8,11 @@
 
 namespace Sivin {
 
-  PlayerMsgProcessor::PlayerMsgProcessor(SivinPlayer &player) : mPlayer(player) {}
+  PlayerMsgProcessor::PlayerMsgProcessor(SnPlayer &player) : mPlayer(player) {}
 
 
   void PlayerMsgProcessor::processSetDataSourceMsg(const std::string &url) {
-    if (mPlayer.mStatus == PlayerStatus::IDLE || mPlayer.mStatus == PlayerStatus::STOPPED) {
+    if (mPlayer.mPlayStatus == PlayerStatus::IDLE || mPlayer.mPlayStatus == PlayerStatus::STOPPED) {
       mPlayer.mParams->url = url;
       mPlayer.changePlayerStatus(PlayerStatus::INITIALIZED);
     }

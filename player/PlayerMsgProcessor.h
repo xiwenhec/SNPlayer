@@ -6,14 +6,17 @@
 #define SIVINPLAYER_PLAYERMSGPROCESSOR_H
 
 #include "PlayerMsgController.h"
-#include "SivinPlayer.h"
+#include "SnPlayer.h"
 
 namespace Sivin {
 
+  /**
+    处理播放器转发的消息类
+  */
   class PlayerMsgProcessor : public IPlayerMsgProcessor {
 
   public:
-    explicit PlayerMsgProcessor(SivinPlayer &player);
+    explicit PlayerMsgProcessor(SnPlayer &player);
 
   private:
     void processSetDataSourceMsg(const std::string &url) override;
@@ -26,7 +29,7 @@ namespace Sivin {
 
 
   private:
-    SivinPlayer &mPlayer;
+    SnPlayer &mPlayer;
   };
 }
 
