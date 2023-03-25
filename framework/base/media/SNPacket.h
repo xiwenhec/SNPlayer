@@ -13,6 +13,9 @@ namespace Sivin {
 #define SN_PKT_FLAG_KEY 0x0001    // The packet contains a keyframe
 #define SN_PKT_FLAG_CORRUPT 0x0002// The packet content is corrupted
 
+  /**
+    解封装数据packet的抽象
+  */
   class SNPacket {
   public:
     class PacketInfo {

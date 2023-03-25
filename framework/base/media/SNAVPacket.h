@@ -15,6 +15,7 @@ extern "C" {
 
 namespace Sivin {
 
+//SNPacket的FFmpeg实现
 class SNAVPacket : public SNPacket {
 
 public:
@@ -28,7 +29,9 @@ public:
 
 private:
   AVPacket *mpkt{nullptr};
+
   bool mIsProtected;
+  
   std::string mMagicKey{};
 
   void copyInfo();

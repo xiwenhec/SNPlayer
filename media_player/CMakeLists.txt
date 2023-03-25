@@ -34,6 +34,7 @@ target_sources(SnMedia PRIVATE
         MediaPlayer.cpp
         PlayerNotifier.cpp
         BufferController.cpp
+        MediaPacketQueue.cpp
         )
 
 

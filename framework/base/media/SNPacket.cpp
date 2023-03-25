@@ -5,8 +5,7 @@
 #include "SNPacket.h"
 
 namespace Sivin {
-
-
+    
     SNPacket::PacketInfo &SNPacket::PacketInfo::operator=(const SNPacket::PacketInfo &other) {
         if (this == &other) {
             return *this;
