@@ -29,6 +29,13 @@ namespace Sivin {
 
     int64_t seek(int64_t us, int flags, int index);
 
+  public:
+    int getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo);
+
+    int getNbStreams() const;
+
+    int getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index);
+
   private:
     static int read_callback(void *userArgs, uint8_t *buffer, int size);
 

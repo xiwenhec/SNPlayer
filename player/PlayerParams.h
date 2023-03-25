@@ -22,14 +22,15 @@ namespace Sivin {
     void reset();
 
   public:
-
     std::string url{};
 
     int timeoutMs{15000};
-
-
+    bool loopPlay{false};
+    bool disableAudio{false};
+    bool disableVideo{false};
+    bool mute{false};
   };
 
-} // Sivin
+}// namespace Sivin
 
-#endif //SIVINPLAYER_PLAYERPARAMS_H
+#endif//SIVINPLAYER_PLAYERPARAMS_H

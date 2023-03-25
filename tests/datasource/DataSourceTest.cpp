@@ -16,7 +16,7 @@ using namespace Sivin;
 int size = 0;
 bool hasSeek = false;
 
-void readThreadFunc(std::shared_ptr<IDataSource> &dataSource) {
+void readThreadFunc(IDataSource *dataSource) {
     while (true) {
         char buffer[1024 * 32];
         int ret = dataSource->read(buffer, sizeof(buffer));
@@ -35,13 +35,12 @@ void readThreadFunc(std::shared_ptr<IDataSource> &dataSource) {
 }
 
 
-void testRead(std::shared_ptr<IDataSource> &dataSource) {
+void testRead(IDataSource *dataSource) {
     std::thread readThread{readThreadFunc, std::ref(dataSource)};
     readThread.join();
 }
 
 int main() {
-
     curl_global_init(CURL_GLOBAL_ALL);
     std::string url = "https://player.alicdn.com/video/aliyunmedia.mp4";
     auto dataSource = DataSourceFactory::create(url);

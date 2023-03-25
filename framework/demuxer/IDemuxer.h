@@ -9,7 +9,7 @@
 #include <memory>
 #include <functional>
 #include "base/media/ISNPacket.h"
-#include <base/media/StreamInfo.h>
+#include <base/media/SNMediaInfo.h>
 
 namespace Sivin {
 
@@ -57,7 +57,12 @@ namespace Sivin {
 
     virtual void closeStream(int index) = 0;
 
-    virtual void getStreamInfo(std::unique_ptr<StreamInfo> &streamInfo, int index) = 0;
+  public:
+    virtual int getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) = 0;
+    
+    virtual int getNbStreams() const = 0;
+
+    virtual int getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) = 0;
 
   protected:
     std::string mPath;

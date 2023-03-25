@@ -103,4 +103,20 @@ namespace Sivin {
     return 0;
   }
 
+  int DemuxerService::getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) {
+    CHECK_DEMUXER;
+    return mDemuxer->getMediaInfo(mediaInfo);
+  }
+
+  int DemuxerService::getNbStreams() const {
+    CHECK_DEMUXER;
+    return mDemuxer->getNbStreams();
+  }
+
+
+  int DemuxerService::getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) {
+    CHECK_DEMUXER;
+    return mDemuxer->getStreamInfo(streamInfo, index);
+  }
+
 }// namespace Sivin

@@ -43,7 +43,7 @@ namespace Sivin {
     virtual void seekTo(int64_t seekPos, bool isAccurate) override;
 
     virtual void stop() override;
-    
+
 
   private:
     void putMsg(PlayerMsgType msgType, const PlayerMsg &msgContent, bool trigger);
@@ -76,6 +76,11 @@ namespace Sivin {
     std::unique_ptr<DemuxerService> mDemuxerService{nullptr};
 
     std::atomic<int64_t> mSeekPos{-1};
+
+    int64_t mDuration{-1};
+    int mVideoWidth{-1};
+    int mVideoHeight{-1};
+    MediaInfo mMediaInfo {};
   };
 
 }// namespace Sivin

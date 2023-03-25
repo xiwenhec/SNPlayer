@@ -1,9 +1,11 @@
 //
 // Created by sivin on 23-1-14.
 //
+#include "base/media/SNMediaInfo.h"
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include <memory>
+#include <utility>
 #define LOG_TAG "PlayerMsgProcessor"
 #include "MediaPlayerDef.h"
 #include "PlayerMsgProcessor.h"
@@ -47,21 +49,37 @@ namespace Sivin {
 
     //创建解封装Service
     mPlayer.mDemuxerService = std::make_unique<DemuxerService>(mPlayer.mDataSource);
-
     if (mPlayer.mSeekPos > 0) {
       mPlayer.mDemuxerService->seek(mPlayer.mSeekPos, 0, -1);
     } else {
       mPlayer.resetSeekStatus();
     }
-
-    mPlayer.mDemuxerService->createDemuxer(IDemuxer::DEMUXER_TYPE_BITSTREAM);
-
+    
     int ret = mPlayer.mDemuxerService->initOpen(IDemuxer::DEMUXER_TYPE_BITSTREAM);
     if (ret < 0) {
       SN_LOGE("prepare failed. reason: demuxerService open faild.");
-      return ;
+      return;
     }
 
+    int nbStream = mPlayer.mDemuxerService->getNbStreams();
+    std::unique_ptr<SNStreamInfo> streamInfo;
+    for (int i = 0; i < nbStream; i++) {
+      mPlayer.mDemuxerService->getStreamInfo(streamInfo, i);
+      if (mPlayer.mDuration < 0) {
+        mPlayer.mDuration = streamInfo->duration;
+      }
+      if (!mPlayer.mParams->disableVideo && streamInfo->type == StreamType::STREAM_TYPE_VIDEO) {
+        mPlayer.mMediaInfo.mStreamInfoQueue.push_back(std::move(streamInfo));
+      } else if (!mPlayer.mParams->disableAudio && streamInfo->type == StreamType::STREAM_TYPE_AUDIO) {
+        mPlayer.mMediaInfo.mStreamInfoQueue.push_back(std::move(streamInfo));
+      }
+    }
+
+    std::unique_ptr<SNMeidaInfo> snMediaInfo{};
+    mPlayer.mDemuxerService->getMediaInfo(snMediaInfo);
+    if (snMediaInfo) {
+      mPlayer.mMediaInfo.totalBitrate = snMediaInfo->totalBitrate;
+    }
     mPlayer.changePlayerStatus(PlayerStatus::PREPARING);
   }
 

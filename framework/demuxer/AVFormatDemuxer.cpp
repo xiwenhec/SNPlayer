@@ -1,11 +1,18 @@
 //
 // Created by sivin on 12/6/22.
 //
+
 #define LOG_TAG "AVFormatDemuxer"
+
 extern "C" {
 #include <libavutil/intreadwrite.h>
 }
 
+#include "base/media/SNMediaInfo.h"
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <sys/types.h>
 #include <memory>
 #include <utils/SNFFUtils.h>
 #include "AVFormatDemuxer.h"
@@ -14,6 +21,15 @@ extern "C" {
 #include "utils/SNUtils.h"
 #include "base/media/SNAVPacket.h"
 
+#define ADD_LOCK \
+  std::unique_lock<std::mutex> lock { mMutex }
+
+#define CHECK_CTX             \
+  if (mCtx == nullptr) {      \
+    SN_TRACE;                 \
+    SN_LOGE("mCtx is null."); \
+    return -1;                \
+  }
 
 namespace Sivin {
 
@@ -24,6 +40,28 @@ namespace Sivin {
     SN_TRACE;
   }
 
+
+  AVFormatDemuxer::~AVFormatDemuxer() {
+    stop();
+    if (mCtx) {
+      avformat_close_input(&mCtx);
+      mCtx = nullptr;
+    }
+    if (mIOCtx) {
+      av_free(mIOCtx->buffer);
+      av_free(mIOCtx);
+      mIOCtx = nullptr;
+    }
+
+    mStreamCtxMap.clear();
+    mPacketQueue.clear();
+    bOpened = false;
+
+    if (mInputOpts) {
+      av_dict_free(&mInputOpts);
+      mInputOpts = nullptr;
+    }
+  }
 
   void AVFormatDemuxer::init() {
     mCtx = avformat_alloc_context();
@@ -181,6 +219,7 @@ namespace Sivin {
     mQueCond.notify_one();
   }
 
+
   void AVFormatDemuxer::stop() {
     {
       std::unique_lock<std::mutex> waitLock(mQueMutex);
@@ -261,8 +300,7 @@ namespace Sivin {
       createBsf(pkt, streamIndex);
       needUpdateExtraData = true;
     }
-    //TODO:Sivin 有什么用
-    //av_packet_shrink_side_data(pkt, AV_PKT_DATA_SKIP_SAMPLES, 0);
+
     if (mStreamCtxMap[pkt->stream_index]->bsf) {
       int index = pkt->stream_index;
       mStreamCtxMap[index]->bsf->sendPacket(pkt);
@@ -367,7 +405,7 @@ namespace Sivin {
   }
 
   int AVFormatDemuxer::openStream(int index) {
-    std::unique_lock<std::mutex> uLock(mMutex);
+    ADD_LOCK;
     if (index >= mCtx->nb_streams) {
       SN_LOGE("no such stream");
       return -1;
@@ -383,7 +421,7 @@ namespace Sivin {
   }
 
   void AVFormatDemuxer::closeStream(int index) {
-    std::unique_lock<std::mutex> uLock(mMutex);
+    ADD_LOCK;
     if (mStreamCtxMap.find(index) == mStreamCtxMap.end()) {
       SN_LOGI("not opened");
       return;
@@ -391,32 +429,33 @@ namespace Sivin {
     mStreamCtxMap[index]->opened = false;
   }
 
-  void AVFormatDemuxer::getStreamInfo(std::unique_ptr<StreamInfo> &streamInfo, int index) {
-    
-  
+  int AVFormatDemuxer::getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) {
+    CHECK_CTX;
+    mediaInfo = std::make_unique<SNMeidaInfo>();
+    mediaInfo->totalBitrate = mCtx->bit_rate;
+    return 0;
   }
 
+  int AVFormatDemuxer::getNbStreams() const {
+    CHECK_CTX;
+    return mCtx->nb_streams;
+  }
 
-  AVFormatDemuxer::~AVFormatDemuxer() {
-    stop();
-    if (mCtx) {
-      avformat_close_input(&mCtx);
-      mCtx = nullptr;
+  int AVFormatDemuxer::getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) {
+    ADD_LOCK;
+    if (index < 0 || mCtx == nullptr || index > mCtx->nb_streams) {
+      return -1;
     }
-    if (mIOCtx) {
-      av_free(mIOCtx->buffer);
-      av_free(mIOCtx);
-      mIOCtx = nullptr;
+    SNStreamInfo *info = new SNStreamInfo();
+    SNFFUtils::getStreamInfo(mCtx->streams[index], info);
+    if (mCtx->duration != AV_NOPTS_VALUE) {
+      info->duration = mCtx->duration;
+    } else {
+      info->duration = 0;
     }
-
-    mStreamCtxMap.clear();
-    mPacketQueue.clear();
-    bOpened = false;
-
-    if (mInputOpts) {
-      av_dict_free(&mInputOpts);
-      mInputOpts = nullptr;
-    }
+    info->index = index;
+    streamInfo = std::unique_ptr<SNStreamInfo>(info);
+    return 0;
   }
 
 

@@ -10,36 +10,34 @@
 
 namespace Sivin {
 
-    class MediaPlayer {
-    public:
-        explicit MediaPlayer();
+  class MediaPlayer {
+  public:
+    explicit MediaPlayer();
 
-        ~MediaPlayer();
+    ~MediaPlayer();
 
-        static std::string GetSdkVersion() {
-            return "Sivin:0.1";
-        }
+    static std::string GetSdkVersion() {
+      return "SNPlayer:0.1";
+    }
 
-    public:
+  public:
+    //设置显示的view
+    void setView(void *view);
 
-        //设置显示的view
-        void setView(void *view);
+    //设置播放URL
+    void setDataSource(const std::string &url);
 
-        //设置播放URL
-        void setDataSource(const std::string &url);
+    void prepare();
 
-        void prepare();
+    void start();
 
-        void start();
+    void pause();
 
-        void pause();
+    void seekTo(int64_t seekPos, SeekMode mode);
 
-        void seekTo(int64_t seekPos, SeekMode mode);
+    void Stop();
+  };
 
-        void Stop();
+}// namespace Sivin
 
-    };
-
-} // Sivin
-
-#endif //SIVINPLAYER_MEDIAPLAYER_H
+#endif//SIVINPLAYER_MEDIAPLAYER_H

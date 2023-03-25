@@ -5,6 +5,9 @@
 #ifndef SIVINPLAYER_MEDIAPLAYERDEF_H
 #define SIVINPLAYER_MEDIAPLAYERDEF_H
 
+#include <deque>
+#include <base/media/SNMediaInfo.h>
+#include <memory>
 #include "base/media/IMediaFrame.h"
 namespace Sivin {
 
@@ -30,6 +33,13 @@ namespace Sivin {
 
   using OnRenderFrameCallback = bool(void *userData, IMediaFrame *frame);
 
+
+  class MediaInfo {
+  public:
+    int64_t totalBitrate{0};
+
+    std::deque<std::unique_ptr<SNStreamInfo>> mStreamInfoQueue{};
+  };
 
 }// namespace Sivin
 

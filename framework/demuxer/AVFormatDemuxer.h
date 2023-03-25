@@ -5,7 +5,8 @@
 #ifndef DATASOURCETEST_AVFORMATDEMUXER_H
 #define DATASOURCETEST_AVFORMATDEMUXER_H
 
-#include "base/media/StreamInfo.h"
+#include "base/media/SNMediaInfo.h"
+
 extern "C" {
 #include <libavformat//avformat.h>
 }
@@ -17,8 +18,6 @@ extern "C" {
 #include <utils/SNThread.h>
 #include <base/media/ISNPacket.h>
 #include "base/media/IAVBSF.h"
-
-
 
 namespace Sivin {
 
@@ -55,7 +54,9 @@ namespace Sivin {
 
 
   public:
-    void getStreamInfo(std::unique_ptr<StreamInfo> &streamInfo, int index) override;
+    int getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) override;
+    int getNbStreams() const override;
+    int getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) override;
 
   private:
     void init();

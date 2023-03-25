@@ -5,13 +5,29 @@
 #ifndef DATASOURCETEST_SNFFUTILS_H
 #define DATASOURCETEST_SNFFUTILS_H
 
+#include <base/media/SNMediaInfo.h>
+
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include "libavutil/avutil.h"
+}
+
 namespace Sivin {
 
-    class SNFFUtils {
-    public:
-        static const char *getErrorString(int err);
-    };
+  class SNFFUtils {
+  public:
+    static const char *getErrorString(int err);
 
-} // Sivin
+    static SNCodecID AVCodecToSNCodec(enum AVCodecID codecID);
 
-#endif //DATASOURCETEST_SNFFUTILS_H
+    static SNPixelFormat AVPixelFormatToSNPixeFormat(int format);
+
+    static SNSampleFormat AVSampleFormatToSNSampleFormat(int format);
+
+    static int getStreamInfo(const struct AVStream *stream, SNStreamInfo *info);
+  };
+
+}// namespace Sivin
+
+#endif//DATASOURCETEST_SNFFUTILS_H
