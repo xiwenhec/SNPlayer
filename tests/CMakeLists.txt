@@ -10,7 +10,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-gc-sections")
 set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
 
 set(COMMON_INC_DIR  
-        ${TOPDIR}/player
+        ${TOPDIR}/media_player
         ${TOPDIR}/framework
         ${TOPDIR}/third_party/json
         ${TOPDIR}/third_party/curl/include
