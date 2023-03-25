@@ -29,9 +29,14 @@ namespace Sivin {
     ERROR = 101,
   };
 
-  struct PlayerListener {};
-
   using OnRenderFrameCallback = bool(void *userData, IMediaFrame *frame);
+
+  using PlayerCallbackType0 = void (*)(void *userData);
+
+  struct PlayerListener {
+    PlayerCallbackType0 onPreparedCallback{nullptr};
+    void *userData{nullptr};
+  };
 
 
   class MediaInfo {

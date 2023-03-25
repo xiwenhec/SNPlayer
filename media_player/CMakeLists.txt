@@ -30,6 +30,7 @@ target_sources(SnMedia PRIVATE
         PlayerMsgController.cpp
         PlayerParams.cpp
         MediaPlayer.cpp
+        PlayerNotifier.cpp
         )
 
 
