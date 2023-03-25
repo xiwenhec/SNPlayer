@@ -25,7 +25,7 @@ set(COMMON_LIB_DIR
         )
 
 add_subdirectory(${TOPDIR}/framework framework.out)
-add_subdirectory(${TOPDIR}/player player.out)
+add_subdirectory(${TOPDIR}/media_player media_player.out)
 
 
 add_executable(test "")
