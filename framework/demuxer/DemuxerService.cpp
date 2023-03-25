@@ -93,7 +93,7 @@ namespace Sivin {
   }
 
 
-  int DemuxerService::readPacket(std::unique_ptr<ISNPacket> &packet, int index) {
+  int DemuxerService::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
     CHECK_DEMUXER;
     return mDemuxer->readPacket(packet, index);
   }

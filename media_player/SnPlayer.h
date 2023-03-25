@@ -12,6 +12,7 @@
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include "utils/SNThread.h"
+#include <cstdint>
 #include <mutex>
 
 
@@ -33,6 +34,8 @@ namespace Sivin {
     virtual void setView(void *view) override;
 
     virtual void setDataSource(const char *url) override;
+
+    virtual void setListener(const PlayerListener &listener) override;
 
     virtual void prepare() override;
 
@@ -57,9 +60,18 @@ namespace Sivin {
     void resetSeekStatus();
 
   private:
+    int64_t getPlayerBufferDuration(bool gotMax, bool internal);
+
+    void doReadPacket();
+
+    void doDecode();
+
+  private:
     //用于记录播放的各种参数，比如播放地址，播放速度等
     std::unique_ptr<PlayerParams> mParams{nullptr};
     std::shared_ptr<IDataSource> mDataSource{nullptr};
+
+    PlayerListener mListener{};
 
     std::mutex mPlayerMutex;
 
@@ -78,9 +90,14 @@ namespace Sivin {
     std::atomic<int64_t> mSeekPos{-1};
 
     int64_t mDuration{-1};
+
+    int mCurrentVideoIndex{-1};
+    int mCurrentAudioIndex{-1};
+
     int mVideoWidth{-1};
     int mVideoHeight{-1};
-    MediaInfo mMediaInfo {};
+
+    MediaInfo mMediaInfo{};
   };
 
 }// namespace Sivin

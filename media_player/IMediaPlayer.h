@@ -16,7 +16,7 @@ namespace Sivin {
 
     virtual std::string getName() = 0;
 
-    // virtual void setListener(const PlayerListener &listener) = 0;
+    virtual void setListener(const PlayerListener &listener) = 0;
 
     // virtual void setOnVideoRenderCallback(OnRenderFrameCallback callback, void *userData) = 0;
 

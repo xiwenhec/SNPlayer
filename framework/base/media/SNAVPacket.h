@@ -9,13 +9,13 @@ extern "C" {
 #include <libavcodec/packet.h>
 };
 
-#include "base/media/ISNPacket.h"
+#include "base/media/SNPacket.h"
 #include <string>
 
 
 namespace Sivin {
 
-class SNAVPacket : public ISNPacket {
+class SNAVPacket : public SNPacket {
 
 public:
   explicit SNAVPacket(AVPacket **pkt);

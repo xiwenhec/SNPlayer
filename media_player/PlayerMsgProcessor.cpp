@@ -54,7 +54,7 @@ namespace Sivin {
     } else {
       mPlayer.resetSeekStatus();
     }
-    
+
     int ret = mPlayer.mDemuxerService->initOpen(IDemuxer::DEMUXER_TYPE_BITSTREAM);
     if (ret < 0) {
       SN_LOGE("prepare failed. reason: demuxerService open faild.");
@@ -69,8 +69,14 @@ namespace Sivin {
         mPlayer.mDuration = streamInfo->duration;
       }
       if (!mPlayer.mParams->disableVideo && streamInfo->type == StreamType::STREAM_TYPE_VIDEO) {
+        if (mPlayer.mCurrentVideoIndex < 0) {
+          mPlayer.mCurrentVideoIndex = streamInfo->index;
+        }
         mPlayer.mMediaInfo.mStreamInfoQueue.push_back(std::move(streamInfo));
       } else if (!mPlayer.mParams->disableAudio && streamInfo->type == StreamType::STREAM_TYPE_AUDIO) {
+        if (mPlayer.mCurrentAudioIndex < 0) {
+          mPlayer.mCurrentAudioIndex = streamInfo->index;
+        }
         mPlayer.mMediaInfo.mStreamInfoQueue.push_back(std::move(streamInfo));
       }
     }

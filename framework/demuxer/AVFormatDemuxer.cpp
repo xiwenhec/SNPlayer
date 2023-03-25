@@ -182,7 +182,7 @@ namespace Sivin {
       return 0;
     }
 
-    std::unique_ptr<ISNPacket> pkt{};
+    std::unique_ptr<SNPacket> pkt{};
     int ret = readPacketInternal(pkt);
     if (ret > 0) {
       std::unique_lock<std::mutex> waitLock{mQueMutex};
@@ -233,7 +233,7 @@ namespace Sivin {
   }
 
 
-  int AVFormatDemuxer::readPacketInternal(std::unique_ptr<ISNPacket> &packet) {
+  int AVFormatDemuxer::readPacketInternal(std::unique_ptr<SNPacket> &packet) {
     if (!bOpened) {
       return -1;
     }
@@ -331,7 +331,7 @@ namespace Sivin {
     }
 
     int packet_size = pkt->size;
-    packet = std::unique_ptr<ISNPacket>(new SNAVPacket(&pkt));
+    packet = std::unique_ptr<SNPacket>(new SNAVPacket(&pkt));
 
     if (packet->getInfo().pts != INT64_MIN) {
       if (mCtx->start_time == INT64_MIN) {
@@ -382,7 +382,7 @@ namespace Sivin {
     return 0;
   }
 
-  int AVFormatDemuxer::readPacket(std::unique_ptr<ISNPacket> &packet, int index) {
+  int AVFormatDemuxer::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
     if (mThread->getStatus() == SNThread::THREAD_STATUS_IDLE) {
       SN_LOGW("read packet thread not start, will read from Internal");
       return readPacketInternal(packet);

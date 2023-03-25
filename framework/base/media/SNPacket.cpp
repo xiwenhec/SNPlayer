@@ -2,12 +2,12 @@
 // Created by sivin on 12/6/22.
 //
 
-#include "ISNPacket.h"
+#include "SNPacket.h"
 
 namespace Sivin {
 
 
-    ISNPacket::PacketInfo &ISNPacket::PacketInfo::operator=(const ISNPacket::PacketInfo &other) {
+    SNPacket::PacketInfo &SNPacket::PacketInfo::operator=(const SNPacket::PacketInfo &other) {
         if (this == &other) {
             return *this;
         }

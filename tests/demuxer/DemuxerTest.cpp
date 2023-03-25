@@ -32,7 +32,7 @@ int main() {
     return 0;
   }
   demuxerService->start();
-  std::unique_ptr<ISNPacket> packet;
+  std::unique_ptr<SNPacket> packet;
   demuxerService->openStream(0);
 
   int64_t start = SNTimer::getSteadyTimeMs();

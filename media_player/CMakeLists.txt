@@ -6,14 +6,16 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
 
-set(COMMON_INC_DIR ${TOPDIR}/framework
+set(COMMON_INC_DIR 
+        ${TOPDIR}/framework
         ${TOPDIR}/third_party/json
         ${TOPDIR}/third_party/curl/include
         ${TOPDIR}/third_party/openssl/include
         ${TOPDIR}/third_party/ffmpeg/x86_64/include
         )
 
-set(COMMON_LIB_DIR ${TOPDIR}/third_party/curl/lib
+set(COMMON_LIB_DIR 
+        ${TOPDIR}/third_party/curl/lib
         ${TOPDIR}/third_party/openssl/lib
         ${TOPDIR}/third_party/ffmpeg/x86_64/lib
         )
@@ -31,6 +33,7 @@ target_sources(SnMedia PRIVATE
         PlayerParams.cpp
         MediaPlayer.cpp
         PlayerNotifier.cpp
+        BufferController.cpp
         )
 
 

@@ -3,6 +3,7 @@
 //
 #define LOG_TAG "SnPlayer"
 
+#include <cstdint>
 #include "SnPlayer.h"
 #include "MediaPlayerDef.h"
 #include "PlayerMsgController.h"
@@ -10,6 +11,9 @@
 #include "PlayerParams.h"
 #include "utils/SNLog.h"
 #include "utils/SNTimer.h"
+
+#define HAVE_VIDEO (mCurrentVideoIndex >= 0)
+#define HAVE_AUDIO (mCurrentAudioIndex >= 0)
 
 static Sivin::PlayerMsg emptyMsg{};
 
@@ -36,6 +40,10 @@ namespace Sivin {
 
   void SnPlayer::setView(void *view) {}
 
+  void SnPlayer::setListener(const PlayerListener &listener) {
+    mListener = listener;
+  }
+
   void SnPlayer::prepare() {
     if (mPlayStatus != PlayerStatus::INITIALIZED && mPlayStatus != PlayerStatus::STOPPED) {
       stop();
@@ -45,7 +53,9 @@ namespace Sivin {
     mPlayerThread->start();
   }
 
-  void SnPlayer::start() {}
+  void SnPlayer::start() {
+    SN_TRACE;
+  }
 
   void SnPlayer::pause() {
   }
@@ -74,9 +84,6 @@ namespace Sivin {
     }
 
     int64_t curTime = SNTimer::getSteadyTimeMs();
-    //    mUtil->notifyPlayerLoop(curTime);
-    //    sendDCAMessage();
-
     //首先处理需要待处理的消息
     if (mMsgController->empty() || mMsgController->processMsg() == 0) {
       processVideoLoop();
@@ -88,15 +95,26 @@ namespace Sivin {
 
   void SnPlayer::processVideoLoop() {
     int64_t curTime = SNTimer::getSteadyTimeMs() / 1000;
+
     if (mPlayStatus != PlayerStatus::COMPLETION &&
-            (mPlayStatus < PlayerStatus::PLAYING || mPlayStatus > PlayerStatus::PAUSED) ||
+            (mPlayStatus < PlayerStatus::PREPARING || mPlayStatus > PlayerStatus::PAUSED) ||
         mDemuxerService == nullptr) {
+      return;//当前播放器处于不可播放状态
     }
   }
 
-
   void SnPlayer::resetSeekStatus() {
     mSeekPos = -1;
+  }
+
+  int64_t SnPlayer::getPlayerBufferDuration(bool gotMax, bool internal) {
+    if (HAVE_AUDIO) {
+    }
+
+    return 0;
+  }
+
+  void SnPlayer::doReadPacket() {
   }
 
 

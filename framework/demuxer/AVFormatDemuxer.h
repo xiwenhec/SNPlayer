@@ -16,7 +16,7 @@ extern "C" {
 #include <deque>
 #include <atomic>
 #include <utils/SNThread.h>
-#include <base/media/ISNPacket.h>
+#include <base/media/SNPacket.h>
 #include "base/media/IAVBSF.h"
 
 namespace Sivin {
@@ -46,7 +46,7 @@ namespace Sivin {
 
     void stop() override;
 
-    int readPacket(std::unique_ptr<ISNPacket> &packet, int index) override;
+    int readPacket(std::unique_ptr<SNPacket> &packet, int index) override;
 
     int openStream(int index) override;
 
@@ -63,7 +63,7 @@ namespace Sivin {
 
     int readLoop();
 
-    int readPacketInternal(std::unique_ptr<ISNPacket> &packet);
+    int readPacketInternal(std::unique_ptr<SNPacket> &packet);
 
     static int interrupt_cb(void *opaque);
 
@@ -88,7 +88,7 @@ namespace Sivin {
     std::mutex mQueMutex{};
     std::condition_variable mQueCond{};
     int MAX_QUEUE_SIZE = 60;
-    std::deque<std::unique_ptr<ISNPacket>> mPacketQueue{};
+    std::deque<std::unique_ptr<SNPacket>> mPacketQueue{};
 
     std::mutex mStreamCtxMutex{};
     //key为流index

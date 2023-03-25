@@ -6,20 +6,24 @@
 
 using namespace Sivin;
 
-void onPrepared(void *userData) {
+static void onPrepared(void *userData) {
+  SnPlayer *player = static_cast<SnPlayer *>(userData);
+  player->start();
 }
 
 int main() {
   printf("player test run...\n");
 
-  PlayerListener mListener{};
-  if (mListener.onPreparedCallback == nullptr) {
-    mListener.onPreparedCallback = onPrepared;
-  }
-  // SnPlayer player;
-  // player.setDataSource("https://player.alicdn.com/video/aliyunmedia.mp4");
-  // player.prepare();
+  SnPlayer *player = new SnPlayer();
+
+  PlayerListener listener{};
+  listener.userData = player;
+  listener.onPreparedCallback = onPrepared;
+  player->setListener(listener);
+  player->setDataSource("https://player.alicdn.com/video/aliyunmedia.mp4");
+  player->prepare();
 
   SNTimer::sleepMs(600 * 1000);
+  delete player;
   return 0;
 }

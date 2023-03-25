@@ -17,7 +17,7 @@ target_sources(
 target_sources(
         framework_utils PUBLIC
         ../base/RingBuffer.cpp
-        ../base/media/ISNPacket.cpp
+        ../base/media/SNPacket.cpp
         ../base/media/IAVBSF.cpp
         ../base/media/SNAVPacket.cpp
 )

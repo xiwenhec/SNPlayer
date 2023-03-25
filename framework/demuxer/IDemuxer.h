@@ -8,7 +8,7 @@
 #include <string>
 #include <memory>
 #include <functional>
-#include "base/media/ISNPacket.h"
+#include "base/media/SNPacket.h"
 #include <base/media/SNMediaInfo.h>
 
 namespace Sivin {
@@ -51,7 +51,7 @@ namespace Sivin {
 
     virtual void stop() = 0;
 
-    virtual int readPacket(std::unique_ptr<ISNPacket> &packet, int index) = 0;
+    virtual int readPacket(std::unique_ptr<SNPacket> &packet, int index) = 0;
 
     virtual int openStream(int index) = 0;
 

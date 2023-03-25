@@ -2,8 +2,8 @@
 // Created by sivin on 12/6/22.
 //
 
-#ifndef FRAMKEWORK_BASE_MEDIA_ISNPACKET_H
-#define FRAMKEWORK_BASE_MEDIA_ISNPACKET_H
+#ifndef FRAMKEWORK_BASE_MEDIA_SNPACKET_H
+#define FRAMKEWORK_BASE_MEDIA_SNPACKET_H
 
 #include <cstdint>
 
@@ -13,24 +13,30 @@ namespace Sivin {
 #define SN_PKT_FLAG_KEY 0x0001    // The packet contains a keyframe
 #define SN_PKT_FLAG_CORRUPT 0x0002// The packet content is corrupted
 
-  class ISNPacket {
+  class SNPacket {
   public:
     class PacketInfo {
     public:
-      int streamIndex;
-      int64_t pts;
-      int64_t dts;
-      int64_t timePosition;
-      int64_t duration;
-      int flags;
-      int64_t pos;
+      PacketInfo &operator=(const PacketInfo &other);
 
     public:
-      PacketInfo &operator=(const PacketInfo &other);
+      int streamIndex{-1};
+
+      int64_t pts{-1};
+
+      int64_t dts{-1};
+
+      int64_t timePosition{-1};
+
+      int64_t duration{-1};
+
+      int flags{-1};
+
+      int64_t pos{-1};
     };
 
   public:
-    virtual ~ISNPacket(){};
+    virtual ~SNPacket(){};
 
     virtual uint8_t *getData() = 0;
 
@@ -46,4 +52,4 @@ namespace Sivin {
 
 }// namespace Sivin
 
-#endif// FRAMKEWORK_BASE_MEDIA_ISNPACKET_H
+#endif// FRAMKEWORK_BASE_MEDIA_SNPACKET_H
