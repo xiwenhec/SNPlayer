@@ -3,10 +3,10 @@
 //
 
 #include "DemuxerFactory.h"
-#include "demuxer/AVFormatDemuxer.h"
+#include "demuxer/AVFFDemuxer.h"
 #include <utility>
 namespace Sivin {
   IDemuxer *DemuxerFactory::createDemuxer(const std::string &path) {
-    return new AVFormatDemuxer(path);
+    return new AVFFDemuxer(path);
   }
 }// namespace Sivin

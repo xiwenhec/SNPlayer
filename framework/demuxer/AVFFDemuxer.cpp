@@ -15,7 +15,7 @@ extern "C" {
 #include <sys/types.h>
 #include <memory>
 #include <utils/SNFFUtils.h>
-#include "AVFormatDemuxer.h"
+#include "AVFFDemuxer.h"
 #include "utils/SNTimer.h"
 #include "utils/SNLog.h"
 #include "utils/SNUtils.h"
@@ -35,13 +35,13 @@ namespace Sivin {
 
   const static int INITIAL_BUFFER_SIZE = 1024 * 32;
 
-  AVFormatDemuxer::AVFormatDemuxer(std::string path) : IDemuxer(std::move(path)) {
+  AVFFDemuxer::AVFFDemuxer(std::string path) : IDemuxer(std::move(path)) {
     init();
     SN_TRACE;
   }
 
 
-  AVFormatDemuxer::~AVFormatDemuxer() {
+  AVFFDemuxer::~AVFFDemuxer() {
     stop();
     if (mCtx) {
       avformat_close_input(&mCtx);
@@ -63,7 +63,7 @@ namespace Sivin {
     }
   }
 
-  void AVFormatDemuxer::init() {
+  void AVFFDemuxer::init() {
     mCtx = avformat_alloc_context();
     //当打开网络流出现阻塞时会回到这个函数，用于判断是否中断
     mCtx->interrupt_callback.callback = interrupt_cb;
@@ -73,12 +73,12 @@ namespace Sivin {
   }
 
 
-  int AVFormatDemuxer::open() {
+  int AVFFDemuxer::open() {
     return open(nullptr);
   }
 
   //TODO:Sivin 错误处理
-  int AVFormatDemuxer::open(AVInputFormat *inputFormat) {
+  int AVFFDemuxer::open(AVInputFormat *inputFormat) {
     if (bOpened) {
       return 0;
     }
@@ -150,22 +150,22 @@ namespace Sivin {
     return 0;
   }
 
-  int AVFormatDemuxer::avio_callback_read(void *arg, uint8_t *buffer, int size) {
-    auto *demuxer = static_cast<AVFormatDemuxer *>(arg);
+  int AVFFDemuxer::avio_callback_read(void *arg, uint8_t *buffer, int size) {
+    auto *demuxer = static_cast<AVFFDemuxer *>(arg);
     int ret = demuxer->mReadCb(demuxer->mUserArg, buffer, size);
     return ret ? ret : AVERROR_EOF;
   }
 
-  int64_t AVFormatDemuxer::avio_callback_seek(void *arg, int64_t offset, int whence) {
-    auto *demuxer = static_cast<AVFormatDemuxer *>(arg);
+  int64_t AVFFDemuxer::avio_callback_seek(void *arg, int64_t offset, int whence) {
+    auto *demuxer = static_cast<AVFFDemuxer *>(arg);
     return demuxer->mSeekCb(demuxer->mUserArg, offset, whence);
   }
 
-  int AVFormatDemuxer::interrupt_cb(void *opaque) {
-    return static_cast<AVFormatDemuxer *>(opaque)->mInterrupted;
+  int AVFFDemuxer::interrupt_cb(void *opaque) {
+    return static_cast<AVFFDemuxer *>(opaque)->mInterrupted;
   }
 
-  int AVFormatDemuxer::readLoop() {
+  int AVFFDemuxer::readLoop() {
     if (bExited) {
       return -1;
     }
@@ -205,13 +205,13 @@ namespace Sivin {
     return 0;
   }
 
-  void AVFormatDemuxer::start() {
+  void AVFFDemuxer::start() {
     bPaused = false;
     mThread->start();
   }
 
 
-  void AVFormatDemuxer::preStop() {
+  void AVFFDemuxer::preStop() {
     {
       std::unique_lock<std::mutex> waitLock(mQueMutex);
       bExited = true;
@@ -220,7 +220,7 @@ namespace Sivin {
   }
 
 
-  void AVFormatDemuxer::stop() {
+  void AVFFDemuxer::stop() {
     {
       std::unique_lock<std::mutex> waitLock(mQueMutex);
       bPaused = true;
@@ -233,7 +233,7 @@ namespace Sivin {
   }
 
 
-  int AVFormatDemuxer::readPacketInternal(std::unique_ptr<SNPacket> &packet) {
+  int AVFFDemuxer::readPacketInternal(std::unique_ptr<SNPacket> &packet) {
     if (!bOpened) {
       return -1;
     }
@@ -343,7 +343,7 @@ namespace Sivin {
     return packet_size;
   }
 
-  int AVFormatDemuxer::createBsf(AVPacket *pkt, int index) {
+  int AVFFDemuxer::createBsf(AVPacket *pkt, int index) {
     std::string bsfName{};
     const AVCodecParameters *codecpar = mCtx->streams[index]->codecpar;
 
@@ -382,7 +382,7 @@ namespace Sivin {
     return 0;
   }
 
-  int AVFormatDemuxer::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
+  int AVFFDemuxer::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
     if (mThread->getStatus() == SNThread::THREAD_STATUS_IDLE) {
       SN_LOGW("read packet thread not start, will read from Internal");
       return readPacketInternal(packet);
@@ -404,7 +404,7 @@ namespace Sivin {
     }
   }
 
-  int AVFormatDemuxer::openStream(int index) {
+  int AVFFDemuxer::openStream(int index) {
     ADD_LOCK;
     if (index >= mCtx->nb_streams) {
       SN_LOGE("no such stream");
@@ -420,7 +420,7 @@ namespace Sivin {
     return 0;
   }
 
-  void AVFormatDemuxer::closeStream(int index) {
+  void AVFFDemuxer::closeStream(int index) {
     ADD_LOCK;
     if (mStreamCtxMap.find(index) == mStreamCtxMap.end()) {
       SN_LOGI("not opened");
@@ -429,19 +429,19 @@ namespace Sivin {
     mStreamCtxMap[index]->opened = false;
   }
 
-  int AVFormatDemuxer::getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) {
+  int AVFFDemuxer::getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) {
     CHECK_CTX;
     mediaInfo = std::make_unique<SNMeidaInfo>();
     mediaInfo->totalBitrate = mCtx->bit_rate;
     return 0;
   }
 
-  int AVFormatDemuxer::getNbStreams() const {
+  int AVFFDemuxer::getNbStreams() const {
     CHECK_CTX;
     return mCtx->nb_streams;
   }
 
-  int AVFormatDemuxer::getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) {
+  int AVFFDemuxer::getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) {
     ADD_LOCK;
     if (index < 0 || mCtx == nullptr || index > mCtx->nb_streams) {
       return -1;

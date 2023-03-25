@@ -10,7 +10,7 @@ target_include_directories(framework_demuxer PUBLIC
 
 target_sources(framework_demuxer PRIVATE
         IDemuxer.cpp
-        AVFormatDemuxer.cpp
+        AVFFDemuxer.cpp
         DemuxerService.cpp
         DemuxerFactory.cpp
         )
