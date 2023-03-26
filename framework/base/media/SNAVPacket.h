@@ -30,7 +30,7 @@ public:
 private:
   AVPacket *mpkt{nullptr};
 
-  bool mIsProtected;
+  bool mProtected;
   
   std::string mMagicKey{};
 

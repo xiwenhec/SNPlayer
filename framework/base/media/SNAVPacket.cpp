@@ -3,6 +3,7 @@
 //
 
 #include "SNAVPacket.h"
+#include "base/media/SNMediaInfo.h"
 
 namespace Sivin {
   SNAVPacket::SNAVPacket(AVPacket **pkt) {
@@ -27,18 +28,21 @@ namespace Sivin {
     mInfo.pts = mpkt->pts;
     mInfo.dts = mpkt->dts;
     mInfo.flags = 0;
+
     if (mpkt->flags & AV_PKT_FLAG_KEY) {
       mInfo.flags |= SN_PKT_FLAG_KEY;
     }
+
     if (mpkt->flags & AV_PKT_FLAG_CORRUPT) {
       mInfo.flags |= SN_PKT_FLAG_CORRUPT;
     }
+
     if (mpkt->flags & AV_PKT_FLAG_DISCARD) {
-      //            setDiscard(true);
+      setDiscard(true);
     }
 
     mInfo.streamIndex = mpkt->stream_index;
-    mInfo.timePosition = INT64_MIN;
+    mInfo.timePosition = SN_UNKNOWN_VALUE;
     mInfo.pos = mpkt->pos;
   }
 

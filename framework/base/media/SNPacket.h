@@ -5,6 +5,7 @@
 #ifndef FRAMKEWORK_BASE_MEDIA_SNPACKET_H
 #define FRAMKEWORK_BASE_MEDIA_SNPACKET_H
 
+#include "base/media/SNMediaInfo.h"
 #include <cstdint>
 
 
@@ -23,19 +24,20 @@ namespace Sivin {
       PacketInfo &operator=(const PacketInfo &other);
 
     public:
-      int streamIndex{-1};
+      int streamIndex{SN_UNKNOWN_VALUE};
 
-      int64_t pts{-1};
+      int64_t pts{SN_UNKNOWN_VALUE};
 
-      int64_t dts{-1};
+      int64_t dts{SN_UNKNOWN_VALUE};
 
-      int64_t timePosition{-1};
+      //值等于当前pkt.pts-first.pts
+      int64_t timePosition{SN_UNKNOWN_VALUE};
 
-      int64_t duration{-1};
+      int64_t duration{0};
 
-      int flags{-1};
+      int flags{0};
 
-      int64_t pos{-1};
+      int64_t pos{0};
     };
 
   public:
@@ -49,8 +51,17 @@ namespace Sivin {
 
     virtual int64_t getSize() = 0;
 
+    virtual bool isDiscard() {
+      return mDiscard;
+    }
+
+    virtual void setDiscard(bool discard) {
+      mDiscard = discard;
+    }
+
   protected:
     PacketInfo mInfo{};
+    bool mDiscard{};
   };
 
 }// namespace Sivin

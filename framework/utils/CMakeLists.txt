@@ -11,7 +11,8 @@ target_sources(
         SNThread.cpp
         SNTimer.cpp
         SNUtils.cpp
-        SNFFUtils.cpp
+        SNFFUtil.cpp
+        os/SNSysInfoUtil.cpp
 )
 
 target_sources(

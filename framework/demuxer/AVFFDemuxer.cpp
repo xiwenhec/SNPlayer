@@ -14,7 +14,7 @@ extern "C" {
 #include <cstring>
 #include <sys/types.h>
 #include <memory>
-#include <utils/SNFFUtils.h>
+#include <utils/SNFFUtil.h>
 #include "AVFFDemuxer.h"
 #include "utils/SNTimer.h"
 #include "utils/SNLog.h"
@@ -117,7 +117,7 @@ namespace Sivin {
 
     int ret = avformat_open_input(&mCtx, filename, inputFormat, mInputOpts ? &mInputOpts : nullptr);
     if (ret < 0) {
-      SN_LOGE("avformat_open_input error %d, %s", ret, SNFFUtils::getErrorString(ret));
+      SN_LOGE("avformat_open_input error %d, %s", ret, SNFFUtil::getErrorString(ret));
       if (ret == AVERROR_PROTOCOL_NOT_FOUND) {
         return -1;
       }
@@ -143,7 +143,7 @@ namespace Sivin {
     }
 
     if (ret < 0 && ret != AVERROR_EOF) {
-      SN_LOGE("avformat_find_stream_info error %d:%s", ret, SNFFUtils::getErrorString(ret));
+      SN_LOGE("avformat_find_stream_info error %d:%s", ret, SNFFUtil::getErrorString(ret));
       return ret;
     }
     bOpened = true;
@@ -447,7 +447,7 @@ namespace Sivin {
       return -1;
     }
     SNStreamInfo *info = new SNStreamInfo();
-    SNFFUtils::getStreamInfo(mCtx->streams[index], info);
+    SNFFUtil::getStreamInfo(mCtx->streams[index], info);
     if (mCtx->duration != AV_NOPTS_VALUE) {
       info->duration = mCtx->duration;
     } else {
