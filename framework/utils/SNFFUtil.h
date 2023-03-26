@@ -1,9 +1,8 @@
 //
 // Created by sivin on 12/7/22.
 //
-
-#ifndef DATASOURCETEST_SNFFUTILS_H
-#define DATASOURCETEST_SNFFUTILS_H
+#ifndef FRAMKEWORK_UTILS_SNFFUTIL_H
+#define FRAMKEWORK_UTILS_SNFFUTIL_H
 
 #include <base/media/SNMediaInfo.h>
 
@@ -15,7 +14,7 @@ extern "C" {
 
 namespace Sivin {
 
-  class SNFFUtils {
+  class SNFFUtil {
   public:
     static const char *getErrorString(int err);
 
@@ -30,4 +29,5 @@ namespace Sivin {
 
 }// namespace Sivin
 
-#endif//DATASOURCETEST_SNFFUTILS_H
+#endif//#ifndef FRAMKEWORK_UTILS_SNFFUTIL_H
+

@@ -4,7 +4,7 @@
 
 #include <utils/SNLog.h>
 #include "IAVBSF.h"
-#include "utils/SNFFUtils.h"
+#include "utils/SNFFUtil.h"
 
 namespace Sivin {
     IAVBSF *AVBSFFactory::create(const std::string &name) {
@@ -45,7 +45,7 @@ namespace Sivin {
     int AVBSF::sendPacket(AVPacket *pkt) {
         int ret = av_bsf_send_packet(mBsfContext, pkt);
         if (ret < 0) {
-            SN_LOGE("av_bsf_send_packet error %d (%s)", ret,  SNFFUtils::getErrorString(ret));
+            SN_LOGE("av_bsf_send_packet error %d (%s)", ret,  SNFFUtil::getErrorString(ret));
         }
         return ret;
     }
@@ -55,7 +55,7 @@ namespace Sivin {
         if (ret == AVERROR_EOF) {
             return 0;
         } else if (ret < 0) {
-            SN_LOGE("av_bsf_receive_packet error %d (%s)", ret,  SNFFUtils::getErrorString(ret));
+            SN_LOGE("av_bsf_receive_packet error %d (%s)", ret,  SNFFUtil::getErrorString(ret));
             return ret;
         } else {
             return pkt->size;
