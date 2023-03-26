@@ -8,6 +8,16 @@
 #include <mutex>
 namespace Sivin {
 
+  enum class BufferType {
+    BUFFER_TYPE_NONE = 0,
+    BUFFER_TYPE_VIDEO = 1,
+    BUFFER_TYPE_AUDIO = (1 << 1),
+    BUFFER_TYPE_SUBTILE = (1 << 2),
+    BUFFER_TYPE_AV = (BUFFER_TYPE_VIDEO | BUFFER_TYPE_AUDIO),
+    BUFFER_TYPE_ALL = (BUFFER_TYPE_VIDEO | BUFFER_TYPE_AUDIO | BUFFER_TYPE_SUBTILE)
+  };
+
+  //TODO:需要对packet如果没有duration的额外情况进行处理
   class MediaPacketQueue {
   public:
     using MediaPacket = std::unique_ptr<SNPacket>;
@@ -34,13 +44,14 @@ namespace Sivin {
 
     int64_t getPts();
 
-    int64_t getKeyTimePositionBefore(int64_t pts);
+    int64_t getKeyPacketTimePositionBefore(int64_t pts);
 
-    int64_t getKeyTimePositionBeforeUTCTime(int64_t pts);
+    // int64_t getKeyPacketTimePositionBeforeUTCTime(int64_t pts);
 
-    int64_t getFirstKeyPTS(int64_t pts);
+    int64_t getFirstKeyPacketPts(int64_t pts);
 
-    int64_t getLastKeyTimePos();
+    //获取距离当前最近的关键战的timePos
+    int64_t getLastKeyPacketTimePos();
 
     int64_t clearPacketBeforeTimePos(int64_t pts);
 
@@ -48,11 +59,12 @@ namespace Sivin {
 
     void rewind();
 
-    int64_t getLastTimePos();
+    int64_t getLastPacketTimePos();
 
-    int64_t getFirstTimePos();
+    int64_t getFirstPacketTimePos();
 
-    int64_t getLastPTS();
+    //获取队列里最后一个packet的pts
+    int64_t getLastPacketPts();
 
     int64_t findSeamlessPointTimePosition(int &count);
 
@@ -61,20 +73,26 @@ namespace Sivin {
     void setMaxBackwardDuration(uint64_t duration);
 
   public:
-    int mediaType{0};
+    BufferType mBufferType{BufferType::BUFFER_TYPE_NONE};
 
   private:
     void popFrontPacket();
 
   private:
     std::list<MediaPacket> mQueue{};
+
+    std::list<MediaPacket>::iterator mCurrent;
+
     std::recursive_mutex mMutex{};
-    int64_t mPacketDuration{0};
+
     int64_t mDuration{0};
+
     int64_t mTotalDuration{0};
+
     uint64_t mMaxBackwardDuration{0};
 
     uint8_t *mDropedExtraData{nullptr};
+
     int mDropedExtraDataSize{0};
   };
 

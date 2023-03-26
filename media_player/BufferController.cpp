@@ -6,8 +6,6 @@ namespace Sivin {
 
   int64_t BufferController::getPacketDuration(BufferType type) {
     
-    
-    
     return 0;
   }
 
