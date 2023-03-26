@@ -1,6 +1,8 @@
 //
 // Created by Sivin on 2022-11-26.
 //
+#include "MediaPlayerUtil.h"
+#include <memory>
 #define LOG_TAG "SnPlayer"
 
 #include <cstdint>
@@ -21,6 +23,7 @@ namespace Sivin {
   SnPlayer::SnPlayer() {
     SN_TRACE;
     mParams = std::make_unique<PlayerParams>();
+    mUtil = std::make_unique<MediaPlayerUtil>();
     mMsgProcessor = std::make_unique<PlayerMsgProcessor>(*this);
     mMsgController = std::make_unique<PlayerMsgController>(*mMsgProcessor);
     mPlayerThread = MAKE_UNIQUE_THREAD(mainService, LOG_TAG);
@@ -108,13 +111,38 @@ namespace Sivin {
   }
 
   int64_t SnPlayer::getPlayerBufferDuration(bool gotMax, bool internal) {
-    if (HAVE_AUDIO) {
-    }
 
     return 0;
   }
 
   void SnPlayer::doReadPacket() {
+    if (mEof) {
+      return;
+    }
+
+    int64_t curBufferDuration = getPlayerBufferDuration(false, false);
+    mUtil->notifyRead(MediaPlayerUtil::PacketReadEvent::EVENT_LOOP, 0);
+
+    int64_t readStartTime = SNTimer::getSteadyTimeUs();
+    int checkStep = 0;
+    while (true) {
+
+      if (mBufferIsFull) {
+        //TODO:缓冲区慢时的处理
+      }
+
+      if (curBufferDuration > mParams->maxBufferDuration &&
+          getPlayerBufferDuration(false, true) > mParams->startBufferDuration) {
+        mBufferIsFull = true;
+        break;
+      }
+
+      mBufferIsFull = false;
+      //TODO: 1000 * 1000的数字含义不明确
+      if ((0 >= checkStep--) && (curBufferDuration > 1000 * 1000)) {
+        
+      }
+    }
   }
 
 

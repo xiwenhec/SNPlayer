@@ -12,6 +12,7 @@
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include "utils/SNThread.h"
+#include "MediaPlayerUtil.h"
 #include <cstdint>
 #include <mutex>
 
@@ -75,6 +76,7 @@ namespace Sivin {
 
     std::mutex mPlayerMutex;
 
+    std::unique_ptr<MediaPlayerUtil> mUtil{nullptr};
     std::unique_ptr<IPlayerMsgProcessor> mMsgProcessor{nullptr};
     std::unique_ptr<PlayerMsgController> mMsgController{nullptr};
 
@@ -98,6 +100,9 @@ namespace Sivin {
     int mVideoHeight{-1};
 
     MediaInfo mMediaInfo{};
+
+    bool mEof{false};
+    bool mBufferIsFull{false};
   };
 
 }// namespace Sivin
