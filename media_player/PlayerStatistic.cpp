@@ -1,26 +1,17 @@
-#include "MediaPlayerUtil.h"
+#include "PlayerStatistic.h"
 #include "utils/SNTimer.h"
 #include <cstdint>
 
 
 namespace Sivin {
 
-  void MediaPlayerUtil::notifyRead(PacketReadEvent event, uint64_t size) {
+  void PlayerStatistic::stat(StatisticEvent event, uint64_t size) {
     switch (event) {
-      case PacketReadEvent::AGAIN:
-        mReadTimes++;
-        break;
-      case PacketReadEvent::GOT:
-        mReadGotIndex++;
+      case StatisticEvent::LOOP:
+      case StatisticEvent::GOT_PACKET:
         mReadGotSize += size;
         break;
-      case PacketReadEvent::LOOP:
-        mReadLoopIndex++;
-        break;
-      case PacketReadEvent::TIME_OUT:
-        mReadTimeOutIndex++;
-        break;
-      case PacketReadEvent::NETWORK:
+      case StatisticEvent::NETWORK:
         mReadGotSize += size;
         break;
     }
