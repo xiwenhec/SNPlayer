@@ -14,9 +14,7 @@ namespace Sivin {
     if (snInfo == nullptr) {
       return -1;
     }
-
     memset(snInfo, 0, sizeof(SNSysInfo));
-
     if (!gProcMeminfofp && (gProcMeminfofp = fopen("/proc/meminfo", "r")) == nullptr) {
       struct sysinfo info;
       sysinfo(&info);

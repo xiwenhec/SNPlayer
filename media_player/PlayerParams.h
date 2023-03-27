@@ -34,10 +34,16 @@ namespace Sivin {
 
     bool mute{false};
 
+    uint64_t lowMemSize{0};
+
     //起播缓冲时长,单位(ms)
     int64_t startBufferDuration{0};
     //播放器最大缓冲时长,单位(ms)
     int64_t maxBufferDuration{0};
+
+    //以音频优先，如果音频比视频短，则播放到音频结束后就停止。
+    bool preferAudio{false};
+
   };
 
 }// namespace Sivin

@@ -4,7 +4,7 @@
 
 #include "PlayerParams.h"
 
-#define DEFAULTSTART_BUFFER_DURATION (1000*1000)
+#define DEFAULTSTART_BUFFER_DURATION (1000 * 1000)
 #define DEFAULT_MAX_BUFFER_DURATION (40 * 1000 * 1000)
 
 namespace Sivin {
@@ -20,6 +20,7 @@ namespace Sivin {
     timeoutMs = 15000;
     startBufferDuration = DEFAULTSTART_BUFFER_DURATION;
     maxBufferDuration = DEFAULT_MAX_BUFFER_DURATION;
+    lowMemSize = 100 * 1024 * 1024;//100M
   }
 
 }// namespace Sivin

@@ -6,15 +6,19 @@
 #define SIVINPLAYER_SIVINPLAYER_H
 
 #include "BufferController.h"
+#include "DeviceManager.h"
 #include "IMediaPlayer.h"
 #include "MediaPlayerDef.h"
+#include "PlayerError.h"
 #include "PlayerMsgController.h"
+#include "PlayerNotifier.h"
 #include "PlayerParams.h"
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include "utils/SNThread.h"
 #include "MediaPlayerUtil.h"
 #include <cstdint>
+#include <memory>
 #include <mutex>
 
 
@@ -61,8 +65,10 @@ namespace Sivin {
 
     void resetSeekStatus();
 
+    void notifyError(PlayerError error);
+
   private:
-    int64_t getPlayerBufferDuration(bool gotMax, bool internal);
+    int64_t getPlayerBufferDuration(bool gotMax);
 
     void readPacket();
 
@@ -71,7 +77,7 @@ namespace Sivin {
     void doDecode();
 
     //待实现
-    void closeVideo();    
+    void closeVideo();
     void closeAudio();
 
   private:
@@ -86,7 +92,10 @@ namespace Sivin {
     std::unique_ptr<MediaPlayerUtil> mUtil{nullptr};
     std::unique_ptr<IPlayerMsgProcessor> mMsgProcessor{nullptr};
     std::unique_ptr<PlayerMsgController> mMsgController{nullptr};
-     std::unique_ptr<BufferController> mBufferController{nullptr};
+    std::unique_ptr<BufferController> mBufferController{nullptr};
+    std::unique_ptr<DeviceManager> mDeviceManager{nullptr};
+    std::unique_ptr<PlayerNotifier> mNotifier{nullptr};
+
 
     std::atomic_bool mCanceled{false};
     std::atomic_bool mMainServiceCanceled{true};
@@ -117,6 +126,9 @@ namespace Sivin {
     bool mBufferIsFull{false};
 
     bool mCalculateSpeedUsePacket{false};
+
+    //出现内存报警
+    bool mLowMem{false};
   };
 
 }// namespace Sivin

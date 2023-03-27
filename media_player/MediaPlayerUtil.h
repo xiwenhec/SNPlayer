@@ -6,19 +6,18 @@
 #include <atomic>
 namespace Sivin {
 
+  enum class PacketReadEvent {
+    AGAIN,
+    GOT,
+    TIME_OUT,
+    LOOP,
+    NETWORK
+  };
   /*
     统计当前的数据包的下载速度
   */
   class MediaPlayerUtil {
   public:
-    enum class PacketReadEvent {
-      EVENT_AGAIN,
-      EVENT_GOT,
-      EVENT_TIME_OUT,
-      EVENT_LOOP,
-      EVENT_NETWORK
-    };
-
   public:
     explicit MediaPlayerUtil() = default;
     ~MediaPlayerUtil() = default;

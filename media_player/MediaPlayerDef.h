@@ -42,7 +42,6 @@ namespace Sivin {
   class MediaInfo {
   public:
     int64_t totalBitrate{0};
-
     std::deque<std::unique_ptr<SNStreamInfo>> mStreamInfoQueue{};
   };
 

@@ -1,11 +1,15 @@
 //
 // Created by Sivin on 2022-11-26.
 //
+#include "DeviceManager.h"
+#include "MediaPacketQueue.h"
 #include "MediaPlayerUtil.h"
+#include "PlayerNotifier.h"
 #include "base/error/SNError.h"
 #include "base/media/SNPacket.h"
 #include <cassert>
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <utility>
 #define LOG_TAG "SnPlayer"
@@ -18,13 +22,27 @@
 #include "PlayerParams.h"
 #include "utils/SNLog.h"
 #include "utils/SNTimer.h"
+#include "utils/os/SNSysInfoUtil.h"
 
 #define HAVE_VIDEO (mCurrentVideoIndex >= 0)
 #define HAVE_AUDIO (mCurrentAudioIndex >= 0)
 
-static Sivin::PlayerMsg emptyMsg{};
-
 namespace Sivin {
+
+  //表示一秒钟
+  static const int kSecond = 1000 * 1000;
+  static const int kBufferGap = 1 * kSecond;
+
+  //表示1M字节
+  static const int k1M = 1024 * 1024;
+
+  //一帧视频渲染的默认时长(us)
+  static const int VIDEO_RENDER_DURATION_DEFAULT = 40 * 1000;
+  static const int AUDIO_RENDER_DURATION_DEFAULT = 23 * 1000;
+
+
+  static PlayerMsg emptyMsg{};
+
   SnPlayer::SnPlayer() {
     SN_TRACE;
     mParams = std::make_unique<PlayerParams>();
@@ -32,6 +50,8 @@ namespace Sivin {
     mBufferController = std::make_unique<BufferController>();
     mMsgProcessor = std::make_unique<PlayerMsgProcessor>(*this);
     mMsgController = std::make_unique<PlayerMsgController>(*mMsgProcessor);
+    mDeviceManager = std::make_unique<DeviceManager>();
+    mNotifier = std::make_unique<PlayerNotifier>();
     mPlayerThread = MAKE_UNIQUE_THREAD(mainService, LOG_TAG);
   }
 
@@ -122,47 +142,107 @@ namespace Sivin {
     gotMax:true,获取音频，视频，字幕队列中的最大时长,false:返回最小时长
 
   */
-  int64_t SnPlayer::getPlayerBufferDuration(bool gotMax, bool internal) {
+  int64_t SnPlayer::getPlayerBufferDuration(bool gotMax) {
+
     int64_t videoBufDuration = -1;
     int64_t audioBufDuration = -1;
 
     if (HAVE_AUDIO) {
-
       //获取播放器缓冲队列里的时长
-      audioBufDuration = mBufferController->getPacketDuration(BufferType::BUFFER_TYPE_AUDIO);
-
-      
-
+      audioBufDuration = mBufferController->getPacketDuration(BufferType::AUDIO);
+      if (mDeviceManager->isDecoderValid(DeviceType::AUDIO)) {
+        //TODO:这里计算不精确
+        audioBufDuration += mDeviceManager->getDecoder(DeviceType::AUDIO)->getInputQueueSize() * AUDIO_RENDER_DURATION_DEFAULT;
+      }
+      if (mParams->preferAudio) {
+        return audioBufDuration;
+      }
     }
 
+    if (HAVE_VIDEO) {
+      videoBufDuration = mBufferController->getPacketDuration(BufferType::VIDEO);
 
-    return 0;
+      if (videoBufDuration < 0 && !HAVE_AUDIO) {
+        videoBufDuration = mBufferController->getLastPacketPts(BufferType::VIDEO) -
+                           mBufferController->getFirstPacketPts(BufferType::VIDEO);
+      }
+
+      if (videoBufDuration < 0) {
+        videoBufDuration = mBufferController->getPacketSize(BufferType::VIDEO) * VIDEO_RENDER_DURATION_DEFAULT;
+      }
+
+      //TODO:这里的获取时不准确的
+      if (mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
+        videoBufDuration += mDeviceManager->getDecoder(DeviceType::VIDEO)->getInputQueueSize() * VIDEO_RENDER_DURATION_DEFAULT;
+      }
+    }
+
+    //比较音频和视频队列的缓冲时长
+    int64_t maxVal, minVal;
+    if (audioBufDuration > videoBufDuration) {
+      maxVal = audioBufDuration;
+      minVal = videoBufDuration;
+    } else {
+      maxVal = videoBufDuration;
+      minVal = audioBufDuration;
+    }
+    return gotMax ? maxVal : minVal;
   }
+
 
   void SnPlayer::readPacket() {
     if (mEof) {
       return;
     }
+    mUtil->notifyRead(PacketReadEvent::LOOP, 0);
 
-    int64_t curBufferDuration = getPlayerBufferDuration(false, false);
-    mUtil->notifyRead(MediaPlayerUtil::PacketReadEvent::EVENT_LOOP, 0);
+    SNSysInfo sysInfo;
+    int checkStep = 0;
 
     int64_t readStartTime = SNTimer::getSteadyTimeUs();
-    int checkStep = 0;
+    int64_t curBufferDuration = getPlayerBufferDuration(false);
+
     while (true) {
       if (mBufferIsFull) {
-        //TODO:缓冲区慢时的处理
+        //上一次buffer已经读满，如果距离本次读取这段时间消费的数据超过一个bufferGap
+        //则表示需要再次读取，否则不需要读取，直接返回
+        if (mParams->maxBufferDuration > 2 * kBufferGap &&
+            (curBufferDuration > mParams->maxBufferDuration - kBufferGap) &&
+            curBufferDuration > mParams->startBufferDuration) {
+          break;
+        }
       }
 
       if (curBufferDuration > mParams->maxBufferDuration &&
-          getPlayerBufferDuration(false, true) > mParams->startBufferDuration) {
+          curBufferDuration > mParams->startBufferDuration) {
         mBufferIsFull = true;
         break;
       }
       mBufferIsFull = false;
 
+      //真正读取数据包前，对系统可用内存做检测
+      if ((0 >= checkStep--) && (curBufferDuration > 1 * kSecond) && (SNSysInfoUtil::getSystemMemoryInfo(&sysInfo) >= 0)) {
+        if (sysInfo.availableram > 2 * mParams->lowMemSize) {
+          checkStep = (int) (sysInfo.availableram / (5 * k1M));
+        } else if (sysInfo.availableram < mParams->lowMemSize) {
+          //内存状态有良好->低内存
+          if (!mLowMem) {
+            //TODO:通知出现低内存报警
+            mNotifier->notifyEvent(PlayerEventCode::LOW_MEMORY, "low memeory");
+          }
+          mLowMem = true;
+          if (mParams->startBufferDuration > 800 * 1000) {
+            mParams->startBufferDuration = 800 * 1000;
+          }
+          break;
+        } else {
+          checkStep = 5;
+          mLowMem = false;
+        }
+      }
+
       int ret = doReadPacket();
-      if (ret == 0) {//
+      if (ret == 0) {
         if (mPlayStatus == PlayerStatus::PREPARING) {
           if (HAVE_VIDEO && !mHaveVideoPkt) {
             closeVideo();
@@ -171,19 +251,25 @@ namespace Sivin {
             closeAudio();
           }
         }
+        mEof = true;
         break;
-
-      } else if (ret == SNRET_ERROR) {
-        break;
-
       } else if (ret == SNRET_AGAIN) {
         //TODO:处理读取数据包again时的情况
+        mUtil->notifyRead(PacketReadEvent::AGAIN, 0);
         break;
+      } else if (ret == SNRET_ERROR) {
+        notifyError(PlayerError::RREAD_PACKET);
+        break;
+      }
+      //TODO:读取超时时长是否可以配置
+      int timeout = 10000;
+      if (SNTimer::getSteadyTimeUs() - readStartTime > timeout) {
+        mUtil->notifyRead(PacketReadEvent::TIME_OUT, 0);
       }
     }
   }
 
-  //主要任务：从解封装服务中读取压缩数据加入缓存队列
+  //从解封装服务中读取压缩数据加入缓存队列
   //失败：返回错误码<0，成功：返回读取的字节数, 0：读取到文件结尾
   int SnPlayer::doReadPacket() {
     assert(mDemuxerService != nullptr);
@@ -198,12 +284,16 @@ namespace Sivin {
 
     if (packet->getInfo().streamIndex == mCurrentVideoIndex) {
       mHaveVideoPkt = true;
-      mBufferController->addPacket(std::move(packet), BufferType::BUFFER_TYPE_VIDEO);
+      mBufferController->addPacket(std::move(packet), BufferType::VIDEO);
+
     } else if (packet->getInfo().streamIndex == mCurrentAudioIndex) {
       mHaveAudioPkt = true;
-      mBufferController->addPacket(std::move(packet), BufferType::BUFFER_TYPE_AUDIO);
+      mBufferController->addPacket(std::move(packet), BufferType::AUDIO);
     }
     return ret;
+  }
+
+  void SnPlayer::notifyError(PlayerError error) {
   }
 
 }// namespace Sivin

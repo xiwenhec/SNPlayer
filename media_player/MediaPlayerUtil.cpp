@@ -7,20 +7,20 @@ namespace Sivin {
 
   void MediaPlayerUtil::notifyRead(PacketReadEvent event, uint64_t size) {
     switch (event) {
-      case PacketReadEvent::EVENT_AGAIN:
+      case PacketReadEvent::AGAIN:
         mReadTimes++;
         break;
-      case PacketReadEvent::EVENT_GOT:
+      case PacketReadEvent::GOT:
         mReadGotIndex++;
         mReadGotSize += size;
         break;
-      case PacketReadEvent::EVENT_LOOP:
+      case PacketReadEvent::LOOP:
         mReadLoopIndex++;
         break;
-      case PacketReadEvent::EVENT_TIME_OUT:
+      case PacketReadEvent::TIME_OUT:
         mReadTimeOutIndex++;
         break;
-      case PacketReadEvent::EVENT_NETWORK:
+      case PacketReadEvent::NETWORK:
         mReadGotSize += size;
         break;
     }
