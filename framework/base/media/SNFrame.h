@@ -9,7 +9,7 @@ namespace Sivin {
   /**
     这个类定义了解码用于渲染的视频或者音频媒体数据帧
   */
-  class IMediaFrame {
+  class SNFrame {
 
   public:
     enum class FrameType {
@@ -46,7 +46,7 @@ namespace Sivin {
     };
 
 
-    struct MediaFrameInfo {
+    struct SNFrameInfo {
       int64_t pts;
       int64_t pkt_dts;
       int64_t duration;
@@ -60,10 +60,10 @@ namespace Sivin {
     };
 
   public:
-    IMediaFrame() = default;
-    virtual ~IMediaFrame() = default;
+    SNFrame() = default;
+    virtual ~SNFrame() = default;
 
-    virtual std::unique_ptr<IMediaFrame> clone() = 0;
+    virtual std::unique_ptr<SNFrame> clone() = 0;
 
     virtual uint8_t **getData() = 0;
 
@@ -75,14 +75,14 @@ namespace Sivin {
 
     virtual bool isDiscard() { return mDiscard; }
 
-    MediaFrameInfo &getInfo();
+    SNFrameInfo &getInfo();
 
     void setProtect(bool protect) { mProtected = protect; }
 
     bool isProtected() const { return mProtected; }
 
   protected:
-    MediaFrameInfo mInfo{};
+    SNFrameInfo mInfo{};
     bool mDiscard{false};
     bool mProtected{false};
   };

@@ -8,7 +8,7 @@
 #include <deque>
 #include <base/media/SNMediaInfo.h>
 #include <memory>
-#include "base/media/IMediaFrame.h"
+#include "base/media/SNFrame.h"
 namespace Sivin {
 
   enum class SeekMode {
@@ -29,7 +29,7 @@ namespace Sivin {
     ERROR = 101,
   };
 
-  using OnRenderFrameCallback = bool(void *userData, IMediaFrame *frame);
+  using OnRenderFrameCallback = bool(void *userData, SNFrame *frame);
 
   using PlayerCallbackType0 = void (*)(void *userData);
 

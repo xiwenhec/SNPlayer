@@ -7,6 +7,8 @@
 
 namespace Sivin {
   class IDecoder {
+
+    
   };
 }// namespace Sivin
 
