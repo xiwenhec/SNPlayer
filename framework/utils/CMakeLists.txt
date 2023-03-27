@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.22)
-project(framework_utils)
+project(SnUtils)
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(framework_utils STATIC "")
+add_library(SnUtils STATIC "")
 
 target_sources(
-        framework_utils PUBLIC
+        SnUtils PUBLIC
         SNJson.h
         SNLog.cpp
         SNThread.cpp
@@ -16,13 +16,13 @@ target_sources(
 )
 
 target_sources(
-        framework_utils PUBLIC
+        SnUtils PUBLIC
         ../base/RingBuffer.cpp
         ../base/media/SNPacket.cpp
         ../base/media/IAVBSF.cpp
         ../base/media/SNAVPacket.cpp
 )
 
-target_include_directories(framework_utils PUBLIC
+target_include_directories(SnUtils PUBLIC
         ${COMMON_INC_DIR}
         )

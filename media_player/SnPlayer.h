@@ -5,6 +5,7 @@
 #ifndef SIVINPLAYER_SIVINPLAYER_H
 #define SIVINPLAYER_SIVINPLAYER_H
 
+#include "BufferController.h"
 #include "IMediaPlayer.h"
 #include "MediaPlayerDef.h"
 #include "PlayerMsgController.h"
@@ -63,9 +64,15 @@ namespace Sivin {
   private:
     int64_t getPlayerBufferDuration(bool gotMax, bool internal);
 
-    void doReadPacket();
+    void readPacket();
+
+    int doReadPacket();
 
     void doDecode();
+
+    //待实现
+    void closeVideo();    
+    void closeAudio();
 
   private:
     //用于记录播放的各种参数，比如播放地址，播放速度等
@@ -79,6 +86,7 @@ namespace Sivin {
     std::unique_ptr<MediaPlayerUtil> mUtil{nullptr};
     std::unique_ptr<IPlayerMsgProcessor> mMsgProcessor{nullptr};
     std::unique_ptr<PlayerMsgController> mMsgController{nullptr};
+     std::unique_ptr<BufferController> mBufferController{nullptr};
 
     std::atomic_bool mCanceled{false};
     std::atomic_bool mMainServiceCanceled{true};
@@ -96,6 +104,10 @@ namespace Sivin {
     int mCurrentVideoIndex{-1};
     int mCurrentAudioIndex{-1};
 
+    //TODO:这个变量的存在似乎多余
+    bool mHaveVideoPkt{false};
+    bool mHaveAudioPkt{false};
+
     int mVideoWidth{-1};
     int mVideoHeight{-1};
 
@@ -103,6 +115,8 @@ namespace Sivin {
 
     bool mEof{false};
     bool mBufferIsFull{false};
+
+    bool mCalculateSpeedUsePacket{false};
   };
 
 }// namespace Sivin

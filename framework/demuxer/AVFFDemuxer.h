@@ -87,7 +87,9 @@ namespace Sivin {
     std::mutex mMutex{};
     std::mutex mQueMutex{};
     std::condition_variable mQueCond{};
+    
     int MAX_QUEUE_SIZE = 60;
+    //这个packet里存放着音频和视频的packet
     std::deque<std::unique_ptr<SNPacket>> mPacketQueue{};
 
     std::mutex mStreamCtxMutex{};

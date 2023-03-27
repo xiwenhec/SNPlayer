@@ -6,9 +6,9 @@
 #define DATASOURCETEST_ICODEC_H
 
 namespace Sivin {
-    class ICodec {
-    };
-}
+  class IDecoder {
+  };
+}// namespace Sivin
 
 
-#endif //DATASOURCETEST_ICODEC_H
+#endif//DATASOURCETEST_ICODEC_H

@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.22)
-project(framework_datasource)
+project(SnDatasource)
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(framework_datasource STATIC "")
+add_library(SnDatasource STATIC "")
 
 set(ENABLE_CURL ON)
 
 
-target_include_directories(framework_datasource PUBLIC
+target_include_directories(SnDatasource PUBLIC
         ${COMMON_INC_DIR}
         )
 
 if (${ENABLE_CURL})
-    target_sources(framework_datasource PRIVATE
+    target_sources(SnDatasource PRIVATE
             IDataSource.cpp
             DataSourceFactory.cpp
             curl/CurlDataSource.cpp

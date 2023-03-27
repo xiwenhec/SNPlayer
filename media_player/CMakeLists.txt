@@ -39,10 +39,10 @@ target_sources(SnMedia PRIVATE
 
 
 target_link_libraries(SnMedia PRIVATE
-        framework_codec
-        framework_demuxer
-        framework_utils
-        framework_datasource
+        SnDecoder
+        SnDemuxer
+        SnUtils
+        SnDatasource
         pthread
         avformat
         avcodec

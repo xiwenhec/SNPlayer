@@ -183,6 +183,7 @@ namespace Sivin {
     }
 
     std::unique_ptr<SNPacket> pkt{};
+    
     int ret = readPacketInternal(pkt);
     if (ret > 0) {
       std::unique_lock<std::mutex> waitLock{mQueMutex};

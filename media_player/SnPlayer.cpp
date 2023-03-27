@@ -2,7 +2,12 @@
 // Created by Sivin on 2022-11-26.
 //
 #include "MediaPlayerUtil.h"
+#include "base/error/SNError.h"
+#include "base/media/SNPacket.h"
+#include <cassert>
+#include <cstddef>
 #include <memory>
+#include <utility>
 #define LOG_TAG "SnPlayer"
 
 #include <cstdint>
@@ -24,6 +29,7 @@ namespace Sivin {
     SN_TRACE;
     mParams = std::make_unique<PlayerParams>();
     mUtil = std::make_unique<MediaPlayerUtil>();
+    mBufferController = std::make_unique<BufferController>();
     mMsgProcessor = std::make_unique<PlayerMsgProcessor>(*this);
     mMsgController = std::make_unique<PlayerMsgController>(*mMsgProcessor);
     mPlayerThread = MAKE_UNIQUE_THREAD(mainService, LOG_TAG);
@@ -110,12 +116,30 @@ namespace Sivin {
     mSeekPos = -1;
   }
 
+
+  /**
+    获取封装缓冲队列中的数据缓冲时长
+    gotMax:true,获取音频，视频，字幕队列中的最大时长,false:返回最小时长
+
+  */
   int64_t SnPlayer::getPlayerBufferDuration(bool gotMax, bool internal) {
+    int64_t videoBufDuration = -1;
+    int64_t audioBufDuration = -1;
+
+    if (HAVE_AUDIO) {
+
+      //获取播放器缓冲队列里的时长
+      audioBufDuration = mBufferController->getPacketDuration(BufferType::BUFFER_TYPE_AUDIO);
+
+      
+
+    }
+
 
     return 0;
   }
 
-  void SnPlayer::doReadPacket() {
+  void SnPlayer::readPacket() {
     if (mEof) {
       return;
     }
@@ -126,7 +150,6 @@ namespace Sivin {
     int64_t readStartTime = SNTimer::getSteadyTimeUs();
     int checkStep = 0;
     while (true) {
-
       if (mBufferIsFull) {
         //TODO:缓冲区慢时的处理
       }
@@ -136,14 +159,51 @@ namespace Sivin {
         mBufferIsFull = true;
         break;
       }
-
       mBufferIsFull = false;
-      //TODO: 1000 * 1000的数字含义不明确
-      if ((0 >= checkStep--) && (curBufferDuration > 1000 * 1000)) {
-        
+
+      int ret = doReadPacket();
+      if (ret == 0) {//
+        if (mPlayStatus == PlayerStatus::PREPARING) {
+          if (HAVE_VIDEO && !mHaveVideoPkt) {
+            closeVideo();
+          }
+          if (HAVE_AUDIO && !mHaveAudioPkt) {
+            closeAudio();
+          }
+        }
+        break;
+
+      } else if (ret == SNRET_ERROR) {
+        break;
+
+      } else if (ret == SNRET_AGAIN) {
+        //TODO:处理读取数据包again时的情况
+        break;
       }
     }
   }
 
+  //主要任务：从解封装服务中读取压缩数据加入缓存队列
+  //失败：返回错误码<0，成功：返回读取的字节数, 0：读取到文件结尾
+  int SnPlayer::doReadPacket() {
+    assert(mDemuxerService != nullptr);
+    std::unique_ptr<SNPacket> packet{};
+    int ret = mDemuxerService->readPacket(packet, -1);
+    if (packet == nullptr) {
+      if (ret != SNRET_ERROR) {
+        return SNRET_AGAIN;
+      }
+      return ret;
+    }
+
+    if (packet->getInfo().streamIndex == mCurrentVideoIndex) {
+      mHaveVideoPkt = true;
+      mBufferController->addPacket(std::move(packet), BufferType::BUFFER_TYPE_VIDEO);
+    } else if (packet->getInfo().streamIndex == mCurrentAudioIndex) {
+      mHaveAudioPkt = true;
+      mBufferController->addPacket(std::move(packet), BufferType::BUFFER_TYPE_AUDIO);
+    }
+    return ret;
+  }
 
 }// namespace Sivin

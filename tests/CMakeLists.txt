@@ -68,18 +68,18 @@ if (${ENABLE_DEMUXER_TEST})
 endif ()
 
 target_link_libraries(test PRIVATE        
-        framework_codec
-        framework_demuxer
-        framework_utils
-        framework_datasource
-        pthread
-        avformat
-        avcodec
-        avutil
-        curl
-        ssl
-        crypto
-        z
+                SnDecoder
+                SnDemuxer
+                SnUtils
+                SnDatasource
+                pthread
+                avformat
+                avcodec
+                avutil
+                curl
+                ssl
+                crypto
+                z
         )
 
 
@@ -98,11 +98,10 @@ if (${ENABLE_PLAYER_TEST})
         
 
         target_link_libraries(PlayerTest PRIVATE
-                SnMedia
-                framework_codec
-                framework_demuxer
-                framework_utils
-                framework_datasource
+                SnDecoder
+                SnDemuxer
+                SnUtils
+                SnDatasource
                 pthread
                 avformat
                 avcodec
