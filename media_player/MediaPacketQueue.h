@@ -9,12 +9,12 @@
 namespace Sivin {
 
   enum class BufferType {
-    BUFFER_TYPE_NONE = 0,
-    BUFFER_TYPE_VIDEO = 1,
-    BUFFER_TYPE_AUDIO = (1 << 1),
-    BUFFER_TYPE_SUBTILE = (1 << 2),
-    BUFFER_TYPE_AV = (BUFFER_TYPE_VIDEO | BUFFER_TYPE_AUDIO),
-    BUFFER_TYPE_ALL = (BUFFER_TYPE_VIDEO | BUFFER_TYPE_AUDIO | BUFFER_TYPE_SUBTILE)
+    NONE = 0,
+    VIDEO = 1,
+    AUDIO = (1 << 1),
+    SUBTILE = (1 << 2),
+    AV = (VIDEO | AUDIO),
+    ALL = (VIDEO | AUDIO | SUBTILE),
   };
 
   //TODO:需要对packet如果没有duration的额外情况进行处理
@@ -73,7 +73,7 @@ namespace Sivin {
     void setMaxBackwardDuration(uint64_t duration);
 
   public:
-    BufferType mBufferType{BufferType::BUFFER_TYPE_NONE};
+    BufferType mBufferType{BufferType::NONE};
 
   private:
     void popFrontPacket();

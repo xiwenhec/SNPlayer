@@ -39,7 +39,7 @@ namespace Sivin {
       }
     }
 
-    if (mBufferType == BufferType::BUFFER_TYPE_AUDIO && !mQueue.empty() &&
+    if (mBufferType == BufferType::AUDIO && !mQueue.empty() &&
         packet->getInfo().pts != SN_UNKNOWN_VALUE && packet->getInfo().pts < mQueue.back()->getInfo().pts) {
       SN_LOGE("pts revert.");
     }

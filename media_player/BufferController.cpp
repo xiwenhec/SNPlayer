@@ -18,9 +18,9 @@ namespace Sivin {
       return;
     }
     switch (type) {
-      case BufferType::BUFFER_TYPE_AUDIO:
+      case BufferType::AUDIO:
         return mAudioPacketQueue.addPacket(std::move(packet));
-      case BufferType::BUFFER_TYPE_VIDEO:
+      case BufferType::VIDEO:
         return mVideoPacketQueue.addPacket(std::move(packet));
       default:
         SN_LOGE("don't support type:%d", type);
