@@ -6,24 +6,22 @@
 #include <atomic>
 namespace Sivin {
 
-  enum class PacketReadEvent {
-    AGAIN,
-    GOT,
-    TIME_OUT,
+  enum class StatisticEvent {
     LOOP,
+    GOT_PACKET,
     NETWORK
   };
   /*
     统计当前的数据包的下载速度
   */
-  class MediaPlayerUtil {
+  class PlayerStatistic {
   public:
   public:
-    explicit MediaPlayerUtil() = default;
-    ~MediaPlayerUtil() = default;
+    explicit PlayerStatistic() = default;
+    ~PlayerStatistic() = default;
 
   public:
-    void notifyRead(PacketReadEvent event, uint64_t size);
+    void stat(StatisticEvent event, uint64_t size);
 
   private:
     //上一次读取的时间戳(us)
@@ -36,11 +34,6 @@ namespace Sivin {
 
     //当前获取的字节数
     std::atomic<uint64_t> mReadGotSize{0};
-
-    int64_t mReadGotIndex{0};
-    int64_t mReadLoopIndex{0};
-    int64_t mReadAgainIndex{0};
-    int64_t mReadTimeOutIndex{0};
   };
 
 

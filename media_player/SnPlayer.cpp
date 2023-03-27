@@ -3,7 +3,6 @@
 //
 #include "DeviceManager.h"
 #include "MediaPacketQueue.h"
-#include "MediaPlayerUtil.h"
 #include "PlayerNotifier.h"
 #include "base/error/SNError.h"
 #include "base/media/SNPacket.h"
@@ -46,7 +45,7 @@ namespace Sivin {
   SnPlayer::SnPlayer() {
     SN_TRACE;
     mParams = std::make_unique<PlayerParams>();
-    mUtil = std::make_unique<MediaPlayerUtil>();
+    mStat = std::make_unique<PlayerStatistic>();
     mBufferController = std::make_unique<BufferController>();
     mMsgProcessor = std::make_unique<PlayerMsgProcessor>(*this);
     mMsgController = std::make_unique<PlayerMsgController>(*mMsgProcessor);
@@ -194,7 +193,7 @@ namespace Sivin {
     if (mEof) {
       return;
     }
-    mUtil->notifyRead(PacketReadEvent::LOOP, 0);
+    mStat->stat(StatisticEvent::LOOP, 0);
 
     SNSysInfo sysInfo;
     int checkStep = 0;
@@ -241,7 +240,9 @@ namespace Sivin {
         }
       }
 
+      //读取数据
       int ret = doReadPacket();
+
       if (ret == 0) {
         if (mPlayStatus == PlayerStatus::PREPARING) {
           if (HAVE_VIDEO && !mHaveVideoPkt) {
@@ -255,7 +256,7 @@ namespace Sivin {
         break;
       } else if (ret == SNRET_AGAIN) {
         //TODO:处理读取数据包again时的情况
-        mUtil->notifyRead(PacketReadEvent::AGAIN, 0);
+        //mUtil->notifyRead(PacketReadEvent::AGAIN, 0);
         break;
       } else if (ret == SNRET_ERROR) {
         notifyError(PlayerError::RREAD_PACKET);
@@ -264,7 +265,7 @@ namespace Sivin {
       //TODO:读取超时时长是否可以配置
       int timeout = 10000;
       if (SNTimer::getSteadyTimeUs() - readStartTime > timeout) {
-        mUtil->notifyRead(PacketReadEvent::TIME_OUT, 0);
+        //mUtil->notifyRead(PacketReadEvent::TIME_OUT, 0);
       }
     }
   }
@@ -281,6 +282,8 @@ namespace Sivin {
       }
       return ret;
     }
+
+    mStat->stat(StatisticEvent::GOT_PACKET, packet->getSize());
 
     if (packet->getInfo().streamIndex == mCurrentVideoIndex) {
       mHaveVideoPkt = true;
