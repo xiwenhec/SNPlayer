@@ -14,19 +14,25 @@ namespace Sivin {
 
     ~BufferController();
 
-    int getPacketSize(BufferType type) const;
+    void addPacket(std::unique_ptr<SNPacket> packet, BufferType type);
+
+    std::unique_ptr<SNPacket> getPacket(BufferType type);
+
+    int getPacketCount(BufferType type);
 
     int64_t getPacketDuration(BufferType type);
-
-    void addPacket(std::unique_ptr<SNPacket> packet, BufferType type);
 
     int64_t getLastPacketPts(BufferType type);
 
     int64_t getFirstPacketPts(BufferType type);
 
   private:
-    MediaPacketQueue mVideoPacketQueue;
-    MediaPacketQueue mAudioPacketQueue;
+    MediaPacketQueue &getMeidaQueue(BufferType type);
+
+  private:
+    MediaPacketQueue mVideoPacketQueue{BufferType::VIDEO};
+    MediaPacketQueue mAudioPacketQueue{BufferType::AUDIO};
+    MediaPacketQueue dummy{BufferType::NONE};
   };
 }// namespace Sivin
 

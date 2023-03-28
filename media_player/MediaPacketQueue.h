@@ -22,7 +22,7 @@ namespace Sivin {
   public:
     using MediaPacket = std::unique_ptr<SNPacket>;
 
-    explicit MediaPacketQueue();
+    explicit MediaPacketQueue(BufferType type);
 
     ~MediaPacketQueue();
 
@@ -42,57 +42,72 @@ namespace Sivin {
 
     int64_t getDuration();
 
-    int64_t getPts();
+    //获取队列里第一个包含关键帧的pkt的timePostion，且不超过指定的timePosition
+    int64_t getKeyPacketTimePositionBefore(int64_t timePosition);
 
-    int64_t getKeyPacketTimePositionBefore(int64_t pts);
+    //获取队列里第一个包含关键帧的pkt的pts，且不超过指定的pts
+    int64_t getFirstKeyPacketPtsBefore(int64_t pts);
 
-    // int64_t getKeyPacketTimePositionBeforeUTCTime(int64_t pts);
+    //获取缓冲队列里第一个关键帧关键帧的packet的timeposition
+    int64_t getFristKeyPacketTimePosition();
 
-    int64_t getFirstKeyPacketPts(int64_t pts);
+    //获取队列缓存中第一个pacekt的pts
+    int64_t getFirstPacketPts();
 
-    //获取距离当前最近的关键战的timePos
-    int64_t getLastKeyPacketTimePos();
-
-    int64_t clearPacketBeforeTimePos(int64_t pts);
-
-    int64_t clearPacketBeforePTS(int64_t pts);
-
-    void rewind();
+    //获取队列里最后一个packet的pts
+    int64_t getLastPacketPts();
 
     int64_t getLastPacketTimePos();
 
     int64_t getFirstPacketTimePos();
 
-    //获取队列里最后一个packet的pts
-    int64_t getLastPacketPts();
+    //清除掉（cur---end）间所有小于该timeposition的packet
+    //返回清除掉的pkt个数
+    int64_t clearPacketBeforeTimePos(int64_t pos);
+
+    int64_t clearPacketBeforePts(int64_t pts);
+
+    void clearPacketAfterTimePosition(int64_t timePosition);
 
     int64_t findSeamlessPointTimePosition(int &count);
 
-    void clearPacketAfterTimePosition(int64_t pts);
+    void rewind();
 
-    void setMaxBackwardDuration(uint64_t duration);
+    void setMaxBackwardDuration(uint64_t backwardDuration);
 
-  public:
-    BufferType mBufferType{BufferType::NONE};
+    BufferType type() const {
+      return mBufferType;
+    }
 
   private:
     void popFrontPacket();
 
   private:
+    BufferType mBufferType{BufferType::NONE};
+
     std::list<MediaPacket> mQueue{};
 
+    /*始终指向下一个要被取出的packet，如果不需要backward,并且队列不为空，
+     *则值应该始终指向mQueue.begin()
+     */
     std::list<MediaPacket>::iterator mCurrent;
 
     std::recursive_mutex mMutex{};
 
-    int64_t mDuration{0};
+    int64_t mPacketDuration{0};
 
-    int64_t mTotalDuration{0};
-
+    //播放缓冲区是否设置回退时长
     uint64_t mMaxBackwardDuration{0};
 
-    uint8_t *mDropedExtraData{nullptr};
+    //当前队列中没有解码播放的数据包时长
+    int64_t mDuration{0};
 
+    /*整个缓冲队列数据的总时长，如果不需要回退缓冲，则和mDuration相等
+    否则 mTotalDuration = mDuration + 队列中已经播放过的数据时长*/
+    int64_t mTotalDuration{0};
+
+
+    uint8_t *mDropedExtraData{nullptr};
     int mDropedExtraDataSize{0};
   };
 
