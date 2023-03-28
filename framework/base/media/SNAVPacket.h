@@ -15,28 +15,32 @@ extern "C" {
 
 namespace Sivin {
 
-//SNPacket的FFmpeg实现
-class SNAVPacket : public SNPacket {
+  //SNPacket的FFmpeg实现
+  class SNAVPacket : public SNPacket {
 
-public:
-  explicit SNAVPacket(AVPacket **pkt);
+  public:
+    explicit SNAVPacket(AVPacket **pkt);
 
-  ~SNAVPacket();
+    SNAVPacket(const SNAVPacket &packet);
 
-  uint8_t *getData() override;
+    ~SNAVPacket();
 
-  int64_t getSize() override;
+    virtual uint8_t *getData() override;
 
-private:
-  AVPacket *mpkt{nullptr};
+    virtual int64_t getSize() override;
 
-  bool mProtected;
-  
-  std::string mMagicKey{};
+    virtual std::unique_ptr<SNPacket> clone() override;
 
-  void copyInfo();
-};
+  private:
+    AVPacket *mpkt{nullptr};
 
-} // namespace Sivin
+    bool mProtected;
 
-#endif // FRAMKEWORK_BASE_MEDIA_SNAVPACKET_H
+    std::string mMagicKey{};
+
+    void copyInfo();
+  };
+
+}// namespace Sivin
+
+#endif// FRAMKEWORK_BASE_MEDIA_SNAVPACKET_H

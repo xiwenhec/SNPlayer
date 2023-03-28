@@ -7,6 +7,7 @@
 
 #include "base/media/SNMediaInfo.h"
 #include <cstdint>
+#include <memory>
 
 
 namespace Sivin {
@@ -30,13 +31,18 @@ namespace Sivin {
 
       int64_t dts{SN_UNKNOWN_VALUE};
 
-      //值等于当前pkt.pts-first.pts
+      /*
+        timePosition记录这当前pkt应该被播放的绝对时间，它是从0开始记录
+        如果startPts等于0，则timePostion和pts的值相等，否则timePosition
+        应该等于 timePosition = pkt.pts - firstPkt.pts;
+      */
       int64_t timePosition{SN_UNKNOWN_VALUE};
 
       int64_t duration{0};
 
       int flags{0};
 
+      //记录当前pkt在流中的字节位置
       int64_t pos{0};
     };
 
@@ -58,6 +64,8 @@ namespace Sivin {
     virtual void setDiscard(bool discard) {
       mDiscard = discard;
     }
+
+    virtual std::unique_ptr<SNPacket> clone() = 0;
 
   protected:
     PacketInfo mInfo{};

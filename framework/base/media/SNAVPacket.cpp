@@ -4,11 +4,19 @@
 
 #include "SNAVPacket.h"
 #include "base/media/SNMediaInfo.h"
+#include "base/media/SNPacket.h"
+#include <cstring>
+#include <memory>
 
 namespace Sivin {
   SNAVPacket::SNAVPacket(AVPacket **pkt) {
     mpkt = *pkt;
     *pkt = nullptr;
+    copyInfo();
+  }
+
+  SNAVPacket::SNAVPacket(const SNAVPacket &packet) {
+    mpkt = av_packet_clone(packet.mpkt);
     copyInfo();
   }
 
@@ -48,6 +56,10 @@ namespace Sivin {
 
   int64_t SNAVPacket::getSize() {
     return mpkt ? mpkt->size : 0;
+  }
+
+  std::unique_ptr<SNPacket> SNAVPacket::clone() {
+    return std::unique_ptr<SNAVPacket>(new SNAVPacket(*this));
   }
 
 
