@@ -7,9 +7,7 @@ add_library(SnDatasource STATIC "")
 set(ENABLE_CURL ON)
 
 
-target_include_directories(SnDatasource PRIVATE
-        ${COMMON_INC_DIR}
-        )
+target_include_directories(SnDatasource PRIVATE ${COMMON_INC_DIR})
 
 if (${ENABLE_CURL})
     target_sources(SnDatasource PRIVATE
@@ -18,7 +16,7 @@ if (${ENABLE_CURL})
             curl/CurlDataSource.cpp
             curl/CurlConnection.cpp
             curl/CurlConnectionManager.cpp
-            )
+        )
 endif ()
 
 

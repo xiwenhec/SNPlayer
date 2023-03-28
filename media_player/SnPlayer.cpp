@@ -1,6 +1,10 @@
 //
 // Created by Sivin on 2022-11-26.
 //
+
+#define LOG_TAG "SnPlayer"
+
+#include "SnPlayer.h"
 #include "DeviceManager.h"
 #include "MediaPacketQueue.h"
 #include "PlayerNotifier.h"
@@ -11,10 +15,7 @@
 #include <cstdio>
 #include <memory>
 #include <utility>
-#define LOG_TAG "SnPlayer"
-
 #include <cstdint>
-#include "SnPlayer.h"
 #include "MediaPlayerDef.h"
 #include "PlayerMsgController.h"
 #include "PlayerMsgProcessor.h"

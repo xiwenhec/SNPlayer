@@ -12,7 +12,7 @@ set(COMMON_INC_DIR
         ${TOPDIR}/third_party/curl/include
         ${TOPDIR}/third_party/openssl/include
         ${TOPDIR}/third_party/ffmpeg/x86_64/include
-        )
+)
 
 add_subdirectory(utils)
 add_subdirectory(data_source)
