@@ -11,6 +11,11 @@
 #include "base/media/SNFrame.h"
 namespace Sivin {
 
+  enum class AppStatus {
+    FOREGROUND,
+    BACKGROUND,
+  };
+
   enum class SeekMode {
     ACCURATE = 0x01,
     INACCURATE = 0x10,
