@@ -2,6 +2,7 @@
 // Created by Sivin on 2022-11-26.
 //
 
+#include "base/media/SNFrame.h"
 #define LOG_TAG "SnPlayer"
 
 #include "SnPlayer.h"
@@ -134,8 +135,8 @@ namespace Sivin {
       return;//当前播放器处于不可播放状态
     }
 
-    readPacket();
-    decodePacket();
+    doReadPacket();
+    doDecode();
   }
 
   void SnPlayer::resetSeekStatus() {
@@ -196,7 +197,7 @@ namespace Sivin {
   }
 
 
-  void SnPlayer::readPacket() {
+  void SnPlayer::doReadPacket() {
     if (mReadEos) {
       return;
     }
@@ -250,7 +251,7 @@ namespace Sivin {
       }
 
       //读取数据
-      int ret = doReadPacket();
+      int ret = readPacket();
 
       if (ret == 0) {
         if (mPlayStatus == PlayerStatus::PREPARING) {
@@ -284,7 +285,7 @@ namespace Sivin {
 
   //从解封装服务中读取压缩数据加入缓存队列
   //失败：返回错误码<0，成功：返回读取的字节数, 0：读取到文件结尾
-  int SnPlayer::doReadPacket() {
+  int SnPlayer::readPacket() {
     assert(mDemuxerService != nullptr);
     std::unique_ptr<SNPacket> packet{};
     int ret = mDemuxerService->readPacket(packet, -1);
@@ -309,16 +310,18 @@ namespace Sivin {
   }
 
 
-  void SnPlayer::decodePacket() {
+  void SnPlayer::doDecode() {
 
     if (HAVE_VIDEO && !mVideoDecoderEOS && mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
 
       int maxCacheSize = VIDEO_PICTURE_MAX_CACHE_SIZE;
-      
+
       uint64_t videoFrameCount = mVideoFrameQue.size();
-      
+
       if (videoFrameCount < maxCacheSize) {
-        int64_t startDecodeTime = SNTimer::getSteadyTimeUs();
+
+        int64_t startDecodeTimeMs = SNTimer::getSteadyTimeMs();
+        int64_t videoEarlyUs = 0;
         do {
           if (mCanceled) {
             break;
@@ -329,12 +332,66 @@ namespace Sivin {
           if (mVideoPacket == nullptr) {
             mVideoPacket = mBufferController->getPacket(BufferType::VIDEO);
           }
-          
 
-        } while (true);
+          //TODO:这段代码的含义是,需要弄明白getTime的含义
+          videoEarlyUs = mVideoPacket ? mVideoPacket->getInfo().dts - mMasterClock.GetTime() : 0;
+
+          //
+          if (mVideoPacket && mAppStatus == AppStatus::BACKGROUND && videoEarlyUs > 0) {
+            break;
+          }
+
+          //获取解码后的视频frame填充到帧队列中
+          fillVideoFrame();
+
+          if (!mVideoPacket && !mReadEos) {
+            break;
+          }
+
+          if (mVideoPacket && (!HAVE_AUDIO || mAudioDecoderEOS)) {
+            //TODO:没有音频的操作
+          }
+
+          int ret = decodeVideoPacket(mVideoPacket);
+
+          if (ret & STATUS_RETRY_IN) {
+            break;
+          }
+
+          if (SNTimer::getSteadyTimeMs() - startDecodeTimeMs > 50) {
+            break;
+          }
+
+        } while (true);//TODO:循环条件
       }
     }
   }
+
+  int64_t SnPlayer::getCurrentPosition() {
+    if (isSeeking()) {
+      return mSeekPos;
+    }
+    mCurrentPos = mCurrentPos.load() < 0 ? 0 : mCurrentPos.load();
+    if (mDuration > 0) {
+      mCurrentPos = mCurrentPos.load() <= mDuration ? mCurrentPos.load() : mDuration;
+    }
+    return mCurrentPos;
+  }
+
+
+  int SnPlayer::fillVideoFrame() {
+    std::unique_ptr<SNFrame> videoFrame{};
+    //TODO：返回值确定
+    int ret = mDeviceManager->getFrame(videoFrame, DeviceType::VIDEO, 0);
+    if (ret == DEVICE_STATUS_EOS) {
+      mVideoDecoderEOS = true;
+    }
+    if (videoFrame) {
+      mVideoFrameQue.push(std::move(videoFrame));
+    }
+    return ret;
+  }
+
 
   void SnPlayer::notifyError(PlayerError error) {
   }

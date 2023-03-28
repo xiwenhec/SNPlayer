@@ -24,6 +24,7 @@ target_sources(SnMedia PRIVATE
         PlayerNotifier.cpp
         PlayerParams.cpp
         PlayerStatistic.cpp
+        ReferClock.cpp
         )
 
 target_link_libraries(SnMedia PRIVATE

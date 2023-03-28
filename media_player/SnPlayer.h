@@ -15,10 +15,12 @@
 #include "PlayerParams.h"
 #include "base/media/SNFrame.h"
 #include "base/media/SNMediaInfo.h"
+#include "base/media/SNPacket.h"
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include "utils/SNThread.h"
 #include "PlayerStatistic.h"
+#include "ReferClock.h"
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -73,15 +75,20 @@ namespace Sivin {
       return SN_UNKNOWN_VALUE != mSeekPos;
     }
 
+    int64_t getCurrentPosition();
+
   private:
     int64_t getPlayerBufferDuration(bool gotMax);
 
-    void readPacket();
+    void doReadPacket();
 
-    int doReadPacket();
+    int readPacket();
 
-    void decodePacket();
     void doDecode();
+
+    int fillVideoFrame();
+
+    int64_t decodeVideoPacket(std::unique_ptr<SNPacket> &packet);
 
     //待实现
     void closeVideo();
@@ -120,7 +127,7 @@ namespace Sivin {
 
     //用户有seek发生，处理完成后，将会重置为SN_UNKNOWN_VALUE
     std::atomic<int64_t> mSeekPos{SN_UNKNOWN_VALUE};
-
+    std::atomic<int64_t> mCurrentPos{0};
     int64_t mDuration{SN_UNKNOWN_VALUE};
 
     int mCurrentVideoIndex{SN_UNKNOWN_VALUE};
@@ -147,6 +154,7 @@ namespace Sivin {
 
     //移动app当前处于前台还是后台
     std::atomic<AppStatus> mAppStatus{AppStatus::FOREGROUND};
+    ReferClock mMasterClock;
   };
 
 }// namespace Sivin

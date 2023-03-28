@@ -7,6 +7,9 @@
 
 #include <cstdint>
 namespace Sivin {
+
+  
+
   class IDecoder {
     explicit IDecoder() = default;
     virtual ~IDecoder() = default;

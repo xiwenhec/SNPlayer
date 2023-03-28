@@ -9,7 +9,10 @@
 #include <mutex>
 
 
+#define DEVICE_STATUS_EOS -10
+#define STATUS_RETRY_IN -11
 namespace Sivin {
+
 
   enum class DeviceType {
     VIDEO = 1,
@@ -17,20 +20,24 @@ namespace Sivin {
     ADVD = VIDEO | AUDIO
   };
 
+
   class DeviceManager {
 
   public:
     explicit DeviceManager();
+
     ~DeviceManager();
 
   public:
     std::unique_ptr<IDecoder> &getDecoder(DeviceType type) const;
+
     bool isDecoderValid(DeviceType type) const;
     bool isAudioRenderValid() const;
     bool invalidDevice(DeviceType type);
     bool fluchDevice(DeviceType type);
 
-    int getFrame(std::unique_lock<SNFrame> &frame, DeviceType type, uint64_t timeout);
+    int getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
+
     int sendPacket(std::unique_ptr<SNPacket> packet, DeviceType type, uint64_t timeout);
 
     void setVoluem(float volume);
