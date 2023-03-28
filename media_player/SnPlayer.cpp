@@ -310,10 +310,13 @@ namespace Sivin {
 
 
   void SnPlayer::decodePacket() {
-    if (HAVE_VIDEO && !mVideoDecoderEOS && mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
-      int maxCacheSize = VIDEO_PICTURE_MAX_CACHE_SIZE;
 
+    if (HAVE_VIDEO && !mVideoDecoderEOS && mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
+
+      int maxCacheSize = VIDEO_PICTURE_MAX_CACHE_SIZE;
+      
       uint64_t videoFrameCount = mVideoFrameQue.size();
+      
       if (videoFrameCount < maxCacheSize) {
         int64_t startDecodeTime = SNTimer::getSteadyTimeUs();
         do {
@@ -327,6 +330,7 @@ namespace Sivin {
             mVideoPacket = mBufferController->getPacket(BufferType::VIDEO);
           }
           
+
         } while (true);
       }
     }
