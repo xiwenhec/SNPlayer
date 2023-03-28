@@ -1,12 +1,14 @@
 //
 // Created by sivin on 23-1-14.
 //
+
+#define LOG_TAG "PlayerMsgProcessor"
+
 #include "base/media/SNMediaInfo.h"
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include <memory>
 #include <utility>
-#define LOG_TAG "PlayerMsgProcessor"
 #include "MediaPlayerDef.h"
 #include "PlayerMsgProcessor.h"
 #include "data_source/DataSourceFactory.h"

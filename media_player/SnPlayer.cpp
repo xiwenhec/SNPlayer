@@ -26,6 +26,8 @@
 #define HAVE_VIDEO (mCurrentVideoIndex >= 0)
 #define HAVE_AUDIO (mCurrentAudioIndex >= 0)
 
+#define VIDEO_PICTURE_MAX_CACHE_SIZE 2
+
 namespace Sivin {
 
   //表示一秒钟
@@ -122,6 +124,7 @@ namespace Sivin {
   }
 
   void SnPlayer::processVideoLoop() {
+
     int64_t curTime = SNTimer::getSteadyTimeMs() / 1000;
 
     if (mPlayStatus != PlayerStatus::COMPLETION &&
@@ -129,6 +132,9 @@ namespace Sivin {
         mDemuxerService == nullptr) {
       return;//当前播放器处于不可播放状态
     }
+
+    readPacket();
+    decodePacket();
   }
 
   void SnPlayer::resetSeekStatus() {
@@ -167,7 +173,7 @@ namespace Sivin {
       }
 
       if (videoBufDuration < 0) {
-        videoBufDuration = mBufferController->getPacketSize(BufferType::VIDEO) * VIDEO_RENDER_DURATION_DEFAULT;
+        videoBufDuration = mBufferController->getPacketCount(BufferType::VIDEO) * VIDEO_RENDER_DURATION_DEFAULT;
       }
 
       //TODO:这里的获取时不准确的
@@ -190,7 +196,7 @@ namespace Sivin {
 
 
   void SnPlayer::readPacket() {
-    if (mEof) {
+    if (mReadEos) {
       return;
     }
     mStat->stat(StatisticEvent::LOOP, 0);
@@ -199,9 +205,11 @@ namespace Sivin {
     int checkStep = 0;
 
     int64_t readStartTime = SNTimer::getSteadyTimeUs();
-    int64_t curBufferDuration = getPlayerBufferDuration(false);
 
     while (true) {
+
+      int64_t curBufferDuration = getPlayerBufferDuration(false);
+
       if (mBufferIsFull) {
         //上一次buffer已经读满，如果距离本次读取这段时间消费的数据超过一个bufferGap
         //则表示需要再次读取，否则不需要读取，直接返回
@@ -252,8 +260,9 @@ namespace Sivin {
             closeAudio();
           }
         }
-        mEof = true;
+        mReadEos = true;
         break;
+
       } else if (ret == SNRET_AGAIN) {
         //TODO:处理读取数据包again时的情况
         //mUtil->notifyRead(PacketReadEvent::AGAIN, 0);
@@ -262,13 +271,15 @@ namespace Sivin {
         notifyError(PlayerError::RREAD_PACKET);
         break;
       }
-      //TODO:读取超时时长是否可以配置
+
       int timeout = 10000;
       if (SNTimer::getSteadyTimeUs() - readStartTime > timeout) {
-        //mUtil->notifyRead(PacketReadEvent::TIME_OUT, 0);
+        //TODO:处理读取超时
+        break;
       }
-    }
+    }//while
   }
+
 
   //从解封装服务中读取压缩数据加入缓存队列
   //失败：返回错误码<0，成功：返回读取的字节数, 0：读取到文件结尾
@@ -294,6 +305,29 @@ namespace Sivin {
       mBufferController->addPacket(std::move(packet), BufferType::AUDIO);
     }
     return ret;
+  }
+
+
+  void SnPlayer::decodePacket() {
+    if (HAVE_VIDEO && !mVideoDecoderEOS && mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
+      int maxCacheSize = VIDEO_PICTURE_MAX_CACHE_SIZE;
+
+      uint64_t videoFrameCount = mVideoFrameQue.size();
+      if (videoFrameCount < maxCacheSize) {
+        int64_t startDecodeTime = SNTimer::getSteadyTimeUs();
+        do {
+          if (mCanceled) {
+            break;
+          }
+          if ((mAppStatus == AppStatus::BACKGROUND) && isSeeking()) {
+            break;
+          }
+          if (mVideoPacket == nullptr) {
+            mVideoPacket = mBufferController->getPacket(BufferType::VIDEO);
+          }
+        } while (true);
+      }
+    }
   }
 
   void SnPlayer::notifyError(PlayerError error) {

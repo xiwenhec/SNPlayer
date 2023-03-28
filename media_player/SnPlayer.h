@@ -13,6 +13,8 @@
 #include "PlayerMsgController.h"
 #include "PlayerNotifier.h"
 #include "PlayerParams.h"
+#include "base/media/SNFrame.h"
+#include "base/media/SNMediaInfo.h"
 #include "data_source/IDataSource.h"
 #include "demuxer/DemuxerService.h"
 #include "utils/SNThread.h"
@@ -20,7 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-
+#include <queue>
 
 namespace Sivin {
 
@@ -67,6 +69,10 @@ namespace Sivin {
 
     void notifyError(PlayerError error);
 
+    bool isSeeking() {
+      return SN_UNKNOWN_VALUE != mSeekPos;
+    }
+
   private:
     int64_t getPlayerBufferDuration(bool gotMax);
 
@@ -74,6 +80,7 @@ namespace Sivin {
 
     int doReadPacket();
 
+    void decodePacket();
     void doDecode();
 
     //待实现
@@ -96,6 +103,11 @@ namespace Sivin {
     std::unique_ptr<DeviceManager> mDeviceManager{nullptr};
     std::unique_ptr<PlayerNotifier> mNotifier{nullptr};
 
+    //存放解码后的帧序列
+    std::queue<std::unique_ptr<SNFrame>> mVideoFrameQue{};
+    std::deque<std::unique_ptr<SNFrame>> mAudioFrameQue{};
+    std::unique_ptr<SNPacket> mVideoPacket{};
+    std::unique_ptr<SNPacket> mAudioPacket{};
 
     std::atomic_bool mCanceled{false};
     std::atomic_bool mMainServiceCanceled{true};
@@ -106,29 +118,35 @@ namespace Sivin {
 
     std::unique_ptr<DemuxerService> mDemuxerService{nullptr};
 
-    std::atomic<int64_t> mSeekPos{-1};
+    //用户有seek发生，处理完成后，将会重置为SN_UNKNOWN_VALUE
+    std::atomic<int64_t> mSeekPos{SN_UNKNOWN_VALUE};
 
-    int64_t mDuration{-1};
+    int64_t mDuration{SN_UNKNOWN_VALUE};
 
-    int mCurrentVideoIndex{-1};
-    int mCurrentAudioIndex{-1};
+    int mCurrentVideoIndex{SN_UNKNOWN_VALUE};
+    int mCurrentAudioIndex{SN_UNKNOWN_VALUE};
 
     //TODO:这个变量的存在似乎多余
     bool mHaveVideoPkt{false};
     bool mHaveAudioPkt{false};
 
-    int mVideoWidth{-1};
-    int mVideoHeight{-1};
+    int mVideoWidth{SN_UNKNOWN_VALUE};
+    int mVideoHeight{SN_UNKNOWN_VALUE};
 
     MediaInfo mMediaInfo{};
 
-    bool mEof{false};
+    bool mReadEos{false};
+    bool mVideoDecoderEOS{false};
+    bool mAudioDecoderEOS{false};
     bool mBufferIsFull{false};
 
     bool mCalculateSpeedUsePacket{false};
 
     //出现内存报警
     bool mLowMem{false};
+
+    //移动app当前处于前台还是后台
+    std::atomic<AppStatus> mAppStatus{AppStatus::FOREGROUND};
   };
 
 }// namespace Sivin
