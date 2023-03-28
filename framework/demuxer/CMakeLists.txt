@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_library(SnDemuxer STATIC "")
 
-target_include_directories(SnDemuxer PUBLIC
+target_include_directories(SnDemuxer PRIVATE
         ${COMMON_INC_DIR}
         )
 

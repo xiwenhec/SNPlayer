@@ -30,7 +30,7 @@ add_subdirectory(${TOPDIR}/media_player media_player.out)
 
 add_executable(test "")
 
-target_include_directories(test PUBLIC
+target_include_directories(test PRIVATE
         ${COMMON_INC_DIR}
         )
 target_link_directories(test PRIVATE ${COMMON_LIB_DIR})
@@ -43,9 +43,8 @@ target_link_directories(test PRIVATE ${COMMON_LIB_DIR})
 #set(ENABLE_THREAD_TEST ON)
 #dataSource测试
 #set(ENABLE_DATASOURCE_TEST ON)
-#set(ENABLE_DEMUXER_TEST ON)
+set(ENABLE_DEMUXER_TEST ON)
 set(ENABLE_PLAYER_TEST ON)
-
 
 
 if (${ENABLE_THREAD_TEST})

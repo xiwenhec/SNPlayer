@@ -7,7 +7,7 @@ add_library(SnDatasource STATIC "")
 set(ENABLE_CURL ON)
 
 
-target_include_directories(SnDatasource PUBLIC
+target_include_directories(SnDatasource PRIVATE
         ${COMMON_INC_DIR}
         )
 

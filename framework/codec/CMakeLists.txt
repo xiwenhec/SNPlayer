@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_library(SnDecoder STATIC "")
 
-target_include_directories(SnDecoder PUBLIC
+target_include_directories(SnDecoder PRIVATE
         ${COMMON_INC_DIR}
         )
 
