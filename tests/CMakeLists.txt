@@ -24,7 +24,7 @@ set(COMMON_LIB_DIR
         ${TOPDIR}/third_party/ffmpeg/x86_64/lib
         )
 
-add_subdirectory(${TOPDIR}/framework framework.out)
+#add_subdirectory(${TOPDIR}/framework framework.out)
 add_subdirectory(${TOPDIR}/media_player media_player.out)
 
 

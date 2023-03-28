@@ -325,6 +325,7 @@ namespace Sivin {
           if (mVideoPacket == nullptr) {
             mVideoPacket = mBufferController->getPacket(BufferType::VIDEO);
           }
+          
         } while (true);
       }
     }

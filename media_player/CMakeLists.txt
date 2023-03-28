@@ -4,52 +4,31 @@ project(SnMedia)
 set(CMAKE_CXX_STANDARD 20)
 
 
-set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
+set(FRAMEWORK_DIR ${PROJECT_SOURCE_DIR}/../framework)
 
-set(COMMON_INC_DIR 
-        ${TOPDIR}/framework
-        ${TOPDIR}/third_party/json
-        ${TOPDIR}/third_party/curl/include
-        ${TOPDIR}/third_party/openssl/include
-        ${TOPDIR}/third_party/ffmpeg/x86_64/include
-        )
-
-set(COMMON_LIB_DIR 
-        ${TOPDIR}/third_party/curl/lib
-        ${TOPDIR}/third_party/openssl/lib
-        ${TOPDIR}/third_party/ffmpeg/x86_64/lib
-        )
-
-
-# add_subdirectory(${TOPDIR}/framework framework.out)
+set(COMMON_INC_DIR ${FRAMEWORK_DIR})
+add_subdirectory(${FRAMEWORK_DIR} framework.out)
 
 add_library(SnMedia STATIC "")
 
+target_include_directories(SnMedia PRIVATE  ${COMMON_INC_DIR})
 
 target_sources(SnMedia PRIVATE
         SnPlayer.cpp
-        PlayerMsgProcessor.cpp
-        PlayerMsgController.cpp
-        PlayerParams.cpp
         MediaPlayer.cpp
-        PlayerNotifier.cpp
         BufferController.cpp
+        DeviceManager.cpp
         MediaPacketQueue.cpp
+        PlayerMsgController.cpp
+        PlayerMsgProcessor.cpp
+        PlayerNotifier.cpp
+        PlayerParams.cpp
         PlayerStatistic.cpp
         )
-
 
 target_link_libraries(SnMedia PRIVATE
         SnDecoder
         SnDemuxer
         SnUtils
         SnDatasource
-        pthread
-        avformat
-        avcodec
-        avutil
-        curl
-        ssl
-        crypto
-        z
         )
