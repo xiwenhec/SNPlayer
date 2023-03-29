@@ -2,8 +2,8 @@
 // Created by sivin on 12/6/22.
 //
 
-#ifndef FRAMKEWORK_BASE_MEDIA_SNPACKET_H
-#define FRAMKEWORK_BASE_MEDIA_SNPACKET_H
+#ifndef SN_FRAMKEWORK_SNPACKET_H
+#define SN_FRAMKEWORK_SNPACKET_H
 
 #include "base/media/SNMediaInfo.h"
 #include <cstdint>
@@ -74,4 +74,4 @@ namespace Sivin {
 
 }// namespace Sivin
 
-#endif// FRAMKEWORK_BASE_MEDIA_SNPACKET_H
+#endif// SN_FRAMKEWORK_SNPACKET_H

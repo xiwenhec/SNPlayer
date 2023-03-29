@@ -1,5 +1,5 @@
-#ifndef FRAMKEWORK_BASE_MEDIA_IMEDIAFRAME_H
-#define FRAMKEWORK_BASE_MEDIA_IMEDIAFRAME_H
+#ifndef SN_FRAMKEWORK_SNFRAME_H
+#define SN_FRAMKEWORK_SNFRAME_H
 
 #include <cstdint>
 #include <memory>
@@ -91,4 +91,4 @@ namespace Sivin {
 };// namespace Sivin
 
 
-#endif// FRAMKEWORK_BASE_MEDIA_IMEDIAFRAME_H
+#endif// SN_FRAMKEWORK_SNFRAME_H

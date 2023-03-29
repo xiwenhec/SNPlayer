@@ -2,8 +2,8 @@
 // Created by sivin on 12/6/22.
 //
 
-#ifndef DATASOURCETEST_DEMUXERSERVICE_H
-#define DATASOURCETEST_DEMUXERSERVICE_H
+#ifndef SN_FRAMEWORK_DEMUXERSERVICE_H
+#define SN_FRAMEWORK_DEMUXERSERVICE_H
 
 #include "data_source/IDataSource.h"
 #include "demuxer/IDemuxer.h"
@@ -55,4 +55,4 @@ namespace Sivin {
 
 }// namespace Sivin
 
-#endif//DATASOURCETEST_DEMUXERSERVICE_H
+#endif//SN_FRAMEWORK_DEMUXERSERVICE_H

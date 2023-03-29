@@ -2,8 +2,8 @@
 // Created by sivin on 12/6/22.
 //
 
-#ifndef DATASOURCETEST_DATASOURCEFACTORY_H
-#define DATASOURCETEST_DATASOURCEFACTORY_H
+#ifndef SN_FRAMEWORK_DATASOURCEFACTORY_H
+#define SN_FRAMEWORK_DATASOURCEFACTORY_H
 
 #include <memory>
 #include "data_source/IDataSource.h"
@@ -16,4 +16,4 @@ namespace Sivin {
 }
 
 
-#endif //DATASOURCETEST_DATASOURCEFACTORY_H
+#endif //SN_FRAMEWORK_DATASOURCEFACTORY_H

@@ -1,8 +1,8 @@
 //
 // Created by sivin on 12/7/22.
 //
-#ifndef FRAMKEWORK_UTILS_SNFFUTIL_H
-#define FRAMKEWORK_UTILS_SNFFUTIL_H
+#ifndef SN_FRAMKEWORK_SNFFUTIL_H
+#define SN_FRAMKEWORK_SNFFUTIL_H
 
 #include <base/media/SNMediaInfo.h>
 
@@ -29,5 +29,5 @@ namespace Sivin {
 
 }// namespace Sivin
 
-#endif//#ifndef FRAMKEWORK_UTILS_SNFFUTIL_H
+#endif//#ifndef SN_FRAMKEWORK_SNFFUTIL_H
 

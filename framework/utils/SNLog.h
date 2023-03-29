@@ -2,8 +2,8 @@
 // Created by Sivin on 2022-11-26.
 //
 
-#ifndef SIVINPLAYER_SNLOG_H
-#define SIVINPLAYER_SNLOG_H
+#ifndef SN_FRAMEWORK_SNLOG_H
+#define SN_FRAMEWORK_SNLOG_H
 
 #include <mutex>
 #include <memory>
@@ -58,4 +58,4 @@ private:
 };
 
 
-#endif //SIVINPLAYER_SNLOG_H
+#endif //SN_FRAMEWORK_SNLOG_H

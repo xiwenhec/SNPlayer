@@ -2,8 +2,8 @@
 // Created by sivin on 12/6/22.
 //
 
-#ifndef DATASOURCETEST_IDEMUXER_H
-#define DATASOURCETEST_IDEMUXER_H
+#ifndef SN_FRAMEWORK_IDEMUXER_H
+#define SN_FRAMEWORK_IDEMUXER_H
 
 #include <string>
 #include <memory>
@@ -75,4 +75,4 @@ namespace Sivin {
 
 }// namespace Sivin
 
-#endif//DATASOURCETEST_IDEMUXER_H
+#endif//SN_FRAMEWORK_IDEMUXER_H

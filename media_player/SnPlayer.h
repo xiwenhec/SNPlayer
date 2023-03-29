@@ -61,7 +61,7 @@ namespace Sivin {
   private:
     void putMsg(PlayerMsgType msgType, const PlayerMsg &msgContent, bool trigger);
 
-    void processVideoLoop();
+    void processMediaLoop();
 
     void changePlayerStatus(PlayerStatus newStatus);
 
@@ -89,6 +89,11 @@ namespace Sivin {
     int fillVideoFrame();
 
     int64_t decodeVideoPacket(std::unique_ptr<SNPacket> &packet);
+    int64_t decodeAudioPacket(std::unique_ptr<SNPacket> &packet);
+
+    int doRender();
+    bool renderVideo(bool forceRender);
+    int sendVideoFrameToRender(std::unique_ptr<SNFrame> frame);
 
     //待实现
     void closeVideo();
@@ -127,6 +132,7 @@ namespace Sivin {
 
     //用户有seek发生，处理完成后，将会重置为SN_UNKNOWN_VALUE
     std::atomic<int64_t> mSeekPos{SN_UNKNOWN_VALUE};
+    bool mSeekFlag{false};//TODO:need rename
     std::atomic<int64_t> mCurrentPos{0};
     int64_t mDuration{SN_UNKNOWN_VALUE};
 

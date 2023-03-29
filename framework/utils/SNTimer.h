@@ -2,8 +2,8 @@
 // Created by sivin on 12/3/22.
 //
 
-#ifndef DATASOURCETEST_SNTIMER_H
-#define DATASOURCETEST_SNTIMER_H
+#ifndef SN_FRAMEWORK_SNTIMER_H
+#define SN_FRAMEWORK_SNTIMER_H
 #include <cstdint>
 
 class SNTimer {
@@ -20,4 +20,4 @@ public:
 };
 
 
-#endif //DATASOURCETEST_SNTIMER_H
+#endif //SN_FRAMEWORK_SNTIMER_H

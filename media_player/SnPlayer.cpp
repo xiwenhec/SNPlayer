@@ -3,6 +3,7 @@
 //
 
 #include "base/media/SNFrame.h"
+#include "base/media/SNMediaInfo.h"
 #define LOG_TAG "SnPlayer"
 
 #include "SnPlayer.h"
@@ -28,14 +29,15 @@
 #define HAVE_VIDEO (mCurrentVideoIndex >= 0)
 #define HAVE_AUDIO (mCurrentAudioIndex >= 0)
 
-#define VIDEO_PICTURE_MAX_CACHE_SIZE 2
 
 namespace Sivin {
 
   //表示一秒钟
   static const int kSecond = 1000 * 1000;
   static const int kBufferGap = 1 * kSecond;
-
+  //视频帧最大个数
+  static const int kMaxVideoFrameCount = 2;
+  static const int kMaxAudioFrameCount = 2;
   //表示1M字节
   static const int k1M = 1024 * 1024;
 
@@ -118,14 +120,14 @@ namespace Sivin {
     int64_t curTime = SNTimer::getSteadyTimeMs();
     //首先处理需要待处理的消息
     if (mMsgController->empty() || mMsgController->processMsg() == 0) {
-      processVideoLoop();
+      processMediaLoop();
     }
 
 
     return 0;
   }
 
-  void SnPlayer::processVideoLoop() {
+  void SnPlayer::processMediaLoop() {
 
     int64_t curTime = SNTimer::getSteadyTimeMs() / 1000;
 
@@ -137,6 +139,10 @@ namespace Sivin {
 
     doReadPacket();
     doDecode();
+
+    if (mCanceled) {
+      return;
+    }
   }
 
   void SnPlayer::resetSeekStatus() {
@@ -201,13 +207,13 @@ namespace Sivin {
     if (mReadEos) {
       return;
     }
-    mStat->stat(StatisticEvent::LOOP, 0);
 
     SNSysInfo sysInfo;
     int checkStep = 0;
 
     int64_t readStartTime = SNTimer::getSteadyTimeUs();
 
+    //循环读取数据，直到填充满队列，或者出现异常
     while (true) {
 
       int64_t curBufferDuration = getPlayerBufferDuration(false);
@@ -222,11 +228,13 @@ namespace Sivin {
         }
       }
 
+      //检测队列已满
       if (curBufferDuration > mParams->maxBufferDuration &&
           curBufferDuration > mParams->startBufferDuration) {
         mBufferIsFull = true;
         break;
       }
+
       mBufferIsFull = false;
 
       //真正读取数据包前，对系统可用内存做检测
@@ -295,13 +303,11 @@ namespace Sivin {
       }
       return ret;
     }
-
+    //TODO:目前作用未知
     mStat->stat(StatisticEvent::GOT_PACKET, packet->getSize());
-
     if (packet->getInfo().streamIndex == mCurrentVideoIndex) {
       mHaveVideoPkt = true;
       mBufferController->addPacket(std::move(packet), BufferType::VIDEO);
-
     } else if (packet->getInfo().streamIndex == mCurrentAudioIndex) {
       mHaveAudioPkt = true;
       mBufferController->addPacket(std::move(packet), BufferType::AUDIO);
@@ -313,13 +319,8 @@ namespace Sivin {
   void SnPlayer::doDecode() {
 
     if (HAVE_VIDEO && !mVideoDecoderEOS && mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
-
-      int maxCacheSize = VIDEO_PICTURE_MAX_CACHE_SIZE;
-
       uint64_t videoFrameCount = mVideoFrameQue.size();
-
-      if (videoFrameCount < maxCacheSize) {
-
+      if (videoFrameCount < kMaxVideoFrameCount) {
         int64_t startDecodeTimeMs = SNTimer::getSteadyTimeMs();
         int64_t videoEarlyUs = 0;
         do {
@@ -333,10 +334,6 @@ namespace Sivin {
             mVideoPacket = mBufferController->getPacket(BufferType::VIDEO);
           }
 
-          //TODO:这段代码的含义是,需要弄明白getTime的含义
-          videoEarlyUs = mVideoPacket ? mVideoPacket->getInfo().dts - mMasterClock.GetTime() : 0;
-
-          //
           if (mVideoPacket && mAppStatus == AppStatus::BACKGROUND && videoEarlyUs > 0) {
             break;
           }
@@ -354,6 +351,7 @@ namespace Sivin {
 
           int ret = decodeVideoPacket(mVideoPacket);
 
+          //处理视频解码失败的情况
           if (ret & STATUS_RETRY_IN) {
             break;
           }
@@ -362,7 +360,26 @@ namespace Sivin {
             break;
           }
 
-        } while (true);//TODO:循环条件
+        } while (false);//TODO:这里何时需要循环解码？
+      }
+    }
+
+    //解码音频数据包，并获取解码后的数据帧
+    if (HAVE_AUDIO && mDeviceManager->isDecoderValid(DeviceType::AUDIO)) {
+      while (mAudioFrameQue.size() < kMaxAudioFrameCount && !mAudioDecoderEOS && !mCanceled) {
+        if (!mAudioPacket) {
+          mAudioPacket = mBufferController->getPacket(BufferType::AUDIO);
+        }
+
+        if (mAudioPacket) {
+          int ret = decodeAudioPacket(mAudioPacket);
+          //TODO:处理解码返回值
+          if (mAudioPacket == nullptr) {
+            //解码成功
+          } else {
+            break;
+          }
+        }
       }
     }
   }
@@ -379,6 +396,56 @@ namespace Sivin {
   }
 
 
+  int64_t SnPlayer::decodeVideoPacket(std::unique_ptr<SNPacket> &packet) {
+    int ret = 0;
+    if (mVideoDecoderEOS) {
+      return ret;
+    }
+
+    if (packet) {
+      ret = mDeviceManager->sendPacket(packet, DeviceType::VIDEO, 0);
+    } else if (mReadEos) {
+      ret = 0;
+    }
+
+    if (ret < 0) {
+      //TODO：处理解码错误信息
+    }
+    return ret;
+  }
+
+
+  int64_t SnPlayer::decodeAudioPacket(std::unique_ptr<SNPacket> &packet) {
+    int ret = 0;
+    if (mAudioDecoderEOS) {
+      return ret;
+    }
+    //读取音频帧数据
+    std::unique_ptr<SNFrame> audioFrame{};
+    do {
+      ret = mDeviceManager->getFrame(audioFrame, DeviceType::AUDIO, 0);
+      if (ret == DEVICE_STATUS_EOS) {
+        mAudioDecoderEOS = true;
+        break;
+      }
+      if (audioFrame) {
+        //TODO:处理无法获取pts的情况
+        if (audioFrame->getInfo().pts == SN_UNKNOWN_VALUE) {
+        }
+        mAudioFrameQue.push_back(std::move(audioFrame));
+      }
+
+    } while (false);//TODO:这里是否需要循环抽取解码后的音频帧数据
+
+    ret = mDeviceManager->sendPacket(packet, DeviceType::AUDIO, 0);
+
+    if (ret < 0) {
+      //TODO:处理错误
+    }
+    return ret;
+  }
+
+
   int SnPlayer::fillVideoFrame() {
     std::unique_ptr<SNFrame> videoFrame{};
     //TODO：返回值确定
@@ -390,6 +457,48 @@ namespace Sivin {
       mVideoFrameQue.push(std::move(videoFrame));
     }
     return ret;
+  }
+
+
+  int SnPlayer::doRender() {
+    bool rendered = false;
+    if (mSeekFlag && mPlayStatus == PlayerStatus::PREPARING) {
+      if (HAVE_VIDEO && mAppStatus != AppStatus::BACKGROUND) {
+        rendered = renderVideo(true);
+      }
+    }
+    return 0;
+  }
+
+  bool SnPlayer::renderVideo(bool forceRender) {
+    if (!mDeviceManager->isVideoRenderValid()) {
+      return false;
+    }
+
+    if (mVideoFrameQue.empty()) {
+      return false;
+    }
+
+    auto &videoFrame = mVideoFrameQue.front();
+    if (videoFrame == nullptr) {
+      return false;
+    }
+    bool render = forceRender;
+
+    if (render) {
+      sendVideoFrameToRender(std::move(videoFrame));
+    } else {
+    }
+    mVideoFrameQue.pop();
+    return render;
+  }
+
+  int SnPlayer::sendVideoFrameToRender(std::unique_ptr<SNFrame> frame) {
+    if (mDeviceManager->isVideoRenderValid()) {
+      int ret = mDeviceManager->renderVideoFrame(frame);
+      return ret;
+    }
+    return -1;
   }
 
 

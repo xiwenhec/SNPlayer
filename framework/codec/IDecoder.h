@@ -2,25 +2,23 @@
 // Created by sivin on 1/2/23.
 //
 
-#ifndef DATASOURCETEST_ICODEC_H
-#define DATASOURCETEST_ICODEC_H
+#ifndef SN_FRAMEWORK_IDECODER_H
+#define SN_FRAMEWORK_IDECODER_H
 
 #include <cstdint>
 namespace Sivin {
 
-  
 
   class IDecoder {
+  public:
     explicit IDecoder() = default;
     virtual ~IDecoder() = default;
 
   public:
+    
     virtual uint32_t getInputQueueSize() = 0;
-
-
-
   };
 }// namespace Sivin
 
 
-#endif//DATASOURCETEST_ICODEC_H
+#endif//SN_FRAMEWORK_IDECODER_H

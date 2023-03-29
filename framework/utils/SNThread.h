@@ -2,8 +2,8 @@
 // Created by Sivin on 2022-11-26.
 //
 
-#ifndef SIVINPLAYER_SNTHREAD_H
-#define SIVINPLAYER_SNTHREAD_H
+#ifndef SN_FRAMEWORK_SNTHREAD_H
+#define SN_FRAMEWORK_SNTHREAD_H
 
 #include <functional>
 #include <mutex>
@@ -79,4 +79,4 @@ namespace Sivin {
 }
 
 
-#endif //SIVINPLAYER_SNTHREAD_H
+#endif //SN_FRAMEWORK_SNTHREAD_H

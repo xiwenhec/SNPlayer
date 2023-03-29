@@ -1,9 +1,8 @@
 //
 // Created by sivin on 11/28/22.
 //
-
-#ifndef DATASOURCETEST_CURLDATASOURCE_H
-#define DATASOURCETEST_CURLDATASOURCE_H
+#ifndef SN_FRAMEWORK_CURLDATASOURCE_H
+#define SN_FRAMEWORK_CURLDATASOURCE_H
 
 #include "data_source/IDataSource.h"
 #include "data_source/curl/CurlConnectionManager.h"
@@ -46,4 +45,4 @@ namespace Sivin {
 }
 
 
-#endif //DATASOURCETEST_CURLDATASOURCE_H
+#endif //SN_FRAMEWORK_CURLDATASOURCE_H

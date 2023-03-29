@@ -1,6 +1,6 @@
 
-#ifndef FRAMKEWORK_BASE_RINGBUFFER_H
-#define FRAMKEWORK_BASE_RINGBUFFER_H
+#ifndef SN_FRAMKEWORK_BASE_RINGBUFFER_H
+#define SN_FRAMKEWORK_BASE_RINGBUFFER_H
 
 #include <cstdint>
 #include <atomic>
@@ -46,4 +46,4 @@ private:
 
 }; // RingBuffer
 
-#endif // FRAMKEWORK_BASE_RINGBUFFER_H
+#endif // SN_FRAMKEWORK_BASE_RINGBUFFER_H

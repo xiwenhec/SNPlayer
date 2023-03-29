@@ -1,9 +1,8 @@
 //
 // Created by Sivin on 2022-11-26.
 //
-
-#ifndef SIVINPLAYER_IDATASOURCE_H
-#define SIVINPLAYER_IDATASOURCE_H
+#ifndef SN_FRAMKEWORK_IDATASOURCE_H
+#define SN_FRAMKEWORK_IDATASOURCE_H
 
 #include <string>
 #include <vector>
@@ -117,4 +116,4 @@ namespace Sivin {
 
 } // Sivin
 
-#endif //SIVINPLAYER_IDATASOURCE_H
+#endif //SN_FRAMKEWORK_IDATASOURCE_H

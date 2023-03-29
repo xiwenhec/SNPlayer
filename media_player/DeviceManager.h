@@ -32,13 +32,16 @@ namespace Sivin {
     std::unique_ptr<IDecoder> &getDecoder(DeviceType type) const;
 
     bool isDecoderValid(DeviceType type) const;
+    bool isVideoRenderValid() const;
     bool isAudioRenderValid() const;
     bool invalidDevice(DeviceType type);
     bool fluchDevice(DeviceType type);
 
     int getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
 
-    int sendPacket(std::unique_ptr<SNPacket> packet, DeviceType type, uint64_t timeout);
+    int sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout);
+
+    int renderVideoFrame(std::unique_ptr<SNFrame> &frame);
 
     void setVoluem(float volume);
     void setMute(bool mute);

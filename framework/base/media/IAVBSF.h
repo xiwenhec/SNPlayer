@@ -2,8 +2,8 @@
 // Created by sivin on 12/7/22.
 //
 
-#ifndef FRAMKEWORK_BASE_MEDIA_IAVBSF_H
-#define FRAMKEWORK_BASE_MEDIA_IAVBSF_H
+#ifndef SN_FRAMKEWORK_IAVBSF_H
+#define SN_FRAMKEWORK_IAVBSF_H
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -48,4 +48,4 @@ namespace Sivin {
 
 } // Sivin
 
-#endif //FRAMKEWORK_BASE_MEDIA_IAVBSF_H
+#endif //SN_FRAMKEWORK_IAVBSF_H

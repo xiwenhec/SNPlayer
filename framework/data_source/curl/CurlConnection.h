@@ -2,8 +2,8 @@
 // Created by sivin on 11/28/22.
 //
 
-#ifndef DATASOURCETEST_CURLCONNECTION_H
-#define DATASOURCETEST_CURLCONNECTION_H
+#ifndef SN_FRAMEWORK_CURLCONNECTION_H
+#define SN_FRAMEWORK_CURLCONNECTION_H
 
 #include <memory>
 #include <curl/curl.h>
@@ -140,4 +140,4 @@ namespace Sivin {
 }
 
 
-#endif //DATASOURCETEST_CURLCONNECTION_H
+#endif //SN_FRAMEWORK_CURLCONNECTION_H
