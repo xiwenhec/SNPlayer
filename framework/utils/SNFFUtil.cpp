@@ -27,6 +27,20 @@ namespace Sivin {
     return SNCodecID::SN_CODEC_ID_NONE;
   }
 
+  enum AVCodecID SNFFUtil::SNCodecToAVCodec(SNCodecID codecId) {
+    switch (codecId) {
+      case SNCodecID::SN_CODEC_ID_H264:
+        return AV_CODEC_ID_H264;
+      case SNCodecID::SN_CODEC_ID_H265:
+        return AV_CODEC_ID_HEVC;
+      case SNCodecID::SN_CODEC_ID_AAC:
+        return AV_CODEC_ID_AAC;
+      default:
+        return AV_CODEC_ID_NONE;
+    }
+  }
+
+
   SNPixelFormat SNFFUtil::AVPixelFormatToSNPixeFormat(int format) {
     switch (format) {
       case AV_PIX_FMT_YUV420P:

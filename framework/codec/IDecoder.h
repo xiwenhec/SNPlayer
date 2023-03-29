@@ -6,6 +6,8 @@
 #define SN_FRAMEWORK_IDECODER_H
 
 #include <cstdint>
+#include <string>
+
 namespace Sivin {
 
 
@@ -15,8 +17,11 @@ namespace Sivin {
     virtual ~IDecoder() = default;
 
   public:
-    
     virtual uint32_t getInputQueueSize() = 0;
+
+  protected:
+    std::string name;
+    int mFlags{0};
   };
 }// namespace Sivin
 

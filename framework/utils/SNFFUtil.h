@@ -19,6 +19,7 @@ namespace Sivin {
     static const char *getErrorString(int err);
 
     static SNCodecID AVCodecToSNCodec(enum AVCodecID codecID);
+    static enum AVCodecID SNCodecToAVCodec(SNCodecID codecId);
 
     static SNPixelFormat AVPixelFormatToSNPixeFormat(int format);
 
@@ -30,4 +31,3 @@ namespace Sivin {
 }// namespace Sivin
 
 #endif//#ifndef SN_FRAMKEWORK_SNFFUTIL_H
-
