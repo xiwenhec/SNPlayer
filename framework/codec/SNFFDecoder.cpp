@@ -1,6 +1,7 @@
 #include "SNFFDecoder.h"
 #include "base/media/SNPacket.h"
 #include "codec/IDecoder.h"
+#include "codec/SNActiveDecoder.h"
 #include "utils/SNFFUtil.h"
 #include "utils/SNLog.h"
 #include "base/media/SNAVPacket.h"
@@ -10,12 +11,27 @@
 #include "base/media/SNAVFrame.h"
 namespace Sivin {
 
-  SNFFDecoder::SNFFDecoder() {
+  SNFFDecoder::SNFFDecoder() : SNActiveDecoder() {
     name = "ff.decoder";
     mDecoder = std::make_unique<InternalDecoder>();
   }
 
   SNFFDecoder::~SNFFDecoder() {
+  }
+
+  void SNFFDecoder::closeDecoder() {
+    if (mDecoder) {
+      if (mDecoder->codecCtx) {
+        avcodec_close(mDecoder->codecCtx);
+        avcodec_free_context(&mDecoder->codecCtx);
+        mDecoder->codecCtx = nullptr;
+      }
+      mDecoder->codec = nullptr;
+      if (mDecoder->avFrame) {
+        av_frame_free(&mDecoder->avFrame);
+        mDecoder->avFrame = nullptr;
+      }
+    }
   }
 
   SNRetStatus SNFFDecoder::initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) {

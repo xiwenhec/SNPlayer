@@ -37,6 +37,8 @@ namespace Sivin {
     virtual SNRetStatus dequeueDecoder(std::unique_ptr<SNFrame> &frame) override;
 
     virtual void flushDecoder() override;
+    
+    virtual void closeDecoder() override;
 
 
   private:

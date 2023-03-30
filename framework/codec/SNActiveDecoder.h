@@ -21,6 +21,7 @@ namespace Sivin {
     virtual ~SNActiveDecoder();
 
     SNRetStatus open(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) override;
+    
     void close() override;
 
     SNRetStatus sendPacket(std::unique_ptr<SNPacket> &packet, uint64_t timeout) override;
@@ -53,6 +54,7 @@ namespace Sivin {
     virtual SNRetStatus dequeueDecoder(std::unique_ptr<SNFrame> &frame) = 0;
 
     virtual void flushDecoder() = 0;
+    virtual void closeDecoder() = 0;
 
   protected:
     std::unique_ptr<SNThread> mDecodeThread{nullptr};

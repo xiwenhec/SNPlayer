@@ -52,6 +52,24 @@ namespace Sivin {
   }
 
   void SNActiveDecoder::close() {
+    THREAD_CHECK;
+
+    mRunning = false;
+    mWaitCond.notify_one();
+
+    if (mDecodeThread) {
+      mDecodeThread->pause();
+    }
+
+    closeDecoder();
+
+    while (!mInputQueue.empty()) {
+      mInputQueue.pop();
+    }
+
+    while (!mOutputQueue.empty()) {
+      mOutputQueue.pop();
+    }
   }
 
 
