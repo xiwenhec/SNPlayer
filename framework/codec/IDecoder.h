@@ -10,6 +10,12 @@
 
 namespace Sivin {
 
+  enum class DecodeRet {
+    SUCCESS = 0,
+    ERROR = -10,
+    AGAIN,
+    EOS,
+  };
 
   class IDecoder {
   public:

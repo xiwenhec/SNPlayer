@@ -10,4 +10,6 @@ target_include_directories(SnDecoder PRIVATE
 
 target_sources(SnDecoder PRIVATE
         IDecoder.cpp
+        SNActiveDecoder.cpp
+        SNFFDecoder.cpp
         )

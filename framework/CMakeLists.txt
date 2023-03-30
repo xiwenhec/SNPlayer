@@ -8,7 +8,6 @@ set(TOPDIR ${PROJECT_SOURCE_DIR}/..)
 
 set(COMMON_INC_DIR 
         ${TOPDIR}/framework
-        ${TOPDIR}/third_party/boost
         ${TOPDIR}/third_party/json
         ${TOPDIR}/third_party/curl/include
         ${TOPDIR}/third_party/openssl/include

@@ -31,6 +31,8 @@ namespace Sivin {
 
     virtual std::unique_ptr<SNPacket> clone() override;
 
+    AVPacket *toFFPacket();
+
   private:
     AVPacket *mpkt{nullptr};
 

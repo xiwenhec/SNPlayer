@@ -31,6 +31,10 @@ namespace Sivin {
     return mpkt->data;
   }
 
+  AVPacket *SNAVPacket::toFFPacket() {
+    return mpkt;
+  }
+
   void SNAVPacket::copyInfo() {
     mInfo.duration = mpkt->duration;
     mInfo.pts = mpkt->pts;
@@ -50,7 +54,7 @@ namespace Sivin {
     }
 
     mInfo.streamIndex = mpkt->stream_index;
-    mInfo.timePosition = SN_UNKNOWN_VALUE;
+    mInfo.timePosition = INT64_MIN;
     mInfo.pos = mpkt->pos;
   }
 

@@ -25,18 +25,20 @@ namespace Sivin {
       PacketInfo &operator=(const PacketInfo &other);
 
     public:
-      int streamIndex{SN_UNKNOWN_VALUE};
+      int streamIndex{-1};
 
-      int64_t pts{SN_UNKNOWN_VALUE};
+      int64_t pts{INT64_MIN};
 
-      int64_t dts{SN_UNKNOWN_VALUE};
+      int64_t dts{INT64_MIN};
 
       /*
         timePosition记录这当前pkt应该被播放的绝对时间，它是从0开始记录
         如果startPts等于0，则timePostion和pts的值相等，否则timePosition
         应该等于 timePosition = pkt.pts - firstPkt.pts;
       */
-      int64_t timePosition{SN_UNKNOWN_VALUE};
+      int64_t timePosition{-1};
+
+      int64_t utcTime{INT64_MIN};
 
       int64_t duration{0};
 

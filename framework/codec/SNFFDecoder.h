@@ -1,5 +1,6 @@
 #ifndef SN_FRAMEWORK_SNFFDECODER_H
 #define SN_FRAMEWORK_SNFFDECODER_H
+
 #include "base/media/SNMediaInfo.h"
 #include "codec/SNActiveDecoder.h"
 #include <cstdint>
@@ -14,7 +15,7 @@ namespace Sivin {
   class SNFFDecoder : public SNActiveDecoder {
   private:
     struct InternalDecoder {
-      AVCodecContext *codecContext{nullptr};
+      AVCodecContext *codecCtx{nullptr};
       const AVCodec *codec{nullptr};
       AVFrame *avFrame{nullptr};
       struct {
@@ -29,7 +30,11 @@ namespace Sivin {
     virtual ~SNFFDecoder();
 
   private:
-    int initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags);
+    virtual DecodeRet initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags);
+
+    virtual DecodeRet enqueueDecoder(std::unique_ptr<SNPacket> &pPacket) = 0;
+
+    virtual DecodeRet dequeueDecoder(std::unique_ptr<SNFrame> &frame) = 0;
 
   private:
     std::unique_ptr<InternalDecoder> mDecoder{nullptr};

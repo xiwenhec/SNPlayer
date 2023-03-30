@@ -72,7 +72,7 @@ namespace Sivin {
     void notifyError(PlayerError error);
 
     bool isSeeking() {
-      return SN_UNKNOWN_VALUE != mSeekPos;
+      return -1 != mSeekPos;
     }
 
     int64_t getCurrentPosition();
@@ -131,20 +131,20 @@ namespace Sivin {
     std::unique_ptr<DemuxerService> mDemuxerService{nullptr};
 
     //用户有seek发生，处理完成后，将会重置为SN_UNKNOWN_VALUE
-    std::atomic<int64_t> mSeekPos{SN_UNKNOWN_VALUE};
+    std::atomic<int64_t> mSeekPos{-1};
     bool mSeekFlag{false};//TODO:need rename
     std::atomic<int64_t> mCurrentPos{0};
-    int64_t mDuration{SN_UNKNOWN_VALUE};
+    int64_t mDuration{-1};
 
-    int mCurrentVideoIndex{SN_UNKNOWN_VALUE};
-    int mCurrentAudioIndex{SN_UNKNOWN_VALUE};
+    int mCurrentVideoIndex{-1};
+    int mCurrentAudioIndex{-1};
 
     //TODO:这个变量的存在似乎多余
     bool mHaveVideoPkt{false};
     bool mHaveAudioPkt{false};
 
-    int mVideoWidth{SN_UNKNOWN_VALUE};
-    int mVideoHeight{SN_UNKNOWN_VALUE};
+    int mVideoWidth{0};
+    int mVideoHeight{0};
 
     MediaInfo mMediaInfo{};
 

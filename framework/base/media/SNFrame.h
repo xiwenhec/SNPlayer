@@ -13,9 +13,9 @@ namespace Sivin {
 
   public:
     enum class FrameType {
-      FrameTypeUnKnown,
-      FrameTypeVideo,
-      FrameTypeAudio
+      UnKnown,
+      Video,
+      Audio
     };
 
     struct VideoInfo {

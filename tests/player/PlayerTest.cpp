@@ -8,6 +8,12 @@
 
 using namespace Sivin;
 
+enum class Color {
+  RED = 3,
+  YELLOW = -5,
+  WITHE,
+};
+
 void test() {
   // struct sysinfo info;
   // sysinfo(&info);
@@ -16,6 +22,8 @@ void test() {
   // SNSysInfo snInfo;
   // SNSysInfoUtil::getSystemMemoryInfo(&snInfo);
   // printf("%lu %lu\n", snInfo.totalram/1024, snInfo.availableram/1024);
+  int c = static_cast<int>(Color::WITHE);
+  printf("color = %d\n", c);
 }
 
 static void onPrepared(void *userData) {

@@ -4,10 +4,10 @@
 
 namespace Sivin {
 
-  #define SN_UNKNOWN_VALUE -1
+
 
   enum class StreamType {
-    STREAM_TYPE_UNKNOWN = SN_UNKNOWN_VALUE,
+    STREAM_TYPE_UNKNOWN = -1,
     STREAM_TYPE_VIDEO,
     STREAM_TYPE_AUDIO,
     STREAM_TYPE_SUB,
@@ -16,19 +16,19 @@ namespace Sivin {
   };
 
   enum class SNCodecID {
-    SN_CODEC_ID_NONE = SN_UNKNOWN_VALUE,
+    SN_CODEC_ID_NONE = -1,
     SN_CODEC_ID_H264,
     SN_CODEC_ID_H265,
     SN_CODEC_ID_AAC,
   };
 
   enum class SNSampleFormat {
-    SN_SAMPLE_FMT_NONE = SN_UNKNOWN_VALUE,
+    SN_SAMPLE_FMT_NONE = -1,
     SN_SAMPLE_FMT_S16,
   };
 
   enum class SNPixelFormat {
-    SN_PIX_FMT_NONE = SN_UNKNOWN_VALUE,
+    SN_PIX_FMT_NONE = -1,
     SN_PIX_FMT_YUV420P,
   };
 
