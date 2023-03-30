@@ -30,11 +30,14 @@ namespace Sivin {
     virtual ~SNFFDecoder();
 
   private:
-    virtual DecodeRet initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags);
+    virtual SNRetStatus initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) override;
 
-    virtual DecodeRet enqueueDecoder(std::unique_ptr<SNPacket> &pPacket) = 0;
+    virtual SNRetStatus enqueueDecoder(std::unique_ptr<SNPacket> &pPacket) override;
 
-    virtual DecodeRet dequeueDecoder(std::unique_ptr<SNFrame> &frame) = 0;
+    virtual SNRetStatus dequeueDecoder(std::unique_ptr<SNFrame> &frame) override;
+
+    virtual void flushDecoder() override;
+
 
   private:
     std::unique_ptr<InternalDecoder> mDecoder{nullptr};
