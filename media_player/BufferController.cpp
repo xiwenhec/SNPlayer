@@ -1,6 +1,5 @@
-#include <cassert>
 #define LOG_TAG "BufferController"
-
+#include <cassert>
 #include "BufferController.h"
 #include "MediaPacketQueue.h"
 #include "base/media/SNPacket.h"
