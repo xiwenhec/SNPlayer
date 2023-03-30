@@ -22,19 +22,26 @@ namespace Sivin {
 
 
   class DeviceManager {
+  public:
+    struct DecoderHandle {
+      std::unique_ptr<IDecoder> decoder;
+      bool valid{false};
+    };
 
   public:
     explicit DeviceManager();
-
     ~DeviceManager();
 
   public:
-    std::unique_ptr<IDecoder> &getDecoder(DeviceType type) const;
+    const std::unique_ptr<IDecoder> &getDecoder(DeviceType type) const;
 
     bool isDecoderValid(DeviceType type) const;
+
     bool isVideoRenderValid() const;
+    
     bool isAudioRenderValid() const;
-    bool invalidDevice(DeviceType type);
+    
+    void invalidDevice(DeviceType type);
     bool fluchDevice(DeviceType type);
 
     int getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
@@ -45,6 +52,14 @@ namespace Sivin {
 
     void setVoluem(float volume);
     void setMute(bool mute);
+
+
+  private:
+    DecoderHandle mVideoDecodeHandle;
+    DecoderHandle mAudioDecodeHandle;
+
+    bool mAudioRenderValid{false};
+    bool mVideoRenderValid{false};
   };
 
 }// namespace Sivin

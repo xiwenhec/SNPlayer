@@ -54,7 +54,7 @@ namespace Sivin {
     }
 
     if (mBufferType == BufferType::AUDIO &&
-        !mQueue.empty() && packet->getInfo().pts != SN_UNKNOWN_VALUE &&
+        !mQueue.empty() && packet->getInfo().pts != INT64_MIN &&
         packet->getInfo().pts < mQueue.back()->getInfo().pts) {
       SN_LOGE("pts revert.");
     }

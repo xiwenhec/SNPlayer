@@ -97,6 +97,7 @@ if (${ENABLE_PLAYER_TEST})
         
 
         target_link_libraries(PlayerTest PRIVATE
+                SnMedia
                 SnDecoder
                 SnDemuxer
                 SnUtils

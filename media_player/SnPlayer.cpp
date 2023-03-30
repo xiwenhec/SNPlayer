@@ -430,7 +430,7 @@ namespace Sivin {
       }
       if (audioFrame) {
         //TODO:处理无法获取pts的情况
-        if (audioFrame->getInfo().pts == SN_UNKNOWN_VALUE) {
+        if (audioFrame->getInfo().pts == INT64_MIN) {
         }
         mAudioFrameQue.push_back(std::move(audioFrame));
       }
