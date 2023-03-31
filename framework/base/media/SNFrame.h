@@ -1,6 +1,7 @@
 #ifndef SN_FRAMKEWORK_SNFRAME_H
 #define SN_FRAMKEWORK_SNFRAME_H
 
+#include "base/media/SNMediaInfo.h"
 #include <cstdint>
 #include <memory>
 
@@ -19,10 +20,10 @@ namespace Sivin {
     };
 
     struct VideoInfo {
-      int width;
-      int height;
-      int rotate;
-      int format;
+      int width{0};
+      int height{0};
+      int rotate{0};
+      SNPixelFormat format{SNPixelFormat::FMT_NONE};
 
       bool operator==(const VideoInfo &info) const {
         return this->width == info.width && this->height == info.height && this->format == info.format;
@@ -32,14 +33,13 @@ namespace Sivin {
     };
 
     struct AudioInfo {
-      int nb_samples;
-      int channels;
-      int sample_rate;
-      uint64_t channel_layout;//
-      int format;
+      int nb_samples{0};
+      int channels{0};
+      int sample_rate{0};
+      SNSampleFormat format{SNSampleFormat::FMT_NONE};
       bool operator==(const AudioInfo &info) const {
         return this->sample_rate == info.sample_rate && this->channels == info.channels &&
-               this->format == info.format && this->channel_layout == info.channel_layout;
+               this->format == info.format;
       }
 
       bool operator!=(const AudioInfo &info) const { return !operator==(info); }
@@ -47,12 +47,12 @@ namespace Sivin {
 
 
     struct SNFrameInfo {
-      int64_t pts;
-      int64_t pkt_dts;
-      int64_t duration;
-      int64_t timePosition;
-      int64_t utcTime;
-      bool key;
+      int64_t pts{INT64_MIN};
+      int64_t pkt_dts{INT64_MIN};
+      int64_t duration{0};
+      int64_t timePosition{INT64_MIN};
+      int64_t utcTime{INT64_MIN};
+      bool key_frame{false};
       union {
         VideoInfo video;
         AudioInfo audio;
@@ -63,6 +63,7 @@ namespace Sivin {
     SNFrame() = default;
     virtual ~SNFrame() = default;
 
+  public:
     virtual std::unique_ptr<SNFrame> clone() = 0;
 
     virtual uint8_t **getData() = 0;
@@ -71,20 +72,31 @@ namespace Sivin {
 
     virtual FrameType getType() = 0;
 
-    virtual void setDiscard(bool discard) { mDiscard = discard; }
+    void setDiscard(bool discard) {
+      mDiscard = discard;
+    }
 
-    virtual bool isDiscard() { return mDiscard; }
+    bool isDiscard() {
+      return mDiscard;
+    }
 
-    SNFrameInfo &getInfo();
+    SNFrameInfo &getInfo() {
+      return mInfo;
+    }
 
-    void setProtect(bool protect) { mProtected = protect; }
+    void setProtect(bool protect) {
+      mProtected = protect;
+    }
 
-    bool isProtected() const { return mProtected; }
+    bool isProtected() const {
+      return mProtected;
+    }
 
   protected:
     SNFrameInfo mInfo{};
     bool mDiscard{false};
     bool mProtected{false};
+    FrameType mType{FrameType::UnKnown};
   };
 
 

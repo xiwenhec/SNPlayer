@@ -44,18 +44,18 @@ namespace Sivin {
   SNPixelFormat SNFFUtil::AVPixelFormatToSNPixeFormat(int format) {
     switch (format) {
       case AV_PIX_FMT_YUV420P:
-        return SNPixelFormat::SN_PIX_FMT_YUV420P;
+        return SNPixelFormat::FMT_YUV420P;
       default:
-        return SNPixelFormat::SN_PIX_FMT_NONE;
+        return SNPixelFormat::FMT_NONE;
     }
   }
 
   SNSampleFormat SNFFUtil::AVSampleFormatToSNSampleFormat(int format) {
     switch (format) {
       case AV_SAMPLE_FMT_S16:
-        return SNSampleFormat::SN_SAMPLE_FMT_S16;
+        return SNSampleFormat::FMT_S16;
       default:
-        return SNSampleFormat::SN_SAMPLE_FMT_NONE;
+        return SNSampleFormat::FMT_NONE;
     }
   }
 
@@ -66,8 +66,8 @@ namespace Sivin {
     info->codeId = SNFFUtil::AVCodecToSNCodec(stream->codecpar->codec_id);
     info->codec_tag = stream->codecpar->codec_tag;
     info->ptsTimeBase = (float) stream->time_base.num * 1000000 / (float) stream->time_base.den;
-    info->pixFormat = SNPixelFormat::SN_PIX_FMT_NONE;
-    info->sampleFormat = SNSampleFormat::SN_SAMPLE_FMT_NONE;
+    info->pixFormat = SNPixelFormat::FMT_NONE;
+    info->sampleFormat = SNSampleFormat::FMT_NONE;
 
     if (codeType == AVMEDIA_TYPE_VIDEO) {
       //stream里的表示解码后的视频宽高比，codecpar的表示原始图像宽高比

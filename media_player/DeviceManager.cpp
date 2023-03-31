@@ -1,6 +1,7 @@
 
 #include "DeviceManager.h"
 #include "codec/IDecoder.h"
+#include <cassert>
 #include <memory>
 namespace Sivin {
 
@@ -8,18 +9,28 @@ namespace Sivin {
 
   const std::unique_ptr<IDecoder> &DeviceManager::getDecoder(DeviceType type) const {
     if (type == DeviceType::VIDEO) {
-      return mVideoDecodeHandle.decoder;
+      return mVideoDecoderHandle.decoder;
     } else if (type == DeviceType::AUDIO) {
-      return mAudioDecodeHandle.decoder;
+      return mAudioDecoderHandle.decoder;
     }
     return emptyDecoder;
   }
 
+  DeviceManager::DecoderHandle *DeviceManager::getDecoderHandle(DeviceType type) {
+    if (type == DeviceType::AUDIO) {
+      return &mAudioDecoderHandle;
+    } else if (type == DeviceType::VIDEO) {
+      return &mVideoDecoderHandle;
+    }
+    return nullptr;
+  }
+
+
   bool DeviceManager::isDecoderValid(DeviceType type) const {
     if (type == DeviceType::VIDEO) {
-      return mVideoDecodeHandle.valid;
+      return mVideoDecoderHandle.valid;
     } else if (type == DeviceType::AUDIO) {
-      return mAudioDecodeHandle.valid;
+      return mAudioDecoderHandle.valid;
     }
     return false;
   }
@@ -33,12 +44,41 @@ namespace Sivin {
   }
 
   void DeviceManager::invalidDevice(DeviceType type) {
-    if (type == DeviceType::AUDIO || type == DeviceType::ADVD) {
-      if (mAudioDecodeHandle.decoder) {
-        mAudioDecodeHandle.decoder->prePause();
+    if (type == DeviceType::AUDIO) {
+      if (mAudioDecoderHandle.decoder) {
+        mAudioDecoderHandle.decoder->prePause();
       }
-      
+      if (mAudioRender) {
+        mAudioRender->prePause();
+        mAudioRender->mute(true);
+      }
+      mAudioDecoderHandle.valid = false;
+      mAudioRenderValid = false;
+    } else if (type == DeviceType::VIDEO) {
+      if (mVideoDecoderHandle.decoder) {
+        mVideoDecoderHandle.decoder->prePause();
+      }
+      mVideoDecoderHandle.valid = false;
+      mVideoRenderValid = false;
     }
+  }
+
+  SNRetStatus DeviceManager::sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout) {
+    auto decoderHandle = getDecoderHandle(type);
+    if (decoderHandle == nullptr || !decoderHandle->valid) {
+      return SNRetStatus::ERROR;
+    }
+    assert(decoderHandle->decoder);
+    return decoderHandle->decoder->sendPacket(packet, timeout);
+  }
+
+  SNRetStatus DeviceManager::getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout) {
+    auto decoderHandle = getDecoderHandle(type);
+    if (decoderHandle == nullptr || !decoderHandle->valid) {
+      return SNRetStatus::ERROR;
+    }
+    assert(decoderHandle->decoder);
+    return decoderHandle->decoder->getFrame(frame, timeout);
   }
 
 }// namespace Sivin

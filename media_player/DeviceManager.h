@@ -4,6 +4,8 @@
 #include "base/media/SNFrame.h"
 #include "base/media/SNPacket.h"
 #include "codec/IDecoder.h"
+#include "render/audio/IAudioRender.h"
+#include "render/video/IVideoRender.h"
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -15,9 +17,8 @@ namespace Sivin {
 
 
   enum class DeviceType {
+    AUDIO = 0,
     VIDEO = 1,
-    AUDIO = 1 << 1,
-    ADVD = VIDEO | AUDIO
   };
 
 
@@ -29,8 +30,8 @@ namespace Sivin {
     };
 
   public:
-    explicit DeviceManager();
-    ~DeviceManager();
+    explicit DeviceManager() = default;
+    ~DeviceManager() = default;
 
   public:
     const std::unique_ptr<IDecoder> &getDecoder(DeviceType type) const;
@@ -38,26 +39,29 @@ namespace Sivin {
     bool isDecoderValid(DeviceType type) const;
 
     bool isVideoRenderValid() const;
-    
+
     bool isAudioRenderValid() const;
-    
+
     void invalidDevice(DeviceType type);
     bool fluchDevice(DeviceType type);
 
-    int getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
+    SNRetStatus getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
 
-    int sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout);
+    SNRetStatus sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout);
 
     int renderVideoFrame(std::unique_ptr<SNFrame> &frame);
 
     void setVoluem(float volume);
     void setMute(bool mute);
 
+  private:
+    DecoderHandle *getDecoderHandle(DeviceType type);
 
   private:
-    DecoderHandle mVideoDecodeHandle;
-    DecoderHandle mAudioDecodeHandle;
-
+    DecoderHandle mAudioDecoderHandle;
+    DecoderHandle mVideoDecoderHandle;
+    std::unique_ptr<IAudioRender> mAudioRender{nullptr};
+    std::unique_ptr<IVideoRender> mVideoRender{nullptr};
     bool mAudioRenderValid{false};
     bool mVideoRenderValid{false};
   };

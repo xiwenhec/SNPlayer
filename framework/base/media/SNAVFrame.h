@@ -12,15 +12,23 @@ namespace Sivin {
 
   class SNAVFrame : public SNFrame {
   public:
-    explicit SNAVFrame(AVFrame *frame, FrameType type = FrameType::UnKnown);
+    explicit SNAVFrame(AVFrame *frame);
+    ~SNAVFrame();
 
-    virtual std::unique_ptr<SNFrame> clone();
+  public:
+    virtual uint8_t **getData() override;
 
-    virtual uint8_t **getData();
+    virtual int *getLineSize() override;
 
-    virtual int *getLineSize();
+    virtual FrameType getType() override;
 
-    virtual FrameType getType();
+    virtual std::unique_ptr<SNFrame> clone() override;
+
+  private:
+    void copyInfo();
+
+  private:
+    AVFrame *mAVFrame{nullptr};
   };
 
 }// namespace Sivin

@@ -7,9 +7,9 @@
 
 extern "C" {
 #include <libavcodec/packet.h>
-};
+}
 
-#include "base/media/SNPacket.h"
+#include <base/media/SNPacket.h>
 #include <string>
 
 

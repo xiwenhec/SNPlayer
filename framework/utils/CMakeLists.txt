@@ -4,10 +4,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_library(SnUtils STATIC "")
 
-target_include_directories(SnUtils PRIVATE ${COMMON_INC_DIR})
+target_include_directories(SnUtils PUBLIC ${COMMON_INC_DIR})
 
 target_sources(
-        SnUtils PRIVATE
+        SnUtils PUBLIC
         SNJson.h
         SNLog.cpp
         SNThread.cpp
@@ -18,7 +18,7 @@ target_sources(
         )
 
 target_sources(
-        SnUtils PRIVATE
+        SnUtils PUBLIC
         ../base/RingBuffer.cpp
         ../base/media/SNPacket.cpp
         ../base/media/IAVBSF.cpp

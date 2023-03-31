@@ -10,9 +10,9 @@ namespace Sivin {
 
   class BufferController {
   public:
-    explicit BufferController();
+    explicit BufferController() = default;
 
-    ~BufferController();
+    ~BufferController() = default;
 
     void addPacket(std::unique_ptr<SNPacket> packet, BufferType type);
 

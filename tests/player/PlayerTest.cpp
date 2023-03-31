@@ -22,8 +22,8 @@ void test() {
   // SNSysInfo snInfo;
   // SNSysInfoUtil::getSystemMemoryInfo(&snInfo);
   // printf("%lu %lu\n", snInfo.totalram/1024, snInfo.availableram/1024);
-  int c = static_cast<int>(Color::WITHE);
-  printf("color = %d\n", c);
+  // int c = static_cast<int>(Color::WITHE);
+  // printf("color = %d\n", c);
 }
 
 static void onPrepared(void *userData) {
@@ -32,20 +32,20 @@ static void onPrepared(void *userData) {
 }
 
 int main() {
-  test();
+  // test();
 
-  // printf("player test run...\n");
+  printf("player test run...\n");
 
-  // SnPlayer *player = new SnPlayer();
+  SnPlayer *player = new SnPlayer();
 
-  // PlayerListener listener{};
-  // listener.userData = player;
-  // listener.onPreparedCallback = onPrepared;
-  // player->setListener(listener);
-  // player->setDataSource("https://player.alicdn.com/video/aliyunmedia.mp4");
-  // player->prepare();
+  PlayerListener listener{};
+  listener.userData = player;
+  listener.onPreparedCallback = onPrepared;
+  player->setListener(listener);
+  player->setDataSource("https://player.alicdn.com/video/aliyunmedia.mp4");
+  player->prepare();
 
-  // SNTimer::sleepMs(600 * 1000);
-  // delete player;
+  SNTimer::sleepMs(600 * 1000);
+  delete player;
   return 0;
 }

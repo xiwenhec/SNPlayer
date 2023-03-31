@@ -23,13 +23,13 @@ namespace Sivin {
   };
 
   enum class SNSampleFormat {
-    SN_SAMPLE_FMT_NONE = -1,
-    SN_SAMPLE_FMT_S16,
+    FMT_NONE = -1,
+    FMT_S16,
   };
 
   enum class SNPixelFormat {
-    SN_PIX_FMT_NONE = -1,
-    SN_PIX_FMT_YUV420P,
+    FMT_NONE = -1,
+    FMT_YUV420P,
   };
 
 

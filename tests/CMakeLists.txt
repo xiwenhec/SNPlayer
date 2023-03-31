@@ -19,68 +19,16 @@ set(COMMON_INC_DIR
         )
 
 set(COMMON_LIB_DIR 
-        ${TOPDIR}/thirdparty/curl/lib
+        ${TOPDIR}/third_party/curl/lib
         ${TOPDIR}/third_party/openssl/lib
         ${TOPDIR}/third_party/ffmpeg/x86_64/lib
         )
 
-#add_subdirectory(${TOPDIR}/framework framework.out)
+# add_subdirectory(${TOPDIR}/framework framework.out)
+
 add_subdirectory(${TOPDIR}/media_player media_player.out)
 
-
-add_executable(test "")
-
-target_include_directories(test PRIVATE
-        ${COMMON_INC_DIR}
-        )
-target_link_directories(test PRIVATE ${COMMON_LIB_DIR})
-
-
-
-
-
-#线程测试
-#set(ENABLE_THREAD_TEST ON)
-#dataSource测试
-#set(ENABLE_DATASOURCE_TEST ON)
-set(ENABLE_DEMUXER_TEST ON)
 set(ENABLE_PLAYER_TEST ON)
-
-
-if (${ENABLE_THREAD_TEST})
-    target_sources(test PRIVATE
-            thread/ThreadTest.cpp
-            )
-endif ()
-
-if (${ENABLE_DATASOURCE_TEST})
-        target_sources(test PRIVATE
-            datasource/DataSourceTest.cpp
-        )
-
-endif ()
-
-if (${ENABLE_DEMUXER_TEST})
-    target_sources(test PRIVATE
-            demuxer/DemuxerTest.cpp
-            )
-endif ()
-
-target_link_libraries(test PRIVATE        
-                SnDecoder
-                SnDemuxer
-                SnUtils
-                SnDatasource
-                pthread
-                avformat
-                avcodec
-                avutil
-                curl
-                ssl
-                crypto
-                z
-        )
-
 
 if (${ENABLE_PLAYER_TEST}) 
         add_executable(PlayerTest "")
@@ -97,11 +45,11 @@ if (${ENABLE_PLAYER_TEST})
         
 
         target_link_libraries(PlayerTest PRIVATE
-                SnMedia
+                SnUtils
                 SnDecoder
                 SnDemuxer
-                SnUtils
                 SnDatasource
+                SnMedia
                 pthread
                 avformat
                 avcodec
@@ -112,4 +60,62 @@ if (${ENABLE_PLAYER_TEST})
                 z
         )
 endif()
+
+
+
+
+# add_executable(test "")
+
+# target_include_directories(test PRIVATE
+#         ${COMMON_INC_DIR}
+#         )
+# target_link_directories(test PRIVATE ${COMMON_LIB_DIR})
+
+
+
+
+
+#线程测试
+#set(ENABLE_THREAD_TEST ON)
+#dataSource测试
+#set(ENABLE_DATASOURCE_TEST ON)
+# set(ENABLE_DEMUXER_TEST ON)
+
+
+
+# if (${ENABLE_THREAD_TEST})
+#     target_sources(test PRIVATE
+#             thread/ThreadTest.cpp
+#             )
+# endif ()
+
+# if (${ENABLE_DATASOURCE_TEST})
+#         target_sources(test PRIVATE
+#             datasource/DataSourceTest.cpp
+#         )
+
+# endif ()
+
+# if (${ENABLE_DEMUXER_TEST})
+#     target_sources(test PRIVATE
+#             demuxer/DemuxerTest.cpp
+#             )
+# endif ()
+
+# target_link_libraries(test PRIVATE        
+#                 SnDecoder
+#                 SnDemuxer
+#                 SnUtils
+#                 SnDatasource
+#                 pthread
+#                 avformat
+#                 avcodec
+#                 avutil
+#                 curl
+#                 ssl
+#                 crypto
+#                 z
+#         )
+
+
 

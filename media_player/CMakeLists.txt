@@ -11,9 +11,9 @@ add_subdirectory(${FRAMEWORK_DIR} framework.out)
 
 add_library(SnMedia STATIC "")
 
-target_include_directories(SnMedia PRIVATE  ${COMMON_INC_DIR})
+target_include_directories(SnMedia PUBLIC  ${COMMON_INC_DIR})
 
-target_sources(SnMedia PRIVATE
+target_sources(SnMedia PUBLIC
         SnPlayer.cpp
         MediaPlayer.cpp
         BufferController.cpp
@@ -27,7 +27,7 @@ target_sources(SnMedia PRIVATE
         ReferClock.cpp
         )
 
-target_link_libraries(SnMedia PRIVATE
+target_link_libraries(SnMedia PUBLIC
         SnDecoder
         SnDemuxer
         SnUtils
