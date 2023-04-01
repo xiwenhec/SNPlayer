@@ -13,6 +13,7 @@
 #include "PlayerMsgController.h"
 #include "PlayerNotifier.h"
 #include "PlayerParams.h"
+#include "base/SNRet.h"
 #include "base/media/SNFrame.h"
 #include "base/media/SNMediaInfo.h"
 #include "base/media/SNPacket.h"
@@ -82,7 +83,7 @@ namespace Sivin {
 
     void doReadPacket();
 
-    int readPacket();
+    SNRet readPacket();
 
     void doDecode();
 

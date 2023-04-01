@@ -1,15 +1,13 @@
 //
 // Created by sivin on 12/6/22.
 //
-
-#include "demuxer/IDemuxer.h"
-#include <cstdint>
-#include <memory>
 #define LOG_TAG "DemuxerService"
-
+#include "demuxer/IDemuxer.h"
 #include "DemuxerService.h"
 #include "demuxer/DemuxerFactory.h"
 #include "utils/SNLog.h"
+#include <cstdint>
+#include <memory>
 
 #define MAX_PROBE_SIZE 1024
 
@@ -18,6 +16,15 @@
     if (mDemuxer == nullptr) \
       return -1;             \
   } while (false);
+
+
+#define CHECK_DEMUXER_RET          \
+  do {                             \
+    if (mDemuxer == nullptr)       \
+      return SNRet::Status::ERROR; \
+  } while (false);
+
+
 #define CHECK_DEMUXER_V      \
   do {                       \
     if (mDemuxer == nullptr) \
@@ -93,8 +100,8 @@ namespace Sivin {
   }
 
 
-  int DemuxerService::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
-    CHECK_DEMUXER;
+  SNRet DemuxerService::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
+    CHECK_DEMUXER_RET;
     return mDemuxer->readPacket(packet, index);
   }
 

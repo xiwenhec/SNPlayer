@@ -9,6 +9,7 @@
 #include <memory>
 #include <functional>
 #include "base/media/SNPacket.h"
+#include "base/SNRet.h"
 #include <base/media/SNMediaInfo.h>
 
 namespace Sivin {
@@ -51,7 +52,7 @@ namespace Sivin {
 
     virtual void stop() = 0;
 
-    virtual int readPacket(std::unique_ptr<SNPacket> &packet, int index) = 0;
+    virtual SNRet readPacket(std::unique_ptr<SNPacket> &packet, int index) = 0;
 
     virtual int openStream(int index) = 0;
 
@@ -59,7 +60,7 @@ namespace Sivin {
 
   public:
     virtual int getMediaInfo(std::unique_ptr<SNMeidaInfo> &mediaInfo) = 0;
-    
+
     virtual int getNbStreams() const = 0;
 
     virtual int getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index) = 0;

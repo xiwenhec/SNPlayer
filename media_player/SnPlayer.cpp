@@ -1,16 +1,14 @@
 //
 // Created by Sivin on 2022-11-26.
 //
-#include "codec/IDecoder.h"
 #define LOG_TAG "SnPlayer"
-
+#include "codec/IDecoder.h"
 #include "base/media/SNFrame.h"
 #include "base/media/SNMediaInfo.h"
 #include "SnPlayer.h"
 #include "DeviceManager.h"
 #include "MediaPacketQueue.h"
 #include "PlayerNotifier.h"
-#include "base/error/SNError.h"
 #include "base/media/SNPacket.h"
 #include <cassert>
 #include <cstddef>
@@ -254,9 +252,9 @@ namespace Sivin {
       }
 
       //读取数据
-      int ret = readPacket();
+      auto ret = readPacket();
 
-      if (ret == 0) {
+      if (ret == SNRet::Status::EOS) {
         if (mPlayStatus == PlayerStatus::PREPARING) {
           if (HAVE_VIDEO && !mHaveVideoPkt) {
             // closeVideo();
@@ -268,12 +266,12 @@ namespace Sivin {
         mReadEos = true;
         break;
 
-      } else if (ret == SNRET_AGAIN) {
+      } else if (ret == SNRet::Status::AGAIN) {
         //TODO:处理读取数据包again时的情况
         //mUtil->notifyRead(PacketReadEvent::AGAIN, 0);
         break;
-      } else if (ret == SNRET_ERROR) {
-       // notifyError(PlayerError::RREAD_PACKET);
+      } else if (ret == SNRet::Status::ERROR) {
+        // notifyError(PlayerError::RREAD_PACKET);
         break;
       }
 
@@ -288,15 +286,11 @@ namespace Sivin {
 
 
   //从解封装服务中读取压缩数据加入缓存队列
-  //失败：返回错误码<0，成功：返回读取的字节数, 0：读取到文件结尾
-  int SnPlayer::readPacket() {
+  SNRet SnPlayer::readPacket() {
     assert(mDemuxerService != nullptr);
     std::unique_ptr<SNPacket> packet{};
-    int ret = mDemuxerService->readPacket(packet, -1);
+    auto ret = mDemuxerService->readPacket(packet, -1);
     if (packet == nullptr) {
-      if (ret != SNRET_ERROR) {
-        return SNRET_AGAIN;
-      }
       return ret;
     }
     //TODO:目前作用未知
@@ -400,8 +394,8 @@ namespace Sivin {
     }
 
     if (packet) {
-      SNRetStatus status = mDeviceManager->sendPacket(packet, DeviceType::VIDEO, 0);
-      if (status == SNRetStatus::ERROR) {
+      SNRet status = mDeviceManager->sendPacket(packet, DeviceType::VIDEO, 0);
+      if (status == SNRet::Status::ERROR) {
         ret = -1;
       }
     } else if (mReadEos) {
@@ -423,8 +417,8 @@ namespace Sivin {
     //读取音频帧数据
     std::unique_ptr<SNFrame> audioFrame{};
     do {
-      SNRetStatus status = mDeviceManager->getFrame(audioFrame, DeviceType::AUDIO, 0);
-      if (status == SNRetStatus::EOS) {
+      SNRet status = mDeviceManager->getFrame(audioFrame, DeviceType::AUDIO, 0);
+      if (status == SNRet::Status::EOS) {
         mAudioDecoderEOS = true;
         break;
       }
@@ -437,9 +431,9 @@ namespace Sivin {
 
     } while (false);//TODO:这里是否需要循环抽取解码后的音频帧数据
 
-    SNRetStatus status = mDeviceManager->sendPacket(packet, DeviceType::AUDIO, 0);
+    SNRet status = mDeviceManager->sendPacket(packet, DeviceType::AUDIO, 0);
 
-    if (status == SNRetStatus::ERROR) {
+    if (status == SNRet::Status::ERROR) {
       //TODO:处理错误
       ret = -1;
     }
@@ -450,8 +444,8 @@ namespace Sivin {
   int SnPlayer::fillVideoFrame() {
     std::unique_ptr<SNFrame> videoFrame{};
     //TODO：返回值确定
-    SNRetStatus status = mDeviceManager->getFrame(videoFrame, DeviceType::VIDEO, 0);
-    if (status == SNRetStatus::EOS) {
+    SNRet status = mDeviceManager->getFrame(videoFrame, DeviceType::VIDEO, 0);
+    if (status == SNRet::Status::EOS) {
       mVideoDecoderEOS = true;
     }
     if (videoFrame) {

@@ -45,9 +45,9 @@ namespace Sivin {
     void invalidDevice(DeviceType type);
     bool fluchDevice(DeviceType type);
 
-    SNRetStatus getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
+    SNRet getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout);
 
-    SNRetStatus sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout);
+    SNRet sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout);
 
     int renderVideoFrame(std::unique_ptr<SNFrame> &frame);
 

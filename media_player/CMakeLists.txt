@@ -5,8 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 set(FRAMEWORK_DIR ${PROJECT_SOURCE_DIR}/../framework)
+set(THRID_PARTY_DIR ${PROJECT_SOURCE_DIR}/../third_party)
 
-set(COMMON_INC_DIR ${FRAMEWORK_DIR})
+set(COMMON_INC_DIR ${FRAMEWORK_DIR} ${THRID_PARTY_DIR}/json)
+
 add_subdirectory(${FRAMEWORK_DIR} framework.out)
 
 add_library(SnMedia STATIC "")
@@ -27,9 +29,9 @@ target_sources(SnMedia PUBLIC
         ReferClock.cpp
         )
 
-target_link_libraries(SnMedia PUBLIC
-        SnDecoder
-        SnDemuxer
-        SnUtils
-        SnDatasource
-        )
+# target_link_libraries(SnMedia PUBLIC
+#         SnUtils
+#         SnDecoder
+#         SnDemuxer
+#         SnDatasource
+#         )

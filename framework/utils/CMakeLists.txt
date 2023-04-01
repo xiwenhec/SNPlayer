@@ -6,9 +6,12 @@ add_library(SnUtils STATIC "")
 
 target_include_directories(SnUtils PUBLIC ${COMMON_INC_DIR})
 
+target_sources(SnUtils PRIVATE 
+        SNJson.h
+)
+
 target_sources(
         SnUtils PUBLIC
-        SNJson.h
         SNLog.cpp
         SNThread.cpp
         SNTimer.cpp

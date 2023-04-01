@@ -5,18 +5,14 @@
 #ifndef SN_FRAMEWORK_AVFORMATDEMUXER_H
 #define SN_FRAMEWORK_AVFORMATDEMUXER_H
 
-#include "base/media/SNMediaInfo.h"
-
 extern "C" {
 #include <libavformat//avformat.h>
 }
-
 #include "IDemuxer.h"
 #include <map>
 #include <deque>
 #include <atomic>
 #include <utils/SNThread.h>
-#include <base/media/SNPacket.h>
 #include "base/media/IAVBSF.h"
 
 namespace Sivin {
@@ -38,15 +34,13 @@ namespace Sivin {
 
     int open() override;
 
-    int open(AVInputFormat *inputFormat);
-
     void start() override;
 
     void preStop() override;
 
     void stop() override;
 
-    int readPacket(std::unique_ptr<SNPacket> &packet, int index) override;
+    SNRet readPacket(std::unique_ptr<SNPacket> &packet, int index) override;
 
     int openStream(int index) override;
 
@@ -63,7 +57,7 @@ namespace Sivin {
 
     int readLoop();
 
-    int readPacketInternal(std::unique_ptr<SNPacket> &packet);
+    SNRet readPacketInternal(std::unique_ptr<SNPacket> &packet);
 
     static int interrupt_cb(void *opaque);
 
@@ -77,17 +71,17 @@ namespace Sivin {
     AVFormatContext *mCtx{nullptr};
     AVIOContext *mIOCtx{nullptr};
     AVDictionary *mInputOpts = nullptr;
-    bool bOpened{false};
+    bool mOpened{false};
     bool bPaused{false};
-    bool bExited{false};
-    bool bEOS{false};
+    bool mExited{false};
+    bool mReadEOS{false};
     std::atomic_bool mInterrupted{false};
-    std::shared_ptr<SNThread> mThread{nullptr};
+    std::shared_ptr<SNThread> mReadThread{nullptr};
 
     std::mutex mMutex{};
     std::mutex mQueMutex{};
     std::condition_variable mQueCond{};
-    
+
     int MAX_QUEUE_SIZE = 60;
     //这个packet里存放着音频和视频的packet
     std::deque<std::unique_ptr<SNPacket>> mPacketQueue{};

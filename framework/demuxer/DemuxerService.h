@@ -25,7 +25,7 @@ namespace Sivin {
 
     int openStream(int index);
 
-    int readPacket(std::unique_ptr<SNPacket> &packet, int index);
+    SNRet readPacket(std::unique_ptr<SNPacket> &packet, int index);
 
     int64_t seek(int64_t us, int flags, int index);
 

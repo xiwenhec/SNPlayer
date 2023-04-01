@@ -37,18 +37,18 @@ namespace Sivin {
   SNActiveDecoder::~SNActiveDecoder() {
   }
 
-  SNRetStatus SNActiveDecoder::open(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) {
+  SNRet SNActiveDecoder::open(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) {
     mSourceThreadId = empty_tid;
     mCodecId = streamInfo->codeId;
     auto ret = initDecoder(streamInfo, surface, flags);
-    if (ret != SNRetStatus::SUCCESS) {
+    if (ret != SNRet::Status::SUCCESS) {
       close();
       return ret;
     }
     mRunning = true;
     mDecodeThread = MAKE_UNIQUE_THREAD(decodeFunc, "decodeThread");
     mDecodeThread->start();
-    return SNRetStatus::SUCCESS;
+    return SNRet::Status::SUCCESS;
   }
 
   void SNActiveDecoder::close() {
@@ -96,11 +96,11 @@ namespace Sivin {
 
       //送入解码器解码
       auto retStatus = enqueueDecoder(packet);
-      if (retStatus == SNRetStatus::AGAIN) {
+      if (retStatus == SNRet::Status::AGAIN) {
         needWait++;
       } else {
         mInputQueue.pop();
-        if (retStatus == SNRetStatus::EOS) {
+        if (retStatus == SNRet::Status::EOS) {
           mDecoderEos = true;
         } else {
           //TODO:处理解码失败
@@ -119,10 +119,10 @@ namespace Sivin {
         std::unique_ptr<SNPacket> pPacket{};
         auto retStatus = enqueueDecoder(pPacket);
 
-        if (retStatus != SNRetStatus::AGAIN) {
+        if (retStatus != SNRet::Status::AGAIN) {
           mHaveSendEosToDecoder = true;
         }
-        if (retStatus == SNRetStatus::EOS) {
+        if (retStatus == SNRet::Status::EOS) {
           mDecoderEos = true;
         }
       }
@@ -139,13 +139,13 @@ namespace Sivin {
 
 
   int SNActiveDecoder::extractDecoder() {
-    SNRetStatus ret;
+    SNRet ret;
     int count = 0;
     while (mOutputQueue.size_approx() < mMaxOutQueueSize && mRunning) {
       std::unique_ptr<SNFrame> frame{};
       ret = dequeueDecoder(frame);
-      if (ret != SNRetStatus::SUCCESS) {
-        if (ret == SNRetStatus::EOS) {
+      if (ret != SNRet::Status::SUCCESS) {
+        if (ret == SNRet::Status::EOS) {
           SN_LOGD("decoder out put eos");
           mDecoderEos = true;
         }
@@ -159,23 +159,23 @@ namespace Sivin {
     return count;
   }
 
-  SNRetStatus SNActiveDecoder::sendPacket(std::unique_ptr<SNPacket> &packet, uint64_t timeout) {
+  SNRet SNActiveDecoder::sendPacket(std::unique_ptr<SNPacket> &packet, uint64_t timeout) {
 
     THREAD_CHECK;
 
     if (needDrop(packet)) {
       packet = nullptr;
-      return SNRetStatus::SUCCESS;
+      return SNRet::Status::SUCCESS;
     }
 
     if (mInputEos) {
-      return SNRetStatus::EOS;
+      return SNRet::Status::EOS;
     }
 
     if (packet == nullptr) {
       mInputEos = true;
       mWaitCond.notify_one();
-      return SNRetStatus::SUCCESS;
+      return SNRet::Status::SUCCESS;
     }
 
     if (mHolding) {
@@ -193,16 +193,16 @@ namespace Sivin {
         flushDecoder();
       }
       mHoldingQueue.push(std::move(packet));
-      return SNRetStatus::SUCCESS;
+      return SNRet::Status::SUCCESS;
     }
 
     if ((mInputQueue.size() >= mMaxInQueueSize) || (mOutputQueue.size() >= mMaxOutQueueSize)) {
-      return SNRetStatus::AGAIN;
+      return SNRet::Status::AGAIN;
     } else {
       mInputQueue.enqueue(std::move(packet));
       mWaitCond.notify_one();
     }
-    return SNRetStatus::SUCCESS;
+    return SNRet::Status::SUCCESS;
   }
 
   bool SNActiveDecoder::needDrop(std::unique_ptr<SNPacket> &packet) {
@@ -233,16 +233,16 @@ namespace Sivin {
     return false;
   }
 
-  SNRetStatus SNActiveDecoder::getFrame(std::unique_ptr<SNFrame> &frame, uint64_t timeout) {
+  SNRet SNActiveDecoder::getFrame(std::unique_ptr<SNFrame> &frame, uint64_t timeout) {
     THREAD_CHECK;
     if (!mOutputQueue.empty()) {
       frame = std::move(*mOutputQueue.peek());
       mOutputQueue.pop();
-      return SNRetStatus::SUCCESS;
+      return SNRet::Status::SUCCESS;
     } else if (mDecoderEos) {
-      return SNRetStatus::EOS;
+      return SNRet::Status::EOS;
     }
-    return SNRetStatus::AGAIN;
+    return SNRet::Status::AGAIN;
   }
 
   void SNActiveDecoder::prePause() {

@@ -20,13 +20,13 @@ namespace Sivin {
 
     virtual ~SNActiveDecoder();
 
-    SNRetStatus open(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) override;
+    SNRet open(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) override;
     
     void close() override;
 
-    SNRetStatus sendPacket(std::unique_ptr<SNPacket> &packet, uint64_t timeout) override;
+    SNRet sendPacket(std::unique_ptr<SNPacket> &packet, uint64_t timeout) override;
 
-    SNRetStatus getFrame(std::unique_ptr<SNFrame> &frame, uint64_t timeout) override;
+    SNRet getFrame(std::unique_ptr<SNFrame> &frame, uint64_t timeout) override;
 
     void pause(bool pause) override;
 
@@ -47,11 +47,11 @@ namespace Sivin {
     bool needDrop(std::unique_ptr<SNPacket> &packet);
 
   private:
-    virtual SNRetStatus initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) = 0;
+    virtual SNRet initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) = 0;
 
-    virtual SNRetStatus enqueueDecoder(std::unique_ptr<SNPacket> &pPacket) = 0;
+    virtual SNRet enqueueDecoder(std::unique_ptr<SNPacket> &pPacket) = 0;
 
-    virtual SNRetStatus dequeueDecoder(std::unique_ptr<SNFrame> &frame) = 0;
+    virtual SNRet dequeueDecoder(std::unique_ptr<SNFrame> &frame) = 0;
 
     virtual void flushDecoder() = 0;
     virtual void closeDecoder() = 0;

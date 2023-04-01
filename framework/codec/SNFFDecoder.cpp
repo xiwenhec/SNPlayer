@@ -34,19 +34,19 @@ namespace Sivin {
     }
   }
 
-  SNRetStatus SNFFDecoder::initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) {
+  SNRet SNFFDecoder::initDecoder(const std::unique_ptr<SNStreamInfo> &streamInfo, void *surface, uint64_t flags) {
     enum AVCodecID codecId = SNFFUtil::SNCodecToAVCodec(streamInfo->codeId);
     mDecoder->codec = avcodec_find_decoder(codecId);
 
     if (mDecoder->codec == nullptr) {
       SN_LOGE("couldn't find codec:%d", codecId);
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
 
     mDecoder->codecCtx = avcodec_alloc_context3(mDecoder->codec);
     if (mDecoder->codecCtx == nullptr) {
       SN_LOGE("codecCtx alloc failed");
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
 
     bool isAudio = streamInfo->channels > 0;
@@ -65,7 +65,7 @@ namespace Sivin {
     if (avcodec_open2(mDecoder->codecCtx, mDecoder->codec, nullptr) < 0) {
       SN_LOGE("couldn't open codec");
       avcodec_free_context(&mDecoder->codecCtx);
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
 
     mDecoder->avFrame = av_frame_alloc();
@@ -75,10 +75,10 @@ namespace Sivin {
       mDecoder->videoInfo.height = mDecoder->codecCtx->height;
       mDecoder->videoInfo.pix_fmt = mDecoder->codecCtx->pix_fmt;
     }
-    return SNRetStatus::SUCCESS;
+    return SNRet::Status::SUCCESS;
   }
 
-  SNRetStatus SNFFDecoder::enqueueDecoder(std::unique_ptr<SNPacket> &packet) {
+  SNRet SNFFDecoder::enqueueDecoder(std::unique_ptr<SNPacket> &packet) {
     AVPacket *pkt = nullptr;
     if (packet) {
       auto *avPacket = dynamic_cast<SNAVPacket *>(packet.get());
@@ -92,30 +92,30 @@ namespace Sivin {
     if (ret == 0) {
       packet = nullptr;
     } else if (ret == AVERROR_EOF) {
-      return SNRetStatus::EOS;
+      return SNRet::Status::EOS;
     } else if (ret == AVERROR(EAGAIN)) {
-      return SNRetStatus::AGAIN;
+      return SNRet::Status::AGAIN;
     } else {
       SN_LOGE("decode av paceket error:%d:%s", ret, SNFFUtil::getErrorString(ret));
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
-    return SNRetStatus::SUCCESS;
+    return SNRet::Status::SUCCESS;
   }
 
-  SNRetStatus SNFFDecoder::dequeueDecoder(std::unique_ptr<SNFrame> &frame) {
+  SNRet SNFFDecoder::dequeueDecoder(std::unique_ptr<SNFrame> &frame) {
 
     int ret = avcodec_receive_frame(mDecoder->codecCtx, mDecoder->avFrame);
 
     if (ret < 0) {
       if (ret == AVERROR_EOF) {
-        return SNRetStatus::EOS;
+        return SNRet::Status::EOS;
       }
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
 
     if (mDecoder->avFrame->decode_error_flags || mDecoder->avFrame->flags) {
       SN_LOGW("get a error frame\n");
-      return SNRetStatus::AGAIN;
+      return SNRet::Status::AGAIN;
     }
 
     int64_t timePosition = INT64_MIN;
@@ -133,7 +133,7 @@ namespace Sivin {
     frame = std::unique_ptr<SNFrame>(new SNAVFrame(mDecoder->avFrame));
     frame->getInfo().timePosition = timePosition;
     frame->getInfo().utcTime = utcTime;
-    return SNRetStatus::SUCCESS;
+    return SNRet::Status::SUCCESS;
   }
 
   void SNFFDecoder::flushDecoder() {

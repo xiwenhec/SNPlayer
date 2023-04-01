@@ -63,19 +63,19 @@ namespace Sivin {
     }
   }
 
-  SNRetStatus DeviceManager::sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout) {
+  SNRet DeviceManager::sendPacket(std::unique_ptr<SNPacket> &packet, DeviceType type, uint64_t timeout) {
     auto decoderHandle = getDecoderHandle(type);
     if (decoderHandle == nullptr || !decoderHandle->valid) {
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
     assert(decoderHandle->decoder);
     return decoderHandle->decoder->sendPacket(packet, timeout);
   }
 
-  SNRetStatus DeviceManager::getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout) {
+  SNRet DeviceManager::getFrame(std::unique_ptr<SNFrame> &frame, DeviceType type, uint64_t timeout) {
     auto decoderHandle = getDecoderHandle(type);
     if (decoderHandle == nullptr || !decoderHandle->valid) {
-      return SNRetStatus::ERROR;
+      return SNRet::Status::ERROR;
     }
     assert(decoderHandle->decoder);
     return decoderHandle->decoder->getFrame(frame, timeout);
