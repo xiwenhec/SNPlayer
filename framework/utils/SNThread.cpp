@@ -1,14 +1,10 @@
-//
-// Created by Sivin on 2022-11-26.
-//
-
-#define LOG_TAG "SNThread"
-
 #include "SNThread.h"
-#include "SNLog.h"
-
+#include "utils/SNLog.h"
 #include <cassert>
+#include <cstdio>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <utility>
 
 #ifdef ANDROID
@@ -21,9 +17,10 @@
 #define MAX_TASK_NAME_LEN (16)
 #endif
 
-
 namespace Sivin {
 
+#define ADD_LOCK \
+  std::unique_lock<std::mutex> lock { mMutex }
 
 #ifdef ANDROID
 
@@ -57,22 +54,91 @@ namespace Sivin {
 #endif
   }
 
+  SNThread::SNThread(std::function<int(void)> func, std::string name)
+      : mUserFunc(func), mName(std::move(name)), mInnerThread(nullptr) {}
 
-  SNThread::SNThread(std::function<int()> runFunc, const char *threadName)
-      : mUserFunc(std::move(runFunc)), mName(threadName), mThread(nullptr) {}
 
-  void SNThread::start() {
-    std::lock_guard<std::mutex> lockGuard{mMutex};
-    if (mThread == nullptr) {
-      mThread = std::make_unique<std::thread>(&SNThread::threadRun, this);
-    } else {
-      mWaitCond.notify_one();
+  SNThread::~SNThread() {
+    ADD_LOCK;
+    mTryPause = false;
+    {
+      std::unique_lock<std::mutex> waitLock{mWaitMutex};
+      mStatus = Status::IDLE;
     }
-    mThreadStatus = THREAD_STATUS_RUNNING;
+    //如果当前线程处于pause状态，则唤醒线程，使其自然运行结束。
+    mWaitCond.notify_one();
+
+    if (mInnerThread && mInnerThread->joinable()) {
+      if (mInnerThread->get_id() != std::this_thread::get_id()) {
+        mInnerThread->join();
+      } else {
+        mInnerThread->detach();
+      }
+    }
+    mInnerThread.reset();
+    SN_LOGD("%s (%s) end", __func__, mName.c_str());
   }
 
 
-  void SNThread::threadRun() {
+  void SNThread::start() {
+    ADD_LOCK;
+    if (mInnerThread == nullptr) {
+      mStatus = Status::RUNNING;
+      mInnerThread = std::make_unique<std::thread>(&SNThread::runLoop, this);
+    } else {
+      mStatus = Status::RUNNING;
+      mWaitCond.notify_one();
+    }
+  }
+
+  void SNThread::pause() {
+    ADD_LOCK;
+    if (mStatus == Status::RUNNING) {
+      //这里的锁时为了互斥mWaitPaused变量
+      std::unique_lock<std::mutex> waitLock{mWaitMutex};
+      mWaitPaused = true;
+      mWaitCond.wait(waitLock, [=] {
+        return !mWaitPaused;
+      });
+    }
+  }
+
+
+  void SNThread::tryPause() {
+    if (mMutex.try_lock()) {
+      if (mStatus == Status::RUNNING) {
+        mTryPause = true;
+      }
+      mMutex.unlock();
+    }
+  }
+
+  void SNThread::stop() {
+    ADD_LOCK;
+
+    SN_LOGD("%s (%s) start", __func__, mName.c_str());
+    mTryPause = false;
+    {
+      std::unique_lock<std::mutex> waitLock{mWaitMutex};
+      mStatus = Status::STOPED;
+    }
+    //如果当前线程处于pause状态，则唤醒线程，使其自然运行结束。
+    mWaitCond.notify_one();
+
+    if (mInnerThread && mInnerThread->joinable()) {
+      if (mInnerThread->get_id() != std::this_thread::get_id()) {
+        mInnerThread->join();
+      } else {
+        mInnerThread->detach();
+      }
+    }
+    mInnerThread.reset();
+    assert(mInnerThread == nullptr);
+    SN_LOGD("%s (%s) end", __func__, mName.c_str());
+  }
+
+
+  void SNThread::runLoop() {
     if (mThreadBeginCallback != nullptr) {
       mThreadBeginCallback();
     }
@@ -82,23 +148,25 @@ namespace Sivin {
       threadSetSelfName(mName.c_str());
     }
 
-    while (mThreadStatus > THREAD_STATUS_STOPPED) {
+    while (mStatus > Status::STOPED) {
 
       if (mWaitPaused) {
-        mThreadStatus = THREAD_STATUS_PAUSED;
+        mStatus = Status::PAUSED;
+        std::unique_lock<std::mutex> waitLock{mWaitMutex};
         mWaitPaused = false;
+        //通知调用pause，暂停成功
         mWaitCond.notify_one();
       }
 
-      if (mThreadStatus == THREAD_STATUS_PAUSED) {
+      if (mStatus == Status::PAUSED) {
         std::unique_lock<std::mutex> mWaitLock{mWaitMutex};
         //二次判断，防止进入pause判断流程后其他线程调用stop导致stop无效，线程无法释放
-        if (mThreadStatus == THREAD_STATUS_PAUSED) {
-          mWaitCond.wait(mWaitLock, [this]() {
-            return mThreadStatus != THREAD_STATUS_PAUSED;
+        if (mStatus == Status::PAUSED) {
+          mWaitCond.wait(mWaitLock, [=] {
+            return mStatus != Status::PAUSED;
           });
         }
-      } else if (mThreadStatus == THREAD_STATUS_RUNNING) {
+      } else if (mStatus == Status::RUNNING) {
         int ret = mUserFunc();
         if (ret < 0) {
           mTryPause = true;
@@ -106,65 +174,26 @@ namespace Sivin {
       }
 
       if (mTryPause) {
-        //防止调用stop后，使线程进入暂停状态，导致线程无法释放
         if (mMutex.try_lock()) {
-          if (mThreadStatus == THREAD_STATUS_RUNNING) {
-            mThreadStatus = THREAD_STATUS_PAUSED;
+          if (mStatus == Status::RUNNING) {
+            mStatus = Status::PAUSED;
           }
           mMutex.unlock();
         }
         mTryPause = false;
       }
     }
-
+    //线程运行结束
     if (mThreadEndCallback != nullptr) {
       mThreadEndCallback();
     }
   }
 
-  void SNThread::pause() {
-    SN_LOGD("%s (%s) start", __func__, mName.c_str());
-    std::lock_guard<std::mutex> lockGuard{mMutex};
-    if (mThreadStatus == THREAD_STATUS_RUNNING) {
-      mWaitPaused = true;
-      //等待线程pause完成
-      std::unique_lock<std::mutex> uniqueLock{mWaitMutex};
-      mWaitCond.wait(uniqueLock, [this]() {
-        return !mWaitPaused;
-      });
+  std::thread::id SNThread::getId() {
+    if (mInnerThread) {
+      return mInnerThread->get_id();
     }
-    SN_LOGD("%s (%s) end", __func__, mName.c_str());
-  }
-
-  void SNThread::stop() {
-    SN_LOGD("%s (%s) start", __func__, mName.c_str());
-    std::lock_guard<std::mutex> lockGuard{mMutex};
-    mTryPause = false;
-    {
-      std::unique_lock<std::mutex> uniqueLock{mWaitMutex};
-      mThreadStatus = THREAD_STATUS_STOPPED;
-    }
-    //如果当前线程处于pause状态，则唤醒线程，使其自然运行结束。
-    mWaitCond.notify_one();
-    if (mThread && mThread->joinable()) {
-      if (mThread->get_id() != std::this_thread::get_id()) {
-        mThread->join();
-      } else {
-        mThread->detach();
-      }
-    }
-    mThread.reset(nullptr);
-    assert(mThread == nullptr);
-    SN_LOGD("%s (%s) end", __func__, mName.c_str());
-  }
-
-  void SNThread::prePause() {
-    if (mMutex.try_lock()) {
-      if (THREAD_STATUS_RUNNING == mThreadStatus) {
-        mTryPause = true;
-      }
-      mMutex.unlock();
-    }
+    return {};
   }
 
   void SNThread::setBeginCallback(const std::function<void()> &callback) {
@@ -174,32 +203,5 @@ namespace Sivin {
   void SNThread::setEndCallback(const std::function<void()> &callback) {
     mThreadEndCallback = callback;
   }
-
-  std::thread::id SNThread::getId() {
-    if (mThread) {
-      return mThread->get_id();
-    }
-    return {};
-  }
-
-  SNThread::~SNThread() {
-    std::lock_guard<std::mutex> lockGuard{mMutex};
-    mTryPause = false;
-    {
-      std::unique_lock<std::mutex> uniqueLock{mWaitMutex};
-      mThreadStatus = THREAD_STATUS_IDLE;
-    }
-    //如果当前线程处于pause状态，则唤醒线程，使其自然运行结束。
-    mWaitCond.notify_one();
-    if (mThread && mThread->joinable()) {
-      if (mThread->get_id() != std::this_thread::get_id()) {
-        mThread->join();
-      } else {
-        mThread->detach();
-      }
-    }
-    mThread.reset(nullptr);
-  }
-
 
 }// namespace Sivin
