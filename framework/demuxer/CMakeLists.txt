@@ -13,6 +13,8 @@ target_sources(SnDemuxer PUBLIC
         AVFFDemuxer.cpp
         DemuxerService.cpp
         DemuxerFactory.cpp
+        bsf/IAVBSF.cpp
+        bsf/AVBSFFactory.cpp
         )
 
 

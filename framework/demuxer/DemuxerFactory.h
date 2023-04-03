@@ -9,7 +9,7 @@ namespace Sivin {
 
   class DemuxerFactory {
   public:
-    static IDemuxer *createDemuxer(const std::string &path);
+    static std::unique_ptr<IDemuxer> create(const std::string &path);
   };
 
 }// namespace Sivin

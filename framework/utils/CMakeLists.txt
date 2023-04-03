@@ -23,7 +23,6 @@ target_sources(
 target_sources(
         SnUtils PUBLIC
         ../base/RingBuffer.cpp
-        ../base/media/IAVBSF.cpp
         ../base/media/SNPacket.cpp
         ../base/media/SNAVPacket.cpp
         ../base/media/SNFrame.cpp

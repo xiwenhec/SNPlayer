@@ -107,7 +107,7 @@ namespace Sivin {
   private:
     //用于记录播放的各种参数，比如播放地址，播放速度等
     std::unique_ptr<PlayerParams> mParams{nullptr};
-    std::shared_ptr<IDataSource> mDataSource{nullptr};
+    std::unique_ptr<IDataSource> mDataSource{nullptr};
 
     PlayerListener mListener{};
 

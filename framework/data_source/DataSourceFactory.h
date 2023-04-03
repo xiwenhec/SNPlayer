@@ -11,7 +11,7 @@
 namespace Sivin {
   class DataSourceFactory {
   public:
-    static IDataSource* create(const std::string &url);
+    static std::unique_ptr<IDataSource> create(const std::string &url);
   };
 }
 

@@ -87,7 +87,6 @@ namespace Sivin {
   }
 
   SNRet SNFFDecoder::enqueueDecoder(std::unique_ptr<SNPacket> &packet) {
-    SN_LOGI("enqueueDecoder...:dts = %d", packet->getInfo().dts);
     AVPacket *pkt = nullptr;
     if (packet) {
       auto *avPacket = dynamic_cast<SNAVPacket *>(packet.get());

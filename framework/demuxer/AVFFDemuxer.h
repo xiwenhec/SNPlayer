@@ -9,11 +9,11 @@ extern "C" {
 #include <libavformat//avformat.h>
 }
 #include "IDemuxer.h"
+#include "bsf/AVBSFFactory.h"
 #include <map>
 #include <deque>
 #include <atomic>
 #include <utils/SNThread.h>
-#include "base/media/IAVBSF.h"
 
 namespace Sivin {
 

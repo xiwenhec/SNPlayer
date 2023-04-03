@@ -2,6 +2,7 @@
 // Created by sivin on 23-1-14.
 //
 
+#include "demuxer/IDemuxer.h"
 #define LOG_TAG "PlayerMsgProcessor"
 
 #include "base/media/SNMediaInfo.h"
@@ -57,6 +58,9 @@ namespace Sivin {
       return;
     }
 
+    //android或者ffmpeg解码必须annexB的目标码流类型
+    auto &demuxer = mPlayer.mDemuxerService->getDemuxer();
+    demuxer->setBitStreamType(BitStreamType::MERGE, BitStreamType::MERGE);
 
     int nbStream = mPlayer.mDemuxerService->getNbStreams();
     std::unique_ptr<SNStreamInfo> streamInfo;
@@ -97,7 +101,7 @@ namespace Sivin {
   */
   int PlayerMsgProcessor::openUrl() {
     int ret = -1;
-    mPlayer.mDataSource = std::shared_ptr<IDataSource>(DataSourceFactory::create(mPlayer.mParams->url));
+    mPlayer.mDataSource = DataSourceFactory::create(mPlayer.mParams->url);
     if (mPlayer.mDataSource) {
       ret = mPlayer.mDataSource->open(0);
     }

@@ -14,6 +14,18 @@
 
 namespace Sivin {
 
+  //表示解封装后期待的的目标码流类型
+  enum class BitStreamType {
+    //和封装类型保持一致，不做任何改变
+    NO_TOUCH,
+
+    //修改成类似于Annex b的格式
+    MERGE,
+
+    //修改成AVCC的格式
+    EXTRACT,
+  };
+
   class IDemuxer {
 
   public:
@@ -22,11 +34,6 @@ namespace Sivin {
       DEMUXER_TYPE_BITSTREAM,
     };
 
-    enum BitStreamType {
-      BITSTREAM_TYPE_NO_TOUCH,
-      BITSTREAM_TYPE_MERGE,
-      BITSTREAM_TYPE_EXTRACT,
-    };
 
   public:
     using ReadCallback = int (*)(void *userArg, uint8_t *buffer, int size);
@@ -70,8 +77,8 @@ namespace Sivin {
     ReadCallback mReadCb{nullptr};
     SeekCallback mSeekCb{nullptr};
     void *mUserArg{nullptr};
-    BitStreamType mVideoStreamType = BITSTREAM_TYPE_NO_TOUCH;
-    BitStreamType mAudioStreamType = BITSTREAM_TYPE_NO_TOUCH;
+    BitStreamType mVideoStreamType{BitStreamType::NO_TOUCH};
+    BitStreamType mAudioStreamType{BitStreamType::NO_TOUCH};
   };
 
 }// namespace Sivin

@@ -15,7 +15,7 @@ namespace Sivin {
   class DemuxerService {
 
   public:
-    explicit DemuxerService(std::shared_ptr<IDataSource> dataSource);
+    explicit DemuxerService(std::unique_ptr<IDataSource> &dataSource);
 
     int createDemuxer(IDemuxer::DemuxerType demuxerType);
 
@@ -36,15 +36,18 @@ namespace Sivin {
 
     int getStreamInfo(std::unique_ptr<SNStreamInfo> &streamInfo, int index);
 
+    const std::unique_ptr<IDemuxer> &getDemuxer() {
+      return mDemuxer;
+    }
+
   private:
     static int read_callback(void *userArgs, uint8_t *buffer, int size);
 
     static int64_t seek_callback(void *userArgs, int64_t offset, int whence);
 
   private:
-    std::shared_ptr<IDemuxer> mDemuxer{nullptr};
-
-    std::shared_ptr<IDataSource> mDataSource{nullptr};
+    std::unique_ptr<IDemuxer> mDemuxer{nullptr};
+    const std::unique_ptr<IDataSource> &mDataSource;
 
     bool mNoFile{false};
 

@@ -84,8 +84,8 @@ namespace Sivin {
     if (mReadCb != nullptr) {
       auto *readBuffer = static_cast<uint8_t *>(av_malloc(INITIAL_BUFFER_SIZE));
       mIOCtx = avio_alloc_context(readBuffer, INITIAL_BUFFER_SIZE, 0, this,
-                                  mReadCb ? avio_callback_read : nullptr,
-                                  nullptr, mSeekCb ? avio_callback_seek : nullptr);
+          mReadCb ? avio_callback_read : nullptr,
+          nullptr, mSeekCb ? avio_callback_seek : nullptr);
       if (mIOCtx == nullptr) {
         av_free(mIOCtx);
         return -1;
@@ -183,11 +183,11 @@ namespace Sivin {
     if (ret == SNRet::Status::SUCCESS) {
       std::unique_lock<std::mutex> waitLock{mQueMutex};
       if (mPacketQueue.size() > MAX_QUEUE_SIZE) {
-        SN_LOGI("read packet thread wait..");
+        SN_LOGD("read packet thread wait..");
         mQueCond.wait(waitLock, [this]() {
           return mPacketQueue.size() <= MAX_QUEUE_SIZE || bPaused || mInterrupted || mExited;
         });
-        SN_LOGI("read packet thread wakeup");
+        SN_LOGD("read packet thread wakeup");
       }
       mPacketQueue.push_back(std::move(pkt));
 
@@ -198,14 +198,14 @@ namespace Sivin {
       mError = -1;
       std::unique_lock<std::mutex> waitLock(mQueMutex);
       mQueCond.wait_for(waitLock, std::chrono::milliseconds(10),
-                        [this]() { return bPaused || mInterrupted || mExited; });
+          [this]() { return bPaused || mInterrupted || mExited; });
     }
     return 0;
   }
 
   void AVFFDemuxer::start() {
     bPaused = false;
-   mReadThread->start();
+    mReadThread->start();
   }
 
 
@@ -291,7 +291,7 @@ namespace Sivin {
       }
       if (pkt->stream_index == 0) {
         SN_LOGI("get packet pts:%d",
-                av_rescale_q(pkt->pts, mCtx->streams[pkt->stream_index]->time_base, av_get_time_base_q()));
+            av_rescale_q(pkt->pts, mCtx->streams[pkt->stream_index]->time_base, av_get_time_base_q()));
       }
       av_packet_unref(pkt);
     } while (true);
@@ -344,7 +344,7 @@ namespace Sivin {
 
     if (pkt->duration > 0) {
       pkt->duration = av_rescale_q(pkt->duration, mCtx->streams[pkt->stream_index]->time_base,
-                                   av_get_time_base_q());
+          av_get_time_base_q());
     } else if (mCtx->streams[pkt->stream_index]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
       AVCodecParameters *codecpar = mCtx->streams[pkt->stream_index]->codecpar;
       if (codecpar->sample_rate > 0 && codecpar->frame_size > 0) {
@@ -370,7 +370,7 @@ namespace Sivin {
     const AVCodecParameters *codecpar = mCtx->streams[index]->codecpar;
 
     //表示需要Annexb的打包格式
-    if (mVideoStreamType == BitStreamType::BITSTREAM_TYPE_MERGE) {
+    if (mVideoStreamType == BitStreamType::MERGE) {
       //extradata里有数据表示，当前是AVCC的打包格式
       if (codecpar->codec_id == AV_CODEC_ID_H264 && codecpar->extradata != nullptr &&
           (codecpar->extradata[0] == 1)) {
@@ -379,22 +379,22 @@ namespace Sivin {
                  AV_RB32(codecpar->extradata) != 0x0000001 && AV_RB24(codecpar->extradata) != 0x000001) {
         bsfName = "hevc_mp4toannexb";
       }
-    } else if (mVideoStreamType == BITSTREAM_TYPE_EXTRACT) {
+    } else if (mVideoStreamType == BitStreamType::EXTRACT) {
       //将码流转换成AVCC的格式
       if (codecpar->codec_id == AV_CODEC_ID_H264 && codecpar->extradata != nullptr &&
           (codecpar->extradata[0] != 1)) {
         //TODO:Sivin 待实现
-        //                bsfName = "h26xAnnexb2xVcc";
+        //bsfName = "h26xAnnexb2xVcc";
       } else if (codecpar->codec_id == AV_CODEC_ID_HEVC && codecpar->extradata_size >= 5 &&
                  !(AV_RB32(codecpar->extradata) != 0x0000001 &&
-                   AV_RB24(codecpar->extradata) != 0x000001)) {
-        //                bsfName = "h26xAnnexb2xVcc";
+                     AV_RB24(codecpar->extradata) != 0x000001)) {
+        //bsfName = "h26xAnnexb2xVcc";
       }
     }
 
     if (!bsfName.empty()) {
       std::lock_guard<std::mutex> lockGuard{mStreamCtxMutex};
-      mStreamCtxMap[index]->bsf = std::unique_ptr<IAVBSF>(AVBSFFactory::create(bsfName));
+      mStreamCtxMap[index]->bsf = AVBSFFactory::create(bsfName);
       int ret = mStreamCtxMap[index]->bsf->init(bsfName, mCtx->streams[index]->codecpar);
       if (ret < 0) {
         SN_LOGE("create %s bsf error", bsfName.c_str());

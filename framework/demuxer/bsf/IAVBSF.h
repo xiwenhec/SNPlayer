@@ -41,11 +41,7 @@ namespace Sivin {
         AVBSFContext *mBsfContext{nullptr};
     };
 
-    class AVBSFFactory {
-    public:
-        static IAVBSF *create(const std::string &name);
-    };
-
+   
 } // Sivin
 
 #endif //SN_FRAMKEWORK_IAVBSF_H

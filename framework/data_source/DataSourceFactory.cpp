@@ -3,10 +3,12 @@
 //
 
 #include "DataSourceFactory.h"
+#include "data_source/IDataSource.h"
 #include "data_source/curl/CurlDataSource.h"
+#include <memory>
 
 namespace Sivin {
-  IDataSource *DataSourceFactory::create(const std::string &url) {
-    return new CurlDataSource(url);
+  std::unique_ptr<IDataSource> DataSourceFactory::create(const std::string &url) {
+    return std::make_unique<CurlDataSource>(url);
   }
 }// namespace Sivin

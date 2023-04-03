@@ -1,6 +1,7 @@
 //
 // Created by sivin on 12/6/22.
 //
+#include <utility>
 #define LOG_TAG "DemuxerService"
 #include "demuxer/IDemuxer.h"
 #include "DemuxerService.h"
@@ -33,8 +34,8 @@
 
 namespace Sivin {
 
-  DemuxerService::DemuxerService(std::shared_ptr<IDataSource> dataSource)
-      : mDataSource(std::move(dataSource)) {
+  DemuxerService::DemuxerService(std::unique_ptr<IDataSource> &dataSource)
+      : mDataSource(dataSource) {
   }
 
   int DemuxerService::initOpen(IDemuxer::DemuxerType type) {
@@ -66,7 +67,7 @@ namespace Sivin {
       if (mDataSource) {
         url = mDataSource->getUri();
       }
-      mDemuxer = std::shared_ptr<IDemuxer>(DemuxerFactory::createDemuxer(url));
+      mDemuxer = DemuxerFactory::create(url);
       if (!mDemuxer) {
         SN_LOGE("create demuxer error");
         return -1;
