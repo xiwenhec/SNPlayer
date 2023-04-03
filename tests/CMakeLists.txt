@@ -79,7 +79,7 @@ endif()
 #set(ENABLE_THREAD_TEST ON)
 #dataSource测试
 #set(ENABLE_DATASOURCE_TEST ON)
-# set(ENABLE_DEMUXER_TEST ON)
+#set(ENABLE_DEMUXER_TEST ON)
 
 
 

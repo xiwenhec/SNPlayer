@@ -3,7 +3,6 @@
 
 #include "base/media/SNMediaInfo.h"
 #include "codec/IDecoder.h"
-#include "codec/SNFFDecoder.h"
 #include <memory>
 #include <mutex>
 namespace Sivin {

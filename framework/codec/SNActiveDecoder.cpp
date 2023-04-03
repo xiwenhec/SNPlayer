@@ -1,4 +1,5 @@
 #include "SNActiveDecoder.h"
+#include "base/SNRet.h"
 #include "base/media/SNFrame.h"
 #include "base/media/SNMediaInfo.h"
 #include "base/media/SNPacket.h"
@@ -80,14 +81,15 @@ namespace Sivin {
     }
 
     int needWait = 0;
+
     while (!mInputQueue.empty() && mOutputQueue.size() < mMaxOutQueueSize && mRunning) {
+      //从解码器里抽取出所有解码完成的数据，放入framequeue中
       int ret = extractDecoder();
       needWait = 0;
       if (ret == 0) {
         needWait++;
       }
 
-      //获取一个待解码的数据包，这里并没有
       auto &packet = *(mInputQueue.peek());
       if (!packet) {
         mInputQueue.pop();
@@ -107,7 +109,7 @@ namespace Sivin {
         }
       }
 
-      //表示需要等待解码器
+      //需要等待解码器
       if (needWait > 0) {
         std::unique_lock<std::mutex> waitLock{mWaitMutex};
         mWaitCond.wait_for(waitLock, std::chrono::milliseconds(5 * needWait), [this] { return !mRunning; });
@@ -148,6 +150,10 @@ namespace Sivin {
         if (ret == SNRet::Status::EOS) {
           SN_LOGD("decoder out put eos");
           mDecoderEos = true;
+        } else if (ret == SNRet::Status::AGAIN) {
+          return 0;
+        } else {
+          SN_LOGE("extractDecoder error");
         }
         return 0;
       }
@@ -249,7 +255,7 @@ namespace Sivin {
     mRunning = false;
     mWaitCond.notify_one();
     if (mDecodeThread) {
-      mDecodeThread->prePause();
+      mDecodeThread->tryPause();
     }
   }
 
@@ -320,7 +326,7 @@ namespace Sivin {
 
     bool threadRuning = false;
     if (mDecodeThread) {
-      threadRuning = mDecodeThread->getStatus() == SNThread::THREAD_STATUS_RUNNING;
+      threadRuning = mDecodeThread->getStatus() == SNThread::Status::RUNNING;
     }
     mRunning = false;
     if (mDecodeThread) {

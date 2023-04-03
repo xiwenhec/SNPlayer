@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <memory>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-}
+struct AVCodecContext;
+struct AVCodec;
+struct AVFrame;
 
 namespace Sivin {
 
@@ -19,7 +19,7 @@ namespace Sivin {
       const AVCodec *codec{nullptr};
       AVFrame *avFrame{nullptr};
       struct {
-        int pix_fmt{AV_PIX_FMT_NONE};
+        int pix_fmt{-1};
         int width{0};
         int height{0};
       } videoInfo;
@@ -37,7 +37,7 @@ namespace Sivin {
     virtual SNRet dequeueDecoder(std::unique_ptr<SNFrame> &frame) override;
 
     virtual void flushDecoder() override;
-    
+
     virtual void closeDecoder() override;
 
 

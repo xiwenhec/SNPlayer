@@ -5,7 +5,7 @@
 #include "PlayerParams.h"
 
 #define DEFAULTSTART_BUFFER_DURATION (1000 * 1000)
-#define DEFAULT_MAX_BUFFER_DURATION (40 * 1000 * 1000)
+#define DEFAULT_MAX_BUFFER_DURATION (10 * 1000 * 1000)
 
 namespace Sivin {
 

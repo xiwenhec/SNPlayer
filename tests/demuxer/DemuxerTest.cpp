@@ -2,6 +2,7 @@
 // Created by sivin on 1/1/23.
 //
 
+#include "base/SNRet.h"
 #include "data_source/IDataSource.h"
 #include <memory>
 #define LOG_TAG "DemuxerTest"
@@ -36,19 +37,20 @@ int main() {
   demuxerService->openStream(0);
 
   int64_t start = SNTimer::getSteadyTimeMs();
-
+  SNRet status;
   do {
-    ret = demuxerService->readPacket(packet, 0);
-    if (ret > 0) {
+    status = demuxerService->readPacket(packet, 0);
+    if (status == SNRet::Status::SUCCESS) {
       SN_LOGI("get packet: pts = %d", packet->getInfo().pts);
       if (packet->getInfo().pts / 1000000 > 100) {
       }
-    } else if (ret == 0) {
+    } else if (status == SNRet::Status::AGAIN) {
       SNTimer::sleepUs(5);
-    } else if (ret == -1) {
+      status = SNRet::Status::SUCCESS;
+    } else if (status == SNRet::Status::ERROR) {
       SN_LOGI("stream finish to end");
     }
-  } while (ret >= 0);
+  } while (status == SNRet::Status::SUCCESS);
 
   start = SNTimer::getSteadyTimeMs() - start;
 

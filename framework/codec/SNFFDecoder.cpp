@@ -1,4 +1,9 @@
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
+
 #include "SNFFDecoder.h"
+#include "base/SNRet.h"
 #include "base/media/SNPacket.h"
 #include "codec/IDecoder.h"
 #include "codec/SNActiveDecoder.h"
@@ -9,6 +14,8 @@
 #include <cstddef>
 #include <memory>
 #include "base/media/SNAVFrame.h"
+
+
 namespace Sivin {
 
   SNFFDecoder::SNFFDecoder() : SNActiveDecoder() {
@@ -17,6 +24,7 @@ namespace Sivin {
   }
 
   SNFFDecoder::~SNFFDecoder() {
+    closeDecoder();
   }
 
   void SNFFDecoder::closeDecoder() {
@@ -79,6 +87,7 @@ namespace Sivin {
   }
 
   SNRet SNFFDecoder::enqueueDecoder(std::unique_ptr<SNPacket> &packet) {
+    SN_LOGI("enqueueDecoder...:dts = %d", packet->getInfo().dts);
     AVPacket *pkt = nullptr;
     if (packet) {
       auto *avPacket = dynamic_cast<SNAVPacket *>(packet.get());
@@ -109,6 +118,8 @@ namespace Sivin {
     if (ret < 0) {
       if (ret == AVERROR_EOF) {
         return SNRet::Status::EOS;
+      } else if (ret == AVERROR(EAGAIN)) {
+        return SNRet::Status::AGAIN;
       }
       return SNRet::Status::ERROR;
     }

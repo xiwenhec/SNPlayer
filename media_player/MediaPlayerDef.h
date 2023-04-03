@@ -48,6 +48,14 @@ namespace Sivin {
   public:
     int64_t totalBitrate{0};
     std::deque<std::unique_ptr<SNStreamInfo>> mStreamInfoQueue{};
+    std::unique_ptr<SNStreamInfo> *getStreamInfo(StreamType type) {
+      for (auto &info: mStreamInfoQueue) {
+        if (info->type == type) {
+          return &info;
+        }
+      }
+      return nullptr;
+    }
   };
 
 }// namespace Sivin

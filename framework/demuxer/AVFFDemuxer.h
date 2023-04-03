@@ -40,11 +40,11 @@ namespace Sivin {
 
     void stop() override;
 
-    SNRet readPacket(std::unique_ptr<SNPacket> &packet, int index) override;
-
     int openStream(int index) override;
 
     void closeStream(int index) override;
+
+    SNRet readPacket(std::unique_ptr<SNPacket> &packet, int index) override;
 
 
   public:

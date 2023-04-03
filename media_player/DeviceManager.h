@@ -34,6 +34,8 @@ namespace Sivin {
     ~DeviceManager() = default;
 
   public:
+    int setup(const std::unique_ptr<SNStreamInfo> &streamInfo, DeviceType type, void *surface, uint64_t flags);
+
     const std::unique_ptr<IDecoder> &getDecoder(DeviceType type) const;
 
     bool isDecoderValid(DeviceType type) const;

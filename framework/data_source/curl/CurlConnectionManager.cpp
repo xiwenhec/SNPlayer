@@ -120,7 +120,7 @@ namespace Sivin {
   }
 
   void CurlConnectionManager::addConnection(const std::shared_ptr<CurlConnection> &connection) {
-    if (mLoopThread->getStatus() == SNThread::THREAD_STATUS_IDLE) {
+    if (mLoopThread->getStatus() == SNThread::Status::IDLE) {
       mLoopThread->start();
     }
     std::lock_guard<std::mutex> lockGuard{mMutex};

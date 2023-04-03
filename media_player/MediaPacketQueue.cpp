@@ -37,7 +37,6 @@ namespace Sivin {
     bool empty = mQueue.empty();
 
     if (packet->getInfo().duration > 0) {
-
       if (mPacketDuration == 0) {
         mPacketDuration = packet->getInfo().duration;
       }
@@ -46,6 +45,7 @@ namespace Sivin {
         mTotalDuration += packet->getInfo().duration;
       }
     } else if (mPacketDuration > 0) {
+      //异常情况packet里没有duration，伪造duration
       packet->getInfo().duration = mPacketDuration;
       if (!packet->isDiscard()) {
         mDuration += mPacketDuration;
@@ -53,10 +53,12 @@ namespace Sivin {
       }
     }
 
-    if (mBufferType == BufferType::AUDIO &&
-        !mQueue.empty() && packet->getInfo().pts != INT64_MIN &&
+    //音频的pts不会出现反转现象，如果出现则表示发生了错误
+    //视频的packet的pts会出现反转现象，存在B帧，且反转的帧一定是P帧
+    if (mBufferType == BufferType::AUDIO && !mQueue.empty() &&
+        packet->getInfo().pts != INT64_MIN &&
         packet->getInfo().pts < mQueue.back()->getInfo().pts) {
-      SN_LOGE("pts revert.");
+      SN_LOGE("audio packt pts revert.");
     }
 
     mQueue.push_back(std::move(packet));
@@ -75,7 +77,7 @@ namespace Sivin {
   std::unique_ptr<SNPacket> MediaPacketQueue::getPacket() {
     ADD_LOCK;
 
-    //检测判断如果不需要回退缓冲，则后面的条件应该成立，否则会出现异常
+    //检测如果不需要回退缓冲，则后面的条件应该成立，否则会出现异常
     assert(mMaxBackwardDuration != 0 || (mTotalDuration == mDuration && mCurrent == mQueue.begin()));
 
     if (mQueue.empty()) {

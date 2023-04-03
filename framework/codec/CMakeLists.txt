@@ -9,6 +9,7 @@ target_include_directories(SnDecoder PRIVATE
         )
 
 target_sources(SnDecoder PRIVATE
+        DecoderFactory.cpp
         IDecoder.cpp
         SNActiveDecoder.cpp
         SNFFDecoder.cpp

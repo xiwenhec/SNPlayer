@@ -51,17 +51,12 @@ namespace Sivin {
 
     //创建解封装Service
     mPlayer.mDemuxerService = std::make_unique<DemuxerService>(mPlayer.mDataSource);
-    if (mPlayer.mSeekPos > 0) {
-      mPlayer.mDemuxerService->seek(mPlayer.mSeekPos, 0, -1);
-    } else {
-      mPlayer.resetSeekStatus();
-    }
-
     int ret = mPlayer.mDemuxerService->initOpen(IDemuxer::DEMUXER_TYPE_BITSTREAM);
     if (ret < 0) {
       SN_LOGE("prepare failed. reason: demuxerService open faild.");
       return;
     }
+
 
     int nbStream = mPlayer.mDemuxerService->getNbStreams();
     std::unique_ptr<SNStreamInfo> streamInfo;
@@ -73,11 +68,14 @@ namespace Sivin {
       if (!mPlayer.mParams->disableVideo && streamInfo->type == StreamType::STREAM_TYPE_VIDEO) {
         if (mPlayer.mCurrentVideoIndex < 0) {
           mPlayer.mCurrentVideoIndex = streamInfo->index;
+          mPlayer.mDemuxerService->openStream(mPlayer.mCurrentVideoIndex);
         }
         mPlayer.mMediaInfo.mStreamInfoQueue.push_back(std::move(streamInfo));
+
       } else if (!mPlayer.mParams->disableAudio && streamInfo->type == StreamType::STREAM_TYPE_AUDIO) {
         if (mPlayer.mCurrentAudioIndex < 0) {
           mPlayer.mCurrentAudioIndex = streamInfo->index;
+          mPlayer.mDemuxerService->openStream(mPlayer.mCurrentAudioIndex);
         }
         mPlayer.mMediaInfo.mStreamInfoQueue.push_back(std::move(streamInfo));
       }
@@ -88,6 +86,8 @@ namespace Sivin {
     if (snMediaInfo) {
       mPlayer.mMediaInfo.totalBitrate = snMediaInfo->totalBitrate;
     }
+
+    mPlayer.mDemuxerService->start();
     mPlayer.changePlayerStatus(PlayerStatus::PREPARING);
   }
 

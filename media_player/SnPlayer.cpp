@@ -34,7 +34,7 @@ namespace Sivin {
   static const int kSecond = 1000 * 1000;
   static const int kBufferGap = 1 * kSecond;
   //视频帧最大个数
-  static const int kMaxVideoFrameCount = 2;
+  static const int kMaxVideoFrameCount = 1;
   static const int kMaxAudioFrameCount = 2;
   //表示1M字节
   static const int k1M = 1024 * 1024;
@@ -121,7 +121,6 @@ namespace Sivin {
       processMediaLoop();
     }
 
-
     return 0;
   }
 
@@ -134,7 +133,8 @@ namespace Sivin {
     }
 
     doReadPacket();
-    //doDecode();
+    doDecode();
+    setupAVDevice();
 
     if (mCanceled) {
       return;
@@ -299,6 +299,7 @@ namespace Sivin {
     if (packet->getInfo().streamIndex == mCurrentAudioIndex) {
       mHaveAudioPkt = true;
       mBufferController->addPacket(std::move(packet), BufferType::AUDIO);
+
     } else if (packet->getInfo().streamIndex == mCurrentVideoIndex) {
       mHaveVideoPkt = true;
       mBufferController->addPacket(std::move(packet), BufferType::VIDEO);
@@ -308,7 +309,6 @@ namespace Sivin {
 
 
   void SnPlayer::doDecode() {
-
     if (HAVE_VIDEO && !mVideoDecoderEOS && mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
       uint64_t videoFrameCount = mVideoFrameQue.size();
       if (videoFrameCount < kMaxVideoFrameCount) {
@@ -337,7 +337,7 @@ namespace Sivin {
           }
 
           if (mVideoPacket && (!HAVE_AUDIO || mAudioDecoderEOS)) {
-            //TODO:没有音频的操作
+            //TODO:不需要解码音频，直接丢弃音频数据包
           }
 
           int ret = decodeVideoPacket(mVideoPacket);
@@ -363,7 +363,8 @@ namespace Sivin {
         }
 
         if (mAudioPacket) {
-          int ret = decodeAudioPacket(mAudioPacket);
+          mAudioPacket = nullptr;
+          // int ret = decodeAudioPacket(mAudioPacket);
           //TODO:处理解码返回值
           if (mAudioPacket == nullptr) {
             //解码成功
@@ -423,8 +424,8 @@ namespace Sivin {
         break;
       }
       if (audioFrame) {
-        //TODO:处理无法获取pts的情况
         if (audioFrame->getInfo().pts == INT64_MIN) {
+          //TODO:处理无法获取pts的情况
         }
         mAudioFrameQue.push_back(std::move(audioFrame));
       }
@@ -449,7 +450,8 @@ namespace Sivin {
       mVideoDecoderEOS = true;
     }
     if (videoFrame) {
-      mVideoFrameQue.push(std::move(videoFrame));
+      SN_LOGI("render frame: pts =%d", videoFrame->getInfo().pts);
+      // mVideoFrameQue.push(std::move(videoFrame));
     }
     return 0;
   }
@@ -494,6 +496,18 @@ namespace Sivin {
       return ret;
     }
     return -1;
+  }
+
+
+  void SnPlayer::setupAVDevice() {
+    if (HAVE_VIDEO && !mDeviceManager->isDecoderValid(DeviceType::VIDEO)) {
+      setupVideoDevice();
+    }
+  }
+
+  void SnPlayer::setupVideoDevice() {
+    auto &streamInfo = *(mMediaInfo.getStreamInfo(StreamType::STREAM_TYPE_VIDEO));
+    mDeviceManager->setup(streamInfo, DeviceType::VIDEO, nullptr, 0);
   }
 
 

@@ -2,7 +2,7 @@
 // Created by sivin on 12/6/22.
 //
 
-#define LOG_TAG "AVFormatDemuxer"
+#define LOG_TAG "AVFFDemuxer"
 
 extern "C" {
 #include <libavutil/intreadwrite.h>
@@ -205,7 +205,7 @@ namespace Sivin {
 
   void AVFFDemuxer::start() {
     bPaused = false;
-    mReadThread->start();
+   mReadThread->start();
   }
 
 
@@ -232,7 +232,7 @@ namespace Sivin {
 
 
   SNRet AVFFDemuxer::readPacket(std::unique_ptr<SNPacket> &packet, int index) {
-    if (mReadThread->getStatus() == SNThread::THREAD_STATUS_IDLE) {
+    if (mReadThread->getStatus() == SNThread::Status::IDLE) {
       SN_LOGW("read packet thread not start, will read from Internal");
       return readPacketInternal(packet);
     } else {

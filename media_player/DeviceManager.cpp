@@ -1,5 +1,7 @@
 
 #include "DeviceManager.h"
+#include "base/SNRet.h"
+#include "codec/DecoderFactory.h"
 #include "codec/IDecoder.h"
 #include <cassert>
 #include <memory>
@@ -7,14 +9,6 @@ namespace Sivin {
 
   static std::unique_ptr<IDecoder> emptyDecoder{};
 
-  const std::unique_ptr<IDecoder> &DeviceManager::getDecoder(DeviceType type) const {
-    if (type == DeviceType::VIDEO) {
-      return mVideoDecoderHandle.decoder;
-    } else if (type == DeviceType::AUDIO) {
-      return mAudioDecoderHandle.decoder;
-    }
-    return emptyDecoder;
-  }
 
   DeviceManager::DecoderHandle *DeviceManager::getDecoderHandle(DeviceType type) {
     if (type == DeviceType::AUDIO) {
@@ -23,6 +17,43 @@ namespace Sivin {
       return &mVideoDecoderHandle;
     }
     return nullptr;
+  }
+
+
+  int DeviceManager::setup(const std::unique_ptr<SNStreamInfo> &streamInfo, DeviceType type, void *surface, uint64_t flags) {
+    auto *decoderHandle = getDecoderHandle(type);
+    if (decoderHandle == nullptr) {
+      return -1;
+    }
+    if (decoderHandle->valid) {
+      return 0;
+    }
+
+    if (decoderHandle->decoder) {
+      //TODO:
+    }
+
+    decoderHandle->decoder = DecoderFactory::create();
+
+    if (decoderHandle->decoder) {
+      auto ret = decoderHandle->decoder->open(streamInfo, surface, flags);
+      if (ret != SNRet::Status::SUCCESS) {
+        //不成功，释放解码器
+        decoderHandle->decoder = nullptr;
+        return -1;
+      }
+      decoderHandle->valid = true;
+    }
+    return 0;
+  }
+
+  const std::unique_ptr<IDecoder> &DeviceManager::getDecoder(DeviceType type) const {
+    if (type == DeviceType::VIDEO) {
+      return mVideoDecoderHandle.decoder;
+    } else if (type == DeviceType::AUDIO) {
+      return mAudioDecoderHandle.decoder;
+    }
+    return emptyDecoder;
   }
 
 
