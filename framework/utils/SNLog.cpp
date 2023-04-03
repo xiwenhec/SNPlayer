@@ -180,7 +180,7 @@ void SNLog::formatLog(int priority, const char *tag, char *inBuffer, char *outBu
         sprintf(outBuffer, "%s %d 0x%llx %c/%s [%s] [%s]: %s\n", timeBuffer, pid, *(long long *)&tid, levelChar, APP_TAG,
                 mVersion.c_str(), tag, inBuffer);
     } else {
-        sprintf(outBuffer, "%s 0x%llx %c/%s [%s] [%s]: %s", timeBuffer, *(long long *)&tid, levelChar, APP_TAG,
+        sprintf(outBuffer, "%s 0x%llx %c/%s [%s] [%s]: %s\n", timeBuffer, *(long long *)&tid, levelChar, APP_TAG,
                 mVersion.c_str(), tag, inBuffer);
     }
 }

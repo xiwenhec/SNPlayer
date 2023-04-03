@@ -46,6 +46,7 @@ namespace Sivin {
       close();
       return ret;
     }
+    SN_LOGI("init code codec success.");
     mRunning = true;
     mDecodeThread = MAKE_UNIQUE_THREAD(decodeFunc, "decodeThread");
     mDecodeThread->start();

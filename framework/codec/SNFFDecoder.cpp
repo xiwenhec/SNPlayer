@@ -69,7 +69,6 @@ namespace Sivin {
       mDecoder->codecCtx->extradata_size = streamInfo->extraDataSize;
     }
     mDecoder->codecCtx->thread_count = 1;
-
     if (avcodec_open2(mDecoder->codecCtx, mDecoder->codec, nullptr) < 0) {
       SN_LOGE("couldn't open codec");
       avcodec_free_context(&mDecoder->codecCtx);
@@ -96,6 +95,9 @@ namespace Sivin {
       pkt->dts = avPacket->getInfo().dts;
       assert(pkt != nullptr);
     }
+    if (pkt == nullptr) {
+      SN_LOGW("send a empty pkt to decoder.");
+    }
     int ret = avcodec_send_packet(mDecoder->codecCtx, pkt);
     if (ret == 0) {
       packet = nullptr;
@@ -111,7 +113,6 @@ namespace Sivin {
   }
 
   SNRet SNFFDecoder::dequeueDecoder(std::unique_ptr<SNFrame> &frame) {
-
     int ret = avcodec_receive_frame(mDecoder->codecCtx, mDecoder->avFrame);
 
     if (ret < 0) {

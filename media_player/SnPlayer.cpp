@@ -103,7 +103,7 @@ namespace Sivin {
 
   void SnPlayer::changePlayerStatus(PlayerStatus newStatus) {
     mOlderStatus = mPlayStatus;
-    SN_LOGD("change status: newStatus = %d, oldStatus = %ld\n", newStatus, mOlderStatus);
+    SN_LOGD("change status: newStatus = %d, oldStatus = %ld", newStatus, mOlderStatus);
     if (mPlayStatus != newStatus) {
       mPlayStatus = newStatus;
     }
