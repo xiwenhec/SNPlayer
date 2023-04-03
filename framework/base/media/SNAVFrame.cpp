@@ -1,6 +1,8 @@
 #include "SNAVFrame.h"
+#include "base/media/SNFrame.h"
 #include "utils/SNFFUtil.h"
 #include <cassert>
+#include <memory>
 namespace Sivin {
 
   SNAVFrame::SNAVFrame(AVFrame *frame) : mAVFrame(av_frame_clone(frame)) {
@@ -8,7 +10,10 @@ namespace Sivin {
     copyInfo();
   }
   SNAVFrame::~SNAVFrame() {
-    av_frame_free(&mAVFrame);
+    if (mAVFrame) {
+      av_frame_free(&mAVFrame);
+      mAVFrame = nullptr;
+    }
   }
 
   SNFrame::FrameType SNAVFrame::getType() {
@@ -53,6 +58,10 @@ namespace Sivin {
 
   int *SNAVFrame::getLineSize() {
     return mAVFrame->linesize;
+  }
+
+  std::unique_ptr<SNFrame> SNAVFrame::clone() {
+    return std::unique_ptr<SNFrame>();
   }
 
 }// namespace Sivin

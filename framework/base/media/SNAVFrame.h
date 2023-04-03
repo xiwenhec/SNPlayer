@@ -5,7 +5,6 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavutil/encryption_info.h>
 }
 
 namespace Sivin {
